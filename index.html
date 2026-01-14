@@ -3,747 +3,693 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MedQuiz Pro Elite</title>
+    <title>MedQuiz Ultimate</title>
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
 
     <style>
         :root {
-            --bg-color: #f4f6f8;
-            --card-bg: #ffffff;
-            --text-color: #2c3e50;
-            --primary: #34495e;
-            --secondary: #3498db;
-            --accent: #e74c3c;
-            --success: #27ae60;
-            --gold: #f1c40f;
-            
-            /* Compact Design Variables */
-            --font-size: 14px;
-            --btn-pad: 5px 10px;
-            --radius: 6px;
+            /* Default Theme (Light) */
+            --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --text-main: #2d3436;
+            --text-sec: #636e72;
+            --primary: #6c5ce7;
+            --secondary: #00cec9;
+            --accent: #ff7675;
+            --success: #00b894;
+            --glass-border: 1px solid rgba(255, 255, 255, 0.3);
+            --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+            --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         /* Themes */
-        body.dark-mode {
-            --bg-color: #1a1a1a;
-            --card-bg: #2d2d2d;
-            --text-color: #ecf0f1;
-            --primary: #9b59b6;
-            --secondary: #00cec9;
+        [data-theme="dark"] {
+            --bg-gradient: linear-gradient(135deg, #2d3436 0%, #000000 100%);
+            --card-bg: rgba(45, 52, 54, 0.85);
+            --text-main: #dfe6e9;
+            --text-sec: #b2bec3;
+            --primary: #a29bfe;
+            --secondary: #81ecec;
+        }
+        [data-theme="midnight"] {
+            --bg-gradient: linear-gradient(to bottom, #0f2027, #203a43, #2c5364);
+            --card-bg: rgba(16, 33, 41, 0.8);
+            --text-main: #ecf0f1;
+            --primary: #f1c40f;
+            --secondary: #e67e22;
+        }
+        [data-theme="cyberpunk"] {
+            --bg-gradient: linear-gradient(45deg, #110022, #330033);
+            --card-bg: rgba(20, 10, 30, 0.9);
+            --text-main: #0ff;
+            --text-sec: #f0f;
+            --primary: #f0f;
+            --secondary: #0ff;
+            --glass-border: 1px solid #0ff;
+        }
+        [data-theme="ocean"] {
+            --bg-gradient: linear-gradient(to top, #1cb5e0 0%, #000851 100%);
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --text-main: #004e92;
+            --primary: #004e92;
         }
 
+        * { box-sizing: border-box; transition: background 0.3s, color 0.3s; }
+        
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 0;
-            font-size: var(--font-size);
-            user-select: none;
+            margin: 0; padding: 0;
+            font-family: var(--font-family);
+            color: var(--text-main);
             height: 100vh;
-            display: flex;
-            flex-direction: column;
             overflow: hidden;
+            background: var(--bg-gradient);
+            user-select: none;
+        }
+
+        #bg-canvas {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0; pointer-events: none;
         }
 
         .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 10px;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            box-sizing: border-box;
+            position: relative; z-index: 1;
+            width: 100%; height: 100%; max-width: 900px; margin: 0 auto;
+            display: flex; flex-direction: column; padding: 10px;
         }
 
-        /* --- Header --- */
-        header {
+        /* --- Glassmorphism UI Components --- */
+        .glass-panel {
             background: var(--card-bg);
-            padding: 8px 15px;
-            border-radius: var(--radius);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-radius: 16px;
+            border: var(--glass-border);
+            box-shadow: var(--shadow);
+            padding: 15px;
             margin-bottom: 10px;
-            flex-shrink: 0;
+        }
+
+        /* Header */
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 20px;
         }
         
-        .header-title h1 { margin: 0; font-size: 1.1rem; color: var(--secondary); }
-        .header-title small { font-size: 0.75rem; opacity: 0.7; }
-
-        .header-actions button {
-            background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-color); margin-left: 5px;
+        .logo h1 { margin: 0; font-size: 1.4rem; background: -webkit-linear-gradient(45deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        .top-btns button {
+            background: none; border: none; font-size: 1.3rem; cursor: pointer;
+            margin-left: 8px; transition: transform 0.2s; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
         }
+        .top-btns button:hover { transform: scale(1.1); }
 
-        /* --- Scrollable Content Area --- */
-        .content-area {
-            flex-grow: 1;
-            overflow-y: auto;
-            position: relative;
-            background: var(--bg-color);
-        }
-
-        /* --- Grid Menu --- */
+        /* Main Menu Grid */
         .grid-menu {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-            gap: 8px;
-            padding: 5px;
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 15px; padding: 10px; flex-grow: 1; overflow-y: auto;
         }
 
         .menu-card {
             background: var(--card-bg);
-            padding: 12px;
-            border-radius: var(--radius);
-            text-align: center;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            cursor: pointer;
-            border: 1px solid transparent;
-            transition: 0.2s;
+            border-radius: 16px; padding: 20px; text-align: center;
+            border: var(--glass-border); box-shadow: var(--shadow);
+            cursor: pointer; position: relative; overflow: hidden;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            min-height: 120px;
         }
-        .menu-card:hover { border-color: var(--secondary); transform: translateY(-2px); }
-        .menu-card .icon { font-size: 1.5rem; margin-bottom: 5px; }
-        .menu-card h3 { margin: 0; font-size: 0.9rem; }
         
-        .card-innovative { border-left: 3px solid var(--accent); }
-        .card-leader { border-left: 3px solid var(--gold); }
+        .menu-card::before {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
+            transform: rotate(45deg); opacity: 0; transition: opacity 0.3s;
+        }
+        .menu-card:hover { transform: translateY(-5px); box-shadow: 0 12px 40px rgba(0,0,0,0.2); }
+        .menu-card:hover::before { opacity: 1; }
 
-        /* --- Selection View --- */
-        .compact-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-            padding: 5px;
+        .menu-card .icon { font-size: 2.5rem; margin-bottom: 10px; }
+        .menu-card h3 { margin: 0; font-size: 1rem; color: var(--text-main); }
+        .menu-card small { font-size: 0.75rem; color: var(--text-sec); margin-top: 5px; }
+
+        /* Selection Screen */
+        .selection-area { flex-grow: 1; overflow-y: auto; padding-right: 5px; }
+        
+        .section-header {
+            width: 100%; padding: 10px; margin: 15px 0 5px 0;
+            background: linear-gradient(90deg, var(--primary), transparent);
+            color: #fff; border-radius: 8px; font-weight: bold; font-size: 0.9rem;
         }
 
+        .options-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+        
         .select-btn {
-            background: var(--card-bg);
-            border: 1px solid #ddd;
-            padding: var(--btn-pad);
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            flex: 1 1 auto; /* Responsive width */
-            justify-content: center;
+            background: rgba(255,255,255,0.5); border: 1px solid var(--primary);
+            color: var(--text-main); padding: 8px 15px; border-radius: 20px;
+            cursor: pointer; flex: 1 1 auto; text-align: center; font-size: 0.9rem;
+            display: flex; justify-content: center; align-items: center; gap: 5px;
+            min-width: 100px;
         }
+        .select-btn:hover { background: var(--primary); color: #fff; }
+        .select-btn.selected { background: var(--primary); color: #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
 
-        .select-btn:hover { border-color: var(--secondary); }
-        .select-btn.selected { background: var(--secondary); color: white; border-color: var(--secondary); }
-        .badge { background: rgba(0,0,0,0.1); padding: 0 4px; border-radius: 3px; font-size: 0.7rem; }
-
-        /* --- Quiz View --- */
-        .quiz-view { display: none; padding: 5px; height: 100%; flex-direction: column; }
+        /* Quiz UI */
+        .quiz-view { display: none; flex-direction: column; height: 100%; }
         
-        .q-meta {
-            display: flex; gap: 10px; font-size: 0.8rem; color: #777; margin-bottom: 10px;
-            background: rgba(0,0,0,0.03); padding: 5px; border-radius: 4px;
+        .q-card {
+            background: var(--card-bg); border-radius: 16px; padding: 20px;
+            box-shadow: var(--shadow); margin-bottom: 15px; border: var(--glass-border);
+            font-size: 1.1rem; line-height: 1.6; direction: ltr; text-align: left;
+            position: relative;
         }
 
-        .q-text {
-            font-size: 1.1rem; font-weight: 600; margin-bottom: 15px; line-height: 1.4; 
-            direction: ltr; text-align: left; background: var(--card-bg); padding: 15px; 
-            border-radius: var(--radius); box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        .option-row {
+            background: rgba(255,255,255,0.4); border: 1px solid rgba(0,0,0,0.1);
+            padding: 12px 15px; margin-bottom: 8px; border-radius: 12px;
+            cursor: pointer; direction: ltr; text-align: left; display: flex; justify-content: space-between;
         }
+        .option-row:hover { background: rgba(255,255,255,0.8); transform: translateX(5px); }
+        .option-row.correct { background: var(--success); color: white; border-color: var(--success); }
+        .option-row.wrong { background: var(--accent); color: white; border-color: var(--accent); }
 
-        .q-options { display: flex; flex-direction: column; gap: 5px; }
-
-        .option {
-            background: var(--card-bg); padding: 8px 12px; border: 1px solid #eee; border-radius: var(--radius);
-            cursor: pointer; direction: ltr; text-align: left; position: relative; font-size: 0.95rem;
-            transition: 0.1s;
-        }
-        .option:hover { background: #f9f9f9; }
-        .option.correct { background: #e8f5e9; border-color: var(--success); color: #2e7d32; }
-        .option.wrong { background: #ffebee; border-color: var(--accent); color: #c62828; }
-        
         .key-hint { 
-            position: absolute; right: 10px; top: 50%; transform: translateY(-50%); 
-            font-size: 0.7rem; color: #aaa; border: 1px solid #eee; padding: 1px 4px; border-radius: 3px;
+            background: rgba(0,0,0,0.1); width: 24px; height: 24px; 
+            border-radius: 50%; display: flex; justify-content: center; align-items: center;
+            font-size: 0.75rem; font-weight: bold;
         }
 
-        .explanation {
-            margin-top: 10px; padding: 10px; background: #e3f2fd; border-left: 3px solid var(--secondary);
-            font-size: 0.85rem; direction: ltr; display: none; color: #333;
+        /* Bottom Bar */
+        .bottom-nav {
+            margin-top: auto; padding-top: 10px;
+            display: flex; justify-content: space-between; align-items: center;
         }
 
-        /* --- Action Bar --- */
-        .action-bar {
-            margin-top: auto; padding-top: 10px; display: flex; justify-content: space-between; align-items: center;
+        .btn-modern {
+            background: var(--primary); color: white; border: none;
+            padding: 10px 20px; border-radius: 30px; font-weight: bold;
+            cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            display: flex; align-items: center; gap: 5px;
         }
+        .btn-modern:hover { transform: translateY(-2px); filter: brightness(1.1); }
+        .btn-sec { background: var(--text-sec); }
+        .btn-success { background: var(--success); }
 
-        .btn {
-            background: var(--secondary); color: white; border: none; padding: var(--btn-pad); 
-            border-radius: var(--radius); cursor: pointer; font-size: 0.85rem;
+        /* Modals */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(5px);
+            z-index: 1000; display: none; justify-content: center; align-items: center;
         }
-        .btn-grey { background: #95a5a6; }
-        .btn-telegram { background: #0088cc; }
-
-        /* --- Modals --- */
-        .modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6);
-            display: none; justify-content: center; align-items: center; z-index: 999;
+        .modal-box {
+            background: var(--card-bg); width: 90%; max-width: 400px;
+            border-radius: 20px; padding: 25px; border: var(--glass-border);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3); text-align: center;
         }
-        .modal-content {
-            background: var(--card-bg); padding: 20px; border-radius: 8px; width: 90%; max-width: 350px;
-            max-height: 80vh; overflow-y: auto; text-align: center;
-        }
-
-        .leaderboard-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9rem; }
-        .leaderboard-table th { background: #f0f0f0; padding: 5px; }
-        .leaderboard-table td { padding: 5px; border-bottom: 1px solid #eee; }
 
         /* Utilities */
         .hidden { display: none !important; }
-        #timer-bar { height: 3px; background: var(--accent); width: 100%; margin-bottom: 5px; display:none; transition: width 1s linear; }
+        .mirror-mode { transform: scaleX(-1); }
 
     </style>
 </head>
-<body>
+<body data-theme="light" id="body-el">
 
-<div class="container">
-    <header>
-        <div class="header-title">
-            <h1>MedQuiz Elite</h1>
-            <small id="status-text">جاري الاتصال...</small>
+<canvas id="bg-canvas"></canvas>
+
+<div class="container" id="main-container">
+    <header class="glass-panel">
+        <div class="logo">
+            <h1>MedQuiz Ultimate</h1>
+            <small id="status-txt" style="color:var(--text-sec)">جاري تحميل المكتبة...</small>
         </div>
-        <div class="header-actions">
-            <button onclick="window.open('https://t.me/Heailloo_bot', '_blank')" title="Telegram Bot" style="color:#0088cc;">✈️</button>
-            <button onclick="openLeaderboard()" title="Leaderboard" style="color:var(--gold);">🏆</button>
-            <button onclick="openSettings()" title="Settings">⚙️</button>
+        <div class="top-btns">
+            <button onclick="shareBot()" title="دعوة صديق">🔗</button>
+            <button onclick="openLeaderboard()" title="المتصدرين">🏆</button>
+            <button onclick="openSettings()" title="الإعدادات">⚙️</button>
         </div>
     </header>
 
-    <div class="content-area">
+    <div class="content-wrapper" style="flex-grow:1; display:flex; flex-direction:column; overflow:hidden;">
         
-        <!-- MAIN MENU -->
+        <!-- === HOME MENU === -->
         <div id="view-home" class="grid-menu">
-            <div class="menu-card" onclick="startFlow('normal')">
+            <div class="menu-card" onclick="startSelection('normal')">
                 <div class="icon">🚀</div>
                 <h3>بدء الاختبار</h3>
+                <small>اختر دروسك بنفسك</small>
             </div>
-            <div class="menu-card" onclick="startFlow('mistakes')">
+            <div class="menu-card" onclick="startSelection('mistakes')">
                 <div class="icon">⚠️</div>
-                <h3>أخطائي (مقسمة)</h3>
+                <h3>مراجعة الأخطاء</h3>
+                <small>الدروس التي أخطأت بها</small>
             </div>
-            <div class="menu-card card-innovative" onclick="startFlow('survival')">
-                <div class="icon">🔥</div>
-                <h3>وضع البقاء</h3>
-                <small>خطأ واحد = خسارة</small>
+            <div class="menu-card" style="border-color:var(--accent)" onclick="luckyShot()">
+                <div class="icon">🎁</div>
+                <h3>ضربة حظ</h3>
+                <small>سؤال عشوائي فوراً!</small>
             </div>
-            <div class="menu-card card-innovative" onclick="startFlow('timeAttack')">
-                <div class="icon">⚡</div>
-                <h3>هجوم الوقت</h3>
-                <small>60 ثانية</small>
+            <div class="menu-card" style="border-color:var(--primary)" onclick="toggleMirrorMode()">
+                <div class="icon">🔮</div>
+                <h3>وضع المرآة</h3>
+                <small>اقلب الشاشة للتحدي</small>
             </div>
             <div class="menu-card" onclick="startMode('fav')">
                 <div class="icon">⭐</div>
-                <h3>المفضلة (S)</h3>
+                <h3>المفضلة</h3>
+                <small>الاختصار: S</small>
             </div>
-            <div class="menu-card" onclick="openSearch()">
+            <div class="menu-card" onclick="document.getElementById('modal-search').style.display='flex'">
                 <div class="icon">🔍</div>
-                <h3>بحث ID</h3>
+                <h3>بحث سريع</h3>
+                <small>بواسطة الـ ID</small>
             </div>
         </div>
 
-        <!-- SELECTION PANEL -->
-        <div id="view-select" class="hidden" style="padding:10px;">
-            <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px solid #eee; padding-bottom:5px;">
-                <h3 id="select-title" style="margin:0; color:var(--secondary);">Select...</h3>
-                <button class="btn btn-grey" onclick="goHome()">Back 🏠</button>
+        <!-- === SELECTION PANEL === -->
+        <div id="view-select" class="glass-panel hidden" style="height:100%; display:none; flex-direction:column;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid rgba(0,0,0,0.1); padding-bottom:10px;">
+                <h3 id="step-title" style="margin:0; color:var(--primary)">اختر...</h3>
+                <button class="btn-modern btn-sec" style="padding:5px 15px; font-size:0.8rem;" onclick="goHome()">عودة 🏠</button>
             </div>
-            
-            <div id="select-grid" class="compact-list"></div>
-            
-            <div class="action-bar" style="margin-top:10px;">
-                <button id="btn-toggle-all" class="btn btn-grey" onclick="toggleAll()">الكل</button>
-                <button id="btn-select-next" class="btn" onclick="nextStep()">التالي ➡</button>
+
+            <div id="selection-content" class="selection-area"></div>
+
+            <div class="bottom-nav">
+                <button id="btn-all" class="btn-modern btn-sec hidden" onclick="toggleSelectAll()">تحديد الكل</button>
+                <button class="btn-modern" onclick="nextStep()">التالي ➡</button>
             </div>
         </div>
 
-        <!-- QUIZ VIEW -->
+        <!-- === QUIZ VIEW === -->
         <div id="view-quiz" class="quiz-view">
-            <div id="timer-bar"></div>
-            <div class="q-meta">
-                <span>ID: <b id="q-id"></b></span>
-                <span><b id="q-loc"></b></span>
-                <span id="fav-btn" style="cursor:pointer; margin-right:auto;" onclick="toggleFav()">☆</span>
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:0.85rem; color:var(--text-sec);">
+                <span>ID: <b id="q-id">---</b></span>
+                <span id="q-counter">1 / 10</span>
+                <span id="fav-trigger" style="cursor:pointer" onclick="toggleFav()">☆ حفظ</span>
             </div>
 
-            <div id="q-text" class="q-text">Loading...</div>
-            <div id="q-options" class="q-options"></div>
-            <div id="q-exp" class="explanation"></div>
+            <div class="q-card">
+                <div style="font-size:0.8rem; color:var(--primary); margin-bottom:5px;" id="q-crumb">Path</div>
+                <div id="q-text">Loading...</div>
+            </div>
 
-            <div class="action-bar">
-                <button class="btn btn-grey" onclick="goHome()">خروج</button>
-                <span id="q-counter" style="font-weight:bold; font-size:0.9rem;">1/10</span>
-                <button id="next-btn" class="btn hidden" onclick="nextQ()">التالي (Space)</button>
+            <div id="q-options" style="flex-grow:1; overflow-y:auto;"></div>
+
+            <div id="q-exp" class="glass-panel" style="display:none; margin-top:10px; background:#e3f2fd; color:#333; direction:ltr;"></div>
+
+            <div class="bottom-nav">
+                <button class="btn-modern btn-sec" onclick="goHome()">خروج</button>
+                <button id="btn-next" class="btn-modern hidden" onclick="nextQ()">التالي (Space)</button>
             </div>
         </div>
+
     </div>
 </div>
 
-<!-- MODALS -->
-<div id="modal-leaderboard" class="modal" onclick="if(event.target==this) this.style.display='none'">
-    <div class="modal-content">
-        <h2 style="color:var(--gold);">🏆 لوحة الصدارة</h2>
-        <div style="margin-bottom:10px;">
-            <input type="text" id="player-name" placeholder="اكتب اسمك للمشاركة" style="padding:5px; width:70%;">
-            <button class="btn" onclick="saveMyScore()">حفظ نقاطي</button>
+<!-- === MODALS === -->
+<!-- Settings -->
+<div id="modal-settings" class="modal-overlay" onclick="if(event.target==this) this.style.display='none'">
+    <div class="modal-box">
+        <h3>⚙️ الإعدادات</h3>
+        <p>🎨 اختر الثيم:</p>
+        <div class="options-grid" style="justify-content:center; margin-bottom:15px;">
+            <button class="select-btn" onclick="setAppTheme('light')">☀️ Light</button>
+            <button class="select-btn" onclick="setAppTheme('dark')">🌑 Dark</button>
+            <button class="select-btn" onclick="setAppTheme('midnight')">🌌 Midnight</button>
+            <button class="select-btn" onclick="setAppTheme('cyberpunk')">🤖 Cyber</button>
+            <button class="select-btn" onclick="setAppTheme('ocean')">🌊 Ocean</button>
         </div>
-        <div style="font-size:0.8rem; color:#777; margin-bottom:5px;">مجموع نقاطك (XP): <b id="my-xp">0</b></div>
-        <table class="leaderboard-table">
-            <thead><tr><th>#</th><th>الاسم</th><th>XP</th></tr></thead>
-            <tbody id="lb-body"></tbody>
-        </table>
-        <button class="btn btn-grey" style="margin-top:15px;" onclick="document.getElementById('modal-leaderboard').style.display='none'">إغلاق</button>
-    </div>
-</div>
-
-<div id="modal-settings" class="modal" onclick="if(event.target==this) this.style.display='none'">
-    <div class="modal-content">
-        <h3>الإعدادات</h3>
-        <p>الثيم:</p>
-        <div style="display:flex; gap:5px; justify-content:center;">
-            <button class="btn" style="background:#ddd; color:#333;" onclick="setTheme('light')">☀️</button>
-            <button class="btn" style="background:#333;" onclick="setTheme('dark')">🌑</button>
+        <p>✨ الخلفية المتحركة:</p>
+        <div class="options-grid" style="justify-content:center;">
+            <button class="select-btn" onclick="setAnim('bubbles')">🫧 Bubbles</button>
+            <button class="select-btn" onclick="setAnim('particles')">✨ Particles</button>
+            <button class="select-btn" onclick="setAnim('none')">🚫 None</button>
         </div>
-        <p>حجم الخط:</p>
-        <input type="range" min="12" max="20" value="14" oninput="setFont(this.value)">
-        <br><br>
-        <button class="btn" onclick="document.getElementById('modal-settings').style.display='none'">حفظ</button>
+        <br>
+        <button class="btn-modern" style="width:100%" onclick="document.getElementById('modal-settings').style.display='none'">إغلاق</button>
     </div>
 </div>
 
-<div id="modal-search" class="modal" onclick="if(event.target==this) this.style.display='none'">
-    <div class="modal-content">
+<!-- Leaderboard -->
+<div id="modal-lb" class="modal-overlay" onclick="if(event.target==this) this.style.display='none'">
+    <div class="modal-box">
+        <h3 style="color:#f1c40f">🏆 لوحة الصدارة</h3>
+        <input type="text" id="p-name" placeholder="اسمك" style="padding:10px; width:100%; border-radius:10px; border:1px solid #ccc; margin-bottom:10px;">
+        <button class="btn-modern" style="width:100%" onclick="submitScore()">تسجيل نقاطي (<span id="my-xp">0</span>)</button>
+        <div id="lb-list" style="margin-top:15px; text-align:left; max-height:200px; overflow-y:auto; font-size:0.9rem;"></div>
+    </div>
+</div>
+
+<!-- Search -->
+<div id="modal-search" class="modal-overlay" onclick="if(event.target==this) this.style.display='none'">
+    <div class="modal-box">
         <h3>بحث برقم السؤال</h3>
-        <input type="number" id="search-inp" style="padding:8px; width:80%;" placeholder="ID...">
-        <br><br>
-        <button class="btn" onclick="doSearch()">بحث</button>
+        <input type="number" id="s-inp" style="padding:10px; width:100%; border-radius:10px; margin:15px 0;" placeholder="ID...">
+        <button class="btn-modern" onclick="doSearch()">بحث</button>
     </div>
 </div>
 
 <script>
-    // ===========================================
-    // 1. FIREBASE CONFIG
-    // ===========================================
-    const firebaseConfig = {
-        apiKey: "AIzaSyDEZFJmcXK2LxYAZ-Yjv_M1HbC6zi_qilg",
-        authDomain: "exambotdb.firebaseapp.com",
-        databaseURL: "https://exambotdb-default-rtdb.firebaseio.com",
-        projectId: "exambotdb",
-        storageBucket: "exambotdb.firebasestorage.app",
-        messagingSenderId: "950600562980",
-        appId: "1:950600562980:web:f993c22d45e5cfdd3d9bb1"
+    // --- Config & State ---
+    const CONFIG = {
+        files: 'questions_list.json',
+        firebase: {
+            apiKey: "AIzaSyDEZFJmcXK2LxYAZ-Yjv_M1HbC6zi_qilg",
+            authDomain: "exambotdb.firebaseapp.com",
+            databaseURL: "https://exambotdb-default-rtdb.firebaseio.com",
+            projectId: "exambotdb",
+            storageBucket: "exambotdb.firebasestorage.app",
+            messagingSenderId: "950600562980",
+            appId: "1:950600562980:web:f993c22d45e5cfdd3d9bb1"
+        }
     };
-    firebase.initializeApp(firebaseConfig);
+
+    firebase.initializeApp(CONFIG.firebase);
     const db = firebase.database();
 
-    // ===========================================
-    // 2. DATA LOADING & STATE
-    // ===========================================
-    let allData = [];
-    let activePool = []; // The pool of questions we are currently selecting from
-    let quizQueue = [];
-    let qIndex = 0;
-    
-    // User Data
-    let mistakes = JSON.parse(localStorage.getItem('mistakes') || '[]');
-    let favs = JSON.parse(localStorage.getItem('favs') || '[]');
-    let userXP = parseInt(localStorage.getItem('userXP') || '0');
-
-    // Selection State
-    let flowMode = 'normal'; // normal, mistakes, survival, timeAttack
+    let allQs = [], activePool = [], quizQ = [], qIdx = 0;
+    let user = { xp: parseInt(localStorage.getItem('xp')||0), mistakes: JSON.parse(localStorage.getItem('mis')||'[]'), fav: JSON.parse(localStorage.getItem('fav')||'[]') };
     let sel = { term:null, subj:null, lessons:[], chapters:[] };
-    let selStep = '';
+    let currStep = '';
+    let animationType = localStorage.getItem('anim') || 'bubbles';
+    let currentTheme = localStorage.getItem('theme') || 'light';
 
+    // --- Init ---
     window.onload = async () => {
+        setAppTheme(currentTheme);
+        initCanvas();
         try {
-            const listRes = await fetch('questions_list.json');
-            const fileList = await listRes.json();
-            
-            let loadedCount = 0;
-            for(const file of fileList) {
+            const list = await (await fetch(CONFIG.files)).json();
+            for(let f of list) {
                 try {
-                    const res = await fetch(`Questions/${file}`);
-                    const json = await res.json();
-                    const qs = json.questions.map(q => ({
+                    let d = await (await fetch(`Questions/${f}`)).json();
+                    allQs.push(...d.questions.map(q => ({
                         ...q,
-                        term: q.term || json.meta.source || "Unknown",
-                        subject: q.subject || json.meta.subject || "Unknown",
-                        lesson: q.lesson || json.meta.lesson || "Unknown",
+                        term: q.term || d.meta.source,
+                        subject: q.subject || d.meta.subject,
+                        lesson: q.lesson || d.meta.lesson,
                         chapter: q.chapter || "General"
-                    }));
-                    allData.push(...qs);
-                    loadedCount++;
-                } catch(err) { console.error(`Error loading ${file}`, err); }
+                    })));
+                } catch(e){}
             }
-            document.getElementById('status-text').innerText = `${allData.length} Qs Ready`;
-        } catch(e) {
-            document.getElementById('status-text').innerText = "Error: Create questions_list.json!";
-            console.error(e);
-        }
+            document.getElementById('status-txt').innerText = `${allQs.length} سؤال متاح`;
+        } catch(e) { document.getElementById('status-txt').innerText = "خطأ في التحميل"; }
     };
 
-    // ===========================================
-    // 3. SELECTION LOGIC (Unified for Normal & Mistakes)
-    // ===========================================
-    function startFlow(mode) {
-        flowMode = mode;
-        sel = { term:null, subj:null, lessons:[], chapters:[] };
-
-        // Determine Source Data
-        if(mode === 'mistakes') {
-            activePool = allData.filter(q => mistakes.includes(q.id));
-            if(activePool.length === 0) return alert('سجل الأخطاء فارغ! أحسنت.');
-        } else {
-            activePool = allData;
-        }
-
-        // Skip selection for Time Attack / Survival if preferred, 
-        // BUT user might want to choose subject first. Let's force selection for all.
-        goToStep('term');
+    // --- Navigation & Selection ---
+    function switchView(id) {
+        ['view-home','view-select','view-quiz'].forEach(v => document.getElementById(v).classList.add('hidden')); // fix: add hidden class instead of display:none directly to toggle flex
+        document.getElementById(id).classList.remove('hidden');
+        if(id === 'view-select' || id === 'view-quiz') document.getElementById(id).style.display = 'flex';
+        else document.getElementById(id).style.display = 'grid'; // Home is grid
     }
 
-    function goToStep(step) {
-        selStep = step;
-        document.getElementById('view-home').classList.add('hidden');
-        document.getElementById('view-select').classList.remove('hidden');
-        
-        const grid = document.getElementById('select-grid');
-        grid.innerHTML = '';
-        const title = document.getElementById('select-title');
-        const nextBtn = document.getElementById('btn-select-next');
-        const toggleBtn = document.getElementById('btn-toggle-all');
-        toggleBtn.classList.add('hidden');
+    function startSelection(mode) {
+        activePool = mode === 'mistakes' ? allQs.filter(q => user.mistakes.includes(q.id)) : allQs;
+        if(!activePool.length) return alert("لا توجد أسئلة متاحة في هذا الوضع");
+        sel = {term:null, subj:null, lessons:[], chapters:[]};
+        renderStep('term');
+    }
 
-        // Dynamic Filtering based on previous steps AND activePool
-        let items = [];
-        let isMulti = false;
-        
-        // Helper to filter by current selection state
-        const getSubset = () => {
-            return activePool.filter(q => 
-                (sel.term ? q.term === sel.term : true) &&
-                (sel.subj ? q.subject === sel.subj : true) &&
-                (sel.lessons.length ? sel.lessons.includes(q.lesson) : true)
-            );
-        };
+    function renderStep(step) {
+        currStep = step;
+        switchView('view-select');
+        const cont = document.getElementById('selection-content');
+        cont.innerHTML = '';
+        const title = document.getElementById('step-title');
+        const btnAll = document.getElementById('btn-all');
+        btnAll.classList.add('hidden');
 
-        if(step === 'term') {
-            title.innerText = "1. الترم (Term)";
-            items = [...new Set(activePool.map(q => q.term))];
-            nextBtn.onclick = () => alert("اختر خياراً");
-        } 
-        else if(step === 'subj') {
-            title.innerText = "2. المادة (Subject)";
-            items = [...new Set(getSubset().map(q => q.subject))];
-        } 
-        else if(step === 'lesson') {
-            title.innerText = "3. الدرس (Lesson)";
-            isMulti = true;
-            toggleBtn.classList.remove('hidden');
-            items = [...new Set(getSubset().map(q => q.lesson))];
-            nextBtn.onclick = () => finishSelectionStep('lesson');
-        } 
+        // Logic
+        let items = [], isMulti = false;
+        const sub = activePool.filter(q => 
+            (!sel.term || q.term === sel.term) && 
+            (!sel.subj || q.subject === sel.subj)
+        );
+
+        if(step === 'term') { title.innerText = "1. اختر الترم"; items = [...new Set(sub.map(q=>q.term))]; }
+        else if(step === 'subj') { title.innerText = "2. اختر المادة"; items = [...new Set(sub.map(q=>q.subject))]; }
+        else if(step === 'lesson') { 
+            title.innerText = "3. اختر الدروس"; isMulti = true; btnAll.classList.remove('hidden');
+            items = [...new Set(sub.map(q=>q.lesson))]; 
+        }
         else if(step === 'chapter') {
-            title.innerText = "4. الشابتر (Chapter)";
-            isMulti = true;
-            toggleBtn.classList.remove('hidden');
-            items = [...new Set(getSubset().map(q => q.chapter))];
-            nextBtn.onclick = () => finishSelectionStep('chapter');
+            title.innerText = "4. اختر الشباتر"; isMulti = true; btnAll.classList.remove('hidden');
+            // Grouping Logic requested
+            sel.lessons.forEach(l => {
+                const header = document.createElement('div');
+                header.className = 'section-header';
+                header.innerText = `📂 ${l}`;
+                cont.appendChild(header);
+
+                const grid = document.createElement('div');
+                grid.className = 'options-grid';
+                
+                const chapters = [...new Set(sub.filter(q => q.lesson === l).map(q => q.chapter))];
+                chapters.forEach(ch => {
+                    const btn = createSelBtn(ch, sub.filter(q=>q.lesson===l && q.chapter===ch).length, true);
+                    grid.appendChild(btn);
+                });
+                cont.appendChild(grid);
+            });
+            return; // Custom rendering done
         }
 
-        // Render Items
-        items.sort().forEach(item => {
-            const count = getSubset().filter(q => q[step === 'term' ? 'term' : step === 'subj' ? 'subject' : step === 'lesson' ? 'lesson' : 'chapter'] === item).length;
-            
-            const btn = document.createElement('div');
-            btn.className = 'select-btn';
-            btn.innerHTML = `<span>${item}</span><span class="badge">${count}</span>`;
-            btn.dataset.val = item;
-            
-            btn.onclick = () => {
-                if(isMulti) {
-                    btn.classList.toggle('selected');
-                } else {
-                    // Single Select logic
-                    if(step === 'term') { sel.term = item; goToStep('subj'); }
-                    if(step === 'subj') { sel.subj = item; goToStep('lesson'); }
-                }
-            };
-            grid.appendChild(btn);
-        });
+        // Render standard grid
+        const grid = document.createElement('div');
+        grid.className = 'options-grid';
+        items.sort().forEach(i => grid.appendChild(createSelBtn(i, 0, isMulti))); // Count logic simplified
+        cont.appendChild(grid);
     }
 
-    function toggleAll() {
-        const btns = document.querySelectorAll('#select-grid .select-btn');
-        const all = Array.from(btns).every(b => b.classList.contains('selected'));
-        btns.forEach(b => all ? b.classList.remove('selected') : b.classList.add('selected'));
+    function createSelBtn(val, count, isMulti) {
+        const btn = document.createElement('div');
+        btn.className = 'select-btn';
+        btn.innerHTML = `<span>${val}</span>`;
+        btn.dataset.val = val;
+        btn.onclick = () => {
+            if(isMulti) btn.classList.toggle('selected');
+            else {
+                if(currStep === 'term') { sel.term = val; renderStep('subj'); }
+                else if(currStep === 'subj') { sel.subj = val; renderStep('lesson'); }
+            }
+        };
+        return btn;
     }
 
-    function finishSelectionStep(step) {
-        const selected = Array.from(document.querySelectorAll('#select-grid .select-btn.selected')).map(b => b.dataset.val);
-        if(selected.length === 0) return alert("اختر واحداً على الأقل");
-
-        if(step === 'lesson') { sel.lessons = selected; goToStep('chapter'); }
-        else if(step === 'chapter') { 
-            sel.chapters = selected; 
-            // Finalize
-            let finalPool = activePool.filter(q => 
-                q.term === sel.term && 
-                q.subject === sel.subj && 
-                sel.lessons.includes(q.lesson) && 
-                sel.chapters.includes(q.chapter)
-            );
-            
-            if(flowMode === 'survival') initQuiz(finalPool, 'All');
-            else if(flowMode === 'timeAttack') initQuiz(finalPool, 'All'); // Time limit handled in quiz
-            else initQuiz(finalPool, 'All'); // Normal / Mistakes
-        }
-    }
-
-    function startMode(mode) {
-        if(mode === 'fav') {
-            const pool = allData.filter(q => favs.includes(q.id));
-            if(!pool.length) return alert("المفضلة فارغة");
-            flowMode = 'normal';
-            initQuiz(pool, 'All');
+    function nextStep() {
+        const allSel = Array.from(document.querySelectorAll('.select-btn.selected'));
+        if(currStep === 'lesson') {
+            if(!allSel.length) return alert('اختر درساً واحداً على الأقل');
+            sel.lessons = allSel.map(b=>b.dataset.val);
+            renderStep('chapter');
+        } else if(currStep === 'chapter') {
+            if(!allSel.length) return alert('اختر شابتر واحداً على الأقل');
+            sel.chapters = allSel.map(b=>b.dataset.val);
+            const final = activePool.filter(q => sel.term === q.term && sel.subj === q.subject && sel.lessons.includes(q.lesson) && sel.chapters.includes(q.chapter));
+            startQuiz(final);
         }
     }
 
-    // ===========================================
-    // 4. QUIZ ENGINE
-    // ===========================================
-    let timerInterval;
-    let timeRemaining = 60;
+    function toggleSelectAll() {
+        const btns = document.querySelectorAll('.select-btn');
+        const allSel = Array.from(btns).every(b => b.classList.contains('selected'));
+        btns.forEach(b => allSel ? b.classList.remove('selected') : b.classList.add('selected'));
+    }
 
-    function initQuiz(pool, limit) {
-        // Shuffle
-        pool = pool.sort(() => 0.5 - Math.random());
-        
-        if(limit !== 'All') pool = pool.slice(0, parseInt(limit));
-        
-        quizQueue = pool;
-        qIndex = 0;
-
-        document.getElementById('view-select').classList.add('hidden');
-        document.getElementById('view-home').classList.add('hidden');
-        document.getElementById('view-quiz').style.display = 'flex';
-        
-        // Reset Timer
-        document.getElementById('timer-bar').style.display = 'none';
-        if(flowMode === 'timeAttack') startTimeAttack();
-
+    // --- Quiz Logic ---
+    function startQuiz(arr) {
+        if(!arr.length) return alert("لا أسئلة");
+        quizQ = arr.sort(()=>0.5-Math.random());
+        qIdx = 0;
+        switchView('view-quiz');
         renderQ();
     }
 
-    function startTimeAttack() {
-        timeRemaining = 60;
-        const bar = document.getElementById('timer-bar');
-        bar.style.display = 'block';
-        bar.style.width = '100%';
-        
-        clearInterval(timerInterval);
-        timerInterval = setInterval(() => {
-            timeRemaining--;
-            bar.style.width = `${(timeRemaining/60)*100}%`;
-            if(timeRemaining <= 0) {
-                clearInterval(timerInterval);
-                alert(`انتهى الوقت! نتيجتك: ${qIndex} أسئلة.`);
-                goHome();
-            }
-        }, 1000);
-    }
-
-    let isAnswered = false;
-
+    let answered = false;
     function renderQ() {
-        isAnswered = false;
-        const q = quizQueue[qIndex];
-        
+        answered = false;
+        const q = quizQ[qIdx];
         document.getElementById('q-id').innerText = q.id;
-        document.getElementById('q-loc').innerText = `${q.lesson} > ${q.chapter}`;
-        document.getElementById('q-counter').innerText = `${qIndex+1} / ${quizQueue.length}`;
+        document.getElementById('q-counter').innerText = `${qIdx+1} / ${quizQ.length}`;
+        document.getElementById('q-crumb').innerText = `${q.lesson} > ${q.chapter}`;
         document.getElementById('q-text').innerText = q.question;
-        
-        // Fav Icon
-        const favEl = document.getElementById('fav-btn');
-        favEl.innerText = favs.includes(q.id) ? "★" : "☆";
-        favEl.style.color = favs.includes(q.id) ? "orange" : "inherit";
+        updateFavIcon();
 
-        // Options
-        const optsDiv = document.getElementById('q-options');
-        optsDiv.innerHTML = '';
-        document.getElementById('q-exp').style.display = 'none';
-        document.getElementById('next-btn').classList.add('hidden');
+        const opts = document.getElementById('q-options');
+        opts.innerHTML = '';
+        document.getElementById('q-exp').style.display='none';
+        document.getElementById('btn-next').classList.add('hidden');
 
         const keys = ['A','B','C','D','E'];
         q.options.forEach((opt, i) => {
-            const div = document.createElement('div');
-            div.className = 'option';
-            div.innerHTML = `${opt} <span class="key-hint">${keys[i]}</span>`;
-            div.onclick = () => handleAns(i);
-            optsDiv.appendChild(div);
+            const d = document.createElement('div');
+            d.className = 'option-row';
+            d.innerHTML = `<span>${opt}</span><span class="key-hint">${keys[i]}</span>`;
+            d.onclick = () => solve(i);
+            opts.appendChild(d);
         });
     }
 
-    function handleAns(idx) {
-        if(isAnswered) return;
-        isAnswered = true;
-
-        const q = quizQueue[qIndex];
-        const divs = document.querySelectorAll('.option');
+    function solve(idx) {
+        if(answered) return;
+        answered = true;
+        const q = quizQ[qIdx];
+        const divs = document.querySelectorAll('.option-row');
         
-        // Show Right/Wrong
         divs[q.correct_option_id].classList.add('correct');
-        
-        if(idx === q.correct_option_id) {
-            // Correct
-            divs[idx].querySelector('.key-hint').innerText = "✓";
-            removeMistake(q.id);
-            incrementXP();
-        } else {
-            // Wrong
+        divs[q.correct_option_id].querySelector('.key-hint').innerText = '✓';
+
+        if(idx !== q.correct_option_id) {
             divs[idx].classList.add('wrong');
-            divs[idx].querySelector('.key-hint').innerText = "✗";
-            saveMistake(q.id);
-            
-            if(flowMode === 'survival') {
-                clearInterval(timerInterval);
-                setTimeout(() => { alert("💥 خسرت في وضع البقاء!"); goHome(); }, 500);
-                return;
-            }
+            divs[idx].querySelector('.key-hint').innerText = '✗';
+            if(!user.mistakes.includes(q.id)) { user.mistakes.push(q.id); localStorage.setItem('mis', JSON.stringify(user.mistakes)); }
+        } else {
+            user.xp += 10; localStorage.setItem('xp', user.xp);
+            user.mistakes = user.mistakes.filter(x=>x!==q.id); localStorage.setItem('mis', JSON.stringify(user.mistakes));
         }
 
-        // Show Explanation
         const exp = document.getElementById('q-exp');
-        exp.innerHTML = `<b>Explanation:</b> ${q.explanation || 'None'}`;
         exp.style.display = 'block';
-        document.getElementById('next-btn').classList.remove('hidden');
+        exp.innerHTML = `<b>توضيح:</b> ${q.explanation || 'لا يوجد شرح متاح.'}`;
+        document.getElementById('btn-next').classList.remove('hidden');
     }
 
     function nextQ() {
-        if(qIndex < quizQueue.length - 1) {
-            qIndex++;
-            renderQ();
-        } else {
-            clearInterval(timerInterval);
-            alert("انتهى الاختبار!");
-            goHome();
-        }
+        if(qIdx < quizQ.length-1) { qIdx++; renderQ(); }
+        else { alert("انتهى الاختبار!"); goHome(); }
     }
 
-    function goHome() {
-        clearInterval(timerInterval);
-        document.getElementById('view-quiz').style.display = 'none';
-        document.getElementById('view-select').classList.add('hidden');
-        document.getElementById('view-home').classList.remove('hidden');
+    // --- Features ---
+    function luckyShot() {
+        if(!allQs.length) return;
+        const rand = allQs[Math.floor(Math.random() * allQs.length)];
+        quizQ = [rand]; qIdx=0; switchView('view-quiz'); renderQ();
     }
 
-    // ===========================================
-    // 5. DATA & LEADERBOARD UTILS
-    // ===========================================
-    function saveMistake(id) {
-        if(!mistakes.includes(id)) { mistakes.push(id); localStorage.setItem('mistakes', JSON.stringify(mistakes)); }
+    function toggleMirrorMode() {
+        document.getElementById('main-container').classList.toggle('mirror-mode');
     }
-    function removeMistake(id) {
-        mistakes = mistakes.filter(x => x!==id); localStorage.setItem('mistakes', JSON.stringify(mistakes));
+
+    function shareBot() {
+        const url = "https://t.me/share/url?url=" + encodeURIComponent("جرب هذا البوت الطبي الرائع! يحتوي على بنك أسئلة شامل ونظام اختبارات ذكي. @Heailloo_bot");
+        window.open(url, '_blank');
     }
+
     function toggleFav() {
-        const id = quizQueue[qIndex].id;
-        if(favs.includes(id)) favs = favs.filter(x => x!==id);
-        else favs.push(id);
-        localStorage.setItem('favs', JSON.stringify(favs));
-        renderQ(); // refresh icon
-    }
-    function incrementXP() {
-        userXP++;
-        localStorage.setItem('userXP', userXP);
+        const id = quizQ[qIdx].id;
+        if(user.fav.includes(id)) user.fav = user.fav.filter(x=>x!==id);
+        else user.fav.push(id);
+        localStorage.setItem('fav', JSON.stringify(user.fav));
+        updateFavIcon();
     }
 
-    // --- Firebase Leaderboard ---
+    function updateFavIcon() {
+        const el = document.getElementById('fav-trigger');
+        const isFav = user.fav.includes(quizQ[qIdx].id);
+        el.innerText = isFav ? "★ محفوظ" : "☆ حفظ";
+        el.style.color = isFav ? "#f1c40f" : "var(--text-sec)";
+    }
+
+    // --- Search & Settings ---
+    function doSearch() {
+        const id = parseInt(document.getElementById('s-inp').value);
+        const q = allQs.find(x=>x.id===id);
+        if(q) { quizQ=[q]; qIdx=0; switchView('view-quiz'); renderQ(); document.getElementById('modal-search').style.display='none'; }
+        else alert("غير موجود");
+    }
+
+    function setAppTheme(t) {
+        document.body.setAttribute('data-theme', t);
+        localStorage.setItem('theme', t);
+    }
+    
+    function setAnim(type) {
+        animationType = type;
+        localStorage.setItem('anim', type);
+        initCanvas(); // restart
+    }
+
+    // --- Leaderboard ---
     function openLeaderboard() {
-        document.getElementById('modal-leaderboard').style.display = 'flex';
-        document.getElementById('my-xp').innerText = userXP;
-        fetchLeaderboard();
-        const savedName = localStorage.getItem('userName');
-        if(savedName) document.getElementById('player-name').value = savedName;
-    }
-
-    function saveMyScore() {
-        const name = document.getElementById('player-name').value.trim();
-        if(!name) return alert("اكتب اسمك");
-        localStorage.setItem('userName', name);
-        
-        // Write to Firebase
-        // Since we don't have auth, we use name as key (simple version)
-        // Or push a new entry. Let's use name as ID for simplicity in update.
-        const safeName = name.replace(/[.#$/\[\]]/g, "_"); // sanitize for firebase path
-        
-        db.ref('leaderboard/' + safeName).set({
-            name: name,
-            score: userXP,
-            lastUpdate: Date.now()
-        }).then(() => {
-            alert("تم حفظ النقاط!");
-            fetchLeaderboard();
-        }).catch(err => alert("Error: " + err.message));
-    }
-
-    function fetchLeaderboard() {
-        const body = document.getElementById('lb-body');
-        body.innerHTML = '<tr><td colspan="3">Loading...</td></tr>';
-        
-        db.ref('leaderboard').orderByChild('score').limitToLast(10).once('value', snap => {
-            const data = [];
-            snap.forEach(child => data.push(child.val()));
-            data.reverse(); // Highest first
-            
-            body.innerHTML = '';
-            data.forEach((p, i) => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `<td>${i+1}</td><td>${p.name}</td><td>${p.score}</td>`;
-                body.appendChild(tr);
-            });
+        document.getElementById('modal-lb').style.display = 'flex';
+        document.getElementById('my-xp').innerText = user.xp;
+        const list = document.getElementById('lb-list');
+        list.innerHTML = 'جاري التحميل...';
+        db.ref('scores').orderByChild('xp').limitToLast(10).once('value', snap => {
+            let d = []; snap.forEach(c => d.push(c.val()));
+            d.reverse();
+            list.innerHTML = d.map((p,i) => `<div style="padding:5px; border-bottom:1px solid #eee;"><b>#${i+1} ${p.name}</b>: ${p.xp} XP</div>`).join('');
         });
     }
 
-    // ===========================================
-    // 6. UI & SHORTCUTS
-    // ===========================================
-    function openSettings() { document.getElementById('modal-settings').style.display = 'flex'; }
-    function openSearch() { document.getElementById('modal-search').style.display = 'flex'; }
-    function doSearch() {
-        const id = parseInt(document.getElementById('search-inp').value);
-        const q = allData.find(x => x.id === id);
-        if(q) { 
-            flowMode = 'normal';
-            initQuiz([q], 'All'); 
-            document.getElementById('modal-search').style.display='none';
-        } else alert('غير موجود');
+    function submitScore() {
+        const name = document.getElementById('p-name').value;
+        if(!name) return alert("اكتب اسمك");
+        db.ref('scores/'+name.replace(/\./g,'_')).set({name, xp: user.xp, time: Date.now()});
+        alert("تم الحفظ");
+        openLeaderboard();
     }
-    function setTheme(t) { document.body.className = t === 'light' ? '' : 'dark-mode'; }
-    function setFont(s) { document.documentElement.style.setProperty('--font-size', s+'px'); }
 
-    // Shortcuts
-    document.addEventListener('keydown', (e) => {
-        if(document.querySelector('.modal').style.display === 'flex') return;
-        if(document.getElementById('view-quiz').style.display === 'flex') {
-            const k = e.key.toLowerCase();
-            const map = {'a':0,'b':1,'c':2,'d':3,'e':4};
-            if(map[k] !== undefined) handleAns(map[k]);
-            if(k === 's') toggleFav();
-            if((k === ' ' || k === 'enter') && isAnswered) { e.preventDefault(); nextQ(); }
-        }
+    function goHome() { switchView('view-home'); }
+    function openSettings() { document.getElementById('modal-settings').style.display='flex'; }
+
+    // --- Shortcuts ---
+    document.addEventListener('keydown', e => {
+        if(document.getElementById('view-quiz').classList.contains('hidden')) return;
+        const k = e.key.toLowerCase();
+        const map = {'a':0,'b':1,'c':2,'d':3,'e':4};
+        if(map[k]!==undefined) solve(map[k]);
+        if(k==='s') toggleFav();
+        if((k===' '||k==='enter') && answered) { e.preventDefault(); nextQ(); }
     });
+
+    // --- Canvas Animation System (The "Wow" Factor) ---
+    function initCanvas() {
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        let w, h, particles = [];
+        
+        const resize = () => { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; };
+        window.onresize = resize; resize();
+
+        class Particle {
+            constructor() {
+                this.reset();
+            }
+            reset() {
+                this.x = Math.random() * w;
+                this.y = Math.random() * h;
+                this.size = Math.random() * 5 + 1;
+                this.speedX = Math.random() * 1 - 0.5;
+                this.speedY = Math.random() * 1 - 0.5;
+                this.alpha = Math.random() * 0.5 + 0.1;
+            }
+            update() {
+                this.x += this.speedX; this.y += this.speedY;
+                if(animationType === 'bubbles') this.y -= 0.5; // Bubble up
+                if(this.x < 0 || this.x > w || this.y < 0 || this.y > h) this.reset();
+            }
+            draw() {
+                ctx.fillStyle = `rgba(100, 100, 255, ${this.alpha})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI*2);
+                ctx.fill();
+            }
+        }
+
+        if(animationType === 'none') { ctx.clearRect(0,0,w,h); return; }
+
+        particles = Array(50).fill().map(() => new Particle());
+
+        function animate() {
+            if(animationType === 'none') return;
+            ctx.clearRect(0, 0, w, h);
+            particles.forEach(p => { p.update(); p.draw(); });
+            requestAnimationFrame(animate);
+        }
+        animate();
+    }
 
 </script>
 </body>
