@@ -3,762 +3,614 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Exam Bot Pro</title>
+    <title>Exam Bot Online</title>
     
-    <!-- Telegram Web App SDK -->
+    <!-- Telegram SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     
-    <!-- Firebase SDKs (Compat version for simplicity) -->
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
     <style>
         :root {
-            --bg-color: #f8f9fa;
+            --bg-color: #f0f2f5;
             --card-bg: #ffffff;
-            --text-primary: #212529;
-            --text-secondary: #6c757d;
-            --primary: #3b82f6; /* Modern Blue */
-            --correct: #10b981;
-            --correct-bg: #d1fae5;
-            --wrong: #ef4444;
-            --wrong-bg: #fee2e2;
-            --border: #e9ecef;
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --text-primary: #111;
+            --text-secondary: #555;
+            --primary: #0088cc; /* Telegram Blue */
+            --danger: #e53935;
+            --success: #43a047;
             --radius: 12px;
+            --shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
 
         body.dark-mode {
-            --bg-color: #111827;
-            --card-bg: #1f2937;
-            --text-primary: #f9fafb;
-            --text-secondary: #9ca3af;
-            --border: #374151;
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+            --bg-color: #1e1e1e;
+            --card-bg: #2b2b2b;
+            --text-primary: #fff;
+            --text-secondary: #aaa;
+            --shadow: 0 2px 5px rgba(0,0,0,0.5);
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-primary);
-            margin: 0;
-            padding-bottom: 80px; /* For Bottom Nav */
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
-            transition: background 0.3s ease;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background: var(--bg-color); color: var(--text-primary);
+            margin: 0; padding-bottom: 70px;
+            user-select: none; -webkit-tap-highlight-color: transparent;
         }
 
         /* --- Header --- */
         header {
-            background: var(--card-bg);
-            padding: 12px 16px;
-            box-shadow: var(--shadow);
-            position: sticky; top: 0; z-index: 50;
-            display: flex; justify-content: space-between; align-items: center;
+            background: var(--card-bg); padding: 15px; position: sticky; top: 0; z-index: 50;
+            display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow);
         }
-        .app-title { font-weight: 700; font-size: 1.1rem; }
-        .sync-badge {
-            font-size: 0.7rem; padding: 4px 8px; border-radius: 20px;
-            background: #e5e7eb; color: #4b5563; font-weight: 600;
-        }
-        body.dark-mode .sync-badge { background: #374151; color: #d1d5db; }
+        .header-title { font-weight: bold; font-size: 1.1em; }
+        .score-display { font-size: 0.9em; font-weight: 500; background: rgba(0,0,0,0.05); padding: 5px 10px; border-radius: 20px; }
 
-        .score-box { font-size: 0.85rem; font-weight: 500; }
-        
         /* --- Loader --- */
-        #loader {
+        .loader-overlay {
             position: fixed; inset: 0; background: var(--bg-color); z-index: 999;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
-        .spinner {
-            width: 40px; height: 40px; border: 4px solid var(--border);
-            border-top-color: var(--primary); border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        .spinner { width: 40px; height: 40px; border: 4px solid #ddd; border-top-color: var(--primary); border-radius: 50%; animation: spin 1s infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
 
-        /* --- Toast Notification --- */
-        #toast {
-            position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
-            background: rgba(31, 41, 55, 0.95); color: white; padding: 10px 20px;
-            border-radius: 30px; font-size: 0.85rem; z-index: 1000;
-            display: none; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
-        }
+        /* --- Components --- */
+        .container { padding: 15px; max-width: 600px; margin: 0 auto; }
+        .hidden { display: none !important; }
 
-        /* --- Menus & Lists --- */
-        .container { max-width: 600px; margin: 0 auto; padding: 16px; }
-
-        .menu-card {
+        .btn-card {
             background: var(--card-bg); border-radius: var(--radius);
-            padding: 16px; margin-bottom: 12px;
-            box-shadow: var(--shadow);
-            display: flex; justify-content: space-between; align-items: center;
-            cursor: pointer; transition: transform 0.1s; border: 1px solid var(--border);
+            padding: 20px; margin-bottom: 15px; box-shadow: var(--shadow);
+            display: flex; align-items: center; justify-content: space-between;
+            cursor: pointer; transition: transform 0.1s;
         }
-        .menu-card:active { transform: scale(0.98); }
-        .menu-title { font-weight: 600; font-size: 1rem; }
-        .menu-meta { font-size: 0.8rem; color: var(--text-secondary); }
-        .count-pill {
-            background: var(--bg-color); color: var(--text-secondary);
-            padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 700;
-        }
+        .btn-card:active { transform: scale(0.98); }
+        .btn-card h3 { margin: 0; font-size: 1.1em; }
+        .btn-card p { margin: 5px 0 0; font-size: 0.8em; color: var(--text-secondary); }
 
-        /* --- Breadcrumb --- */
-        .breadcrumb {
-            display: flex; align-items: center; gap: 8px;
-            margin-bottom: 16px; font-size: 0.9rem; font-weight: 500;
-            color: var(--primary); cursor: pointer;
+        /* --- Leaderboard Styles --- */
+        .rank-card {
+            background: linear-gradient(135deg, var(--primary), #005f8d); color: white;
+            border-radius: var(--radius); padding: 20px; text-align: center; margin-bottom: 20px;
         }
-
-        /* --- Chips --- */
-        .chips-grid { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
-        .chip {
-            padding: 8px 16px; border-radius: 20px;
-            background: var(--card-bg); border: 1px solid var(--border);
-            font-size: 0.9rem; font-weight: 500; cursor: pointer;
-            transition: all 0.2s;
+        .rank-big { font-size: 2.5em; font-weight: bold; }
+        .leader-row {
+            display: flex; justify-content: space-between; padding: 12px;
+            border-bottom: 1px solid rgba(128,128,128,0.1); align-items: center;
         }
-        .chip.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .medal { width: 25px; display: inline-block; text-align: center; }
 
-        /* --- Quiz Interface --- */
-        .q-img-wrap { width: 100%; border-radius: var(--radius); overflow: hidden; margin-bottom: 16px; display: none; }
-        .q-img-wrap img { width: 100%; height: auto; object-fit: contain; }
+        /* --- Quiz Styles --- */
+        .q-meta-bar {
+            display: flex; justify-content: space-between; font-size: 0.85em;
+            color: var(--text-secondary); margin-bottom: 15px;
+        }
+        .q-id-badge { background: #eee; padding: 2px 6px; border-radius: 4px; font-family: monospace; font-weight: bold; color: #555; }
+        .q-text { font-size: 1.15em; font-weight: 600; line-height: 1.5; margin-bottom: 20px; }
         
-        .question-text {
-            font-size: 1.15rem; font-weight: 600; line-height: 1.6; margin-bottom: 24px;
-        }
-
-        .options-list { display: flex; flex-direction: column; gap: 12px; }
         .opt-btn {
-            background: var(--card-bg); padding: 16px; border-radius: var(--radius);
-            border: 2px solid var(--border); cursor: pointer; text-align: right;
-            font-size: 1rem; transition: all 0.2s; position: relative; color: var(--text-primary);
+            background: var(--card-bg); border: 1px solid rgba(0,0,0,0.1);
+            padding: 15px; border-radius: 10px; width: 100%; text-align: right;
+            margin-bottom: 10px; font-size: 1em; cursor: pointer; color: var(--text-primary);
         }
-        
-        /* Feedback States */
-        .opt-btn.correct { background: var(--correct-bg); border-color: var(--correct); color: #064e3b; }
-        .opt-btn.wrong { background: var(--wrong-bg); border-color: var(--wrong); color: #7f1d1d; }
-
-        /* Explanation Box */
-        .explanation {
-            margin-top: 24px; background: #fffbeb; padding: 16px;
-            border-right: 4px solid #f59e0b; border-radius: 8px;
-            font-size: 0.95rem; line-height: 1.5; color: #78350f;
-            display: none; animation: fadeIn 0.4s ease;
-        }
-        body.dark-mode .explanation { background: #451a03; color: #fbbf24; border-color: #fbbf24; }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* --- Primary Action Button --- */
-        .primary-btn {
-            width: 100%; padding: 16px; border-radius: var(--radius);
-            background: var(--primary); color: white; font-weight: bold; font-size: 1rem;
-            border: none; cursor: pointer; margin-top: 20px;
-            box-shadow: 0 4px 6px rgba(59, 130, 246, 0.4);
-            display: flex; justify-content: center; align-items: center; gap: 8px;
-        }
+        .opt-btn.correct { background: #d4edda; border-color: #28a745; color: #155724; }
+        .opt-btn.wrong { background: #f8d7da; border-color: #dc3545; color: #721c24; }
+        .opt-btn.locked { pointer-events: none; opacity: 0.8; }
 
         /* --- Bottom Nav --- */
-        .bottom-nav {
-            position: fixed; bottom: 0; left: 0; right: 0;
-            background: var(--card-bg); height: 60px;
-            border-top: 1px solid var(--border);
-            display: flex; justify-content: space-around; align-items: center;
+        .nav-bar {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background: var(--card-bg); height: 60px; display: flex;
+            border-top: 1px solid rgba(0,0,0,0.1);
             z-index: 100;
         }
         .nav-item {
-            display: flex; flex-direction: column; align-items: center;
-            font-size: 0.75rem; color: var(--text-secondary); background: none; border: none;
-            gap: 4px; padding: 8px 16px; width: 50%;
+            flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            font-size: 0.75em; color: var(--text-secondary); background: none; border: none;
         }
         .nav-item.active { color: var(--primary); }
-        .nav-icon { font-size: 1.2rem; }
+        .nav-icon { font-size: 1.5em; margin-bottom: 3px; }
 
-        /* Helpers */
-        .hidden { display: none !important; }
-        .center-msg { text-align: center; color: var(--text-secondary); margin-top: 40px; }
     </style>
 </head>
 <body>
 
-    <!-- Loading Screen -->
-    <div id="loader">
+    <!-- 1. Loader (Internet Required) -->
+    <div id="loader" class="loader-overlay">
         <div class="spinner"></div>
-        <p style="margin-top: 16px; font-weight: 500; color: var(--text-secondary)" id="loaderMsg">جاري التحميل...</p>
+        <p style="margin-top:15px" id="loadMsg">الاتصال بالسيرفر...</p>
     </div>
 
-    <!-- Notification Toast -->
-    <div id="toast"></div>
-
-    <!-- Main Application -->
+    <!-- 2. Main Views -->
     <div id="app" class="hidden">
         
         <header>
-            <div>
-                <div class="app-title">المساعد الذكي 🎓</div>
-                <div class="sync-badge" id="syncStatus">Wait...</div>
-            </div>
-            <div class="score-box">
-                <span style="color: var(--correct)">✅ <span id="lblCorrect">0</span></span>
-                <span style="margin: 0 8px; color: var(--border)">|</span>
-                <span style="color: var(--wrong)">❌ <span id="lblWrong">0</span></span>
-            </div>
+            <div class="header-title">🎓 Exam Bot</div>
+            <div class="score-display">🏆 <span id="headerScore">0</span></div>
         </header>
 
-        <!-- View 1: Home / Menu -->
-        <div id="view-home" class="container">
-            <div id="breadcrumbs" class="breadcrumb hidden" onclick="goBack()">
-                <span>⬅️</span> <span id="crumbText">الرئيسية</span>
+        <!-- VIEW: Home (Two Buttons) -->
+        <div id="v-home" class="container">
+            <div class="btn-card" onclick="startNavigation()">
+                <div>
+                    <h3>📂 تصفح المنهج</h3>
+                    <p>استعراض الدروس وحل اختبارات جديدة</p>
+                </div>
+                <div style="font-size:2em">📚</div>
+            </div>
+
+            <div class="btn-card" style="border-right: 4px solid var(--danger)" onclick="openMistakeList()">
+                <div>
+                    <h3>🚧 سجل الأخطاء</h3>
+                    <p>مراجعة الأسئلة التي أخطأت فيها (مقسّمة بالدرس)</p>
+                </div>
+                <div style="font-size:2em">🖍</div>
             </div>
             
-            <div id="menu-list">
-                <!-- Javascript will inject items here -->
+            <hr style="border:0; border-top:1px solid #ddd; margin: 20px 0;">
+
+            <div style="text-align: center; color: var(--text-secondary); font-size:0.9em;">
+                <p>تطبيق يعمل بالإنترنت فقط لضمان التحديث</p>
+                <button onclick="fetchData()" style="padding:10px 20px; border-radius:20px; border:none; background:var(--bg-color); color:var(--primary); cursor:pointer;">🔄 إعادة تحميل البيانات</button>
             </div>
         </div>
 
-        <!-- View 2: Quiz Setup -->
-        <div id="view-setup" class="container hidden">
-            <h2 id="setup-title">إعدادات الاختبار</h2>
+        <!-- VIEW: Tree Navigation (Browse) -->
+        <div id="v-nav" class="container hidden">
+            <button onclick="showHome()" style="border:none; background:none; color:var(--primary); margin-bottom:10px; cursor:pointer;">⬅️ القائمة الرئيسية</button>
+            <h3 id="navTitle" style="margin-top:0">المنهج:</h3>
+            <div id="navContainer"></div>
+        </div>
+
+        <!-- VIEW: Leaderboard -->
+        <div id="v-leader" class="container hidden">
+            <div class="rank-card">
+                <div>ترتيبك الحالي</div>
+                <div class="rank-big" id="myRank">#--</div>
+                <div style="font-size:0.9em">بين <span id="totalPlayers">--</span> طالب</div>
+                <div style="margin-top:10px; font-weight:bold">مجموع النقاط: <span id="myScoreDetails">0</span></div>
+            </div>
+
+            <h3 style="border-bottom: 2px solid var(--primary); display:inline-block">🏆 لوحة الشرف</h3>
+            <div style="background:var(--card-bg); border-radius:10px; margin-top:15px; box-shadow:var(--shadow)" id="leaderboardList">
+                <div style="padding:20px; text-align:center">جاري تحميل القائمة...</div>
+            </div>
+        </div>
+
+        <!-- VIEW: Quiz -->
+        <div id="v-quiz" class="container hidden">
+            <div class="q-meta-bar">
+                <span id="quizCounter">1 / 5</span>
+                <span class="q-id-badge" id="quizIdDisplay">ID: 0000</span>
+                <span onclick="safeExit()" style="color:var(--danger); cursor:pointer">خروج ✖</span>
+            </div>
             
-            <p style="margin-top: 24px; margin-bottom: 8px; font-weight:600">نوع الأسئلة:</p>
-            <div class="chips-grid" id="chip-mode">
-                <div class="chip active" onclick="selectMode('new', this)">أسئلة جديدة</div>
-                <div class="chip" onclick="selectMode('mistake', this)">مراجعة أخطائي</div>
-                <div class="chip" onclick="selectMode('mixed', this)">مختلط</div>
+            <div id="qContent">
+                <!-- Question Loaded Here -->
             </div>
-
-            <p style="margin-bottom: 8px; font-weight:600">العدد:</p>
-            <div class="chips-grid" id="chip-qty">
-                <div class="chip active" onclick="selectQty(5, this)">5</div>
-                <div class="chip" onclick="selectQty(10, this)">10</div>
-                <div class="chip" onclick="selectQty(25, this)">25</div>
-                <div class="chip" onclick="selectQty(999, this)">الكل</div>
-            </div>
-
-            <p id="error-msg" class="hidden" style="color: var(--wrong); text-align: center;">عذراً، لا توجد أسئلة تطابق اختياراتك.</p>
-
-            <button class="primary-btn" onclick="startQuiz()">
-                ابدأ الاختبار 🚀
-            </button>
         </div>
 
-        <!-- View 3: Active Quiz -->
-        <div id="view-quiz" class="container hidden">
-            <div style="display:flex; justify-content:space-between; margin-bottom: 12px; font-size: 0.9rem; color: var(--text-secondary)">
-                <span id="q-counter">السؤال 1 / 5</span>
-                <span onclick="confirmExit()" style="cursor:pointer; color: var(--wrong)">خروج</span>
-            </div>
-
-            <div class="q-img-wrap" id="q-image">
-                <img src="" alt="QImage">
-            </div>
-
-            <div class="question-text" id="q-text">Loading...</div>
-            
-            <div class="options-list" id="opt-container">
-                <!-- Options injected here -->
-            </div>
-
-            <div class="explanation" id="q-expl"></div>
-
-            <button id="btn-next" class="primary-btn hidden" onclick="nextQuestion()">
-                التالي ⬅️
-            </button>
+        <!-- VIEW: Mistakes Menu (Lessons) -->
+        <div id="v-mistakes-menu" class="container hidden">
+             <button onclick="showHome()" style="border:none; background:none; color:var(--primary); margin-bottom:10px;">⬅️ الرئيسية</button>
+             <h3>🔻 دروس تحتوي على أخطاء:</h3>
+             <div id="mistakesContainer"></div>
         </div>
 
-        <!-- Bottom Navigation -->
-        <div class="bottom-nav">
-            <button class="nav-item active" onclick="showHome()">
-                <span class="nav-icon">🏠</span>
-                <span>الرئيسية</span>
-            </button>
-            <button class="nav-item" onclick="forceSync()">
-                <span class="nav-icon">🔄</span>
-                <span>تحديث</span>
-            </button>
-        </div>
+    </div>
+
+    <!-- 3. Bottom Navigation -->
+    <div class="nav-bar" id="bottomBar">
+        <button class="nav-item active" onclick="showHome()">
+            <span class="nav-icon">🏠</span>
+            <span>الرئيسية</span>
+        </button>
+        <button class="nav-item" onclick="showLeaderboard()">
+            <span class="nav-icon">📊</span>
+            <span>الأوائل</span>
+        </button>
     </div>
 
 <script>
-    /** =============================================
-     *  CONFIG (UPDATE THIS!)
-     *  ============================================= */
-    const FIREBASE_CONFIG = {
-        apiKey: "AIzaSyDEZFJmcXK2LxYAZ-Yjv_M1HbC6zi_qilg", 
-        authDomain: "exambotdb.firebaseapp.com",
-        databaseURL: "https://exambotdb-default-rtdb.firebaseio.com",
-        projectId: "exambotdb",
-        storageBucket: "exambotdb.firebasestorage.app",
-        messagingSenderId: "950600562980",
-        appId: "1:950600562980:web:f993c22d45e5cfdd3d9bb1"
+    /**
+     * === CONFIG ===
+     */
+    const CONFIG = {
+        firebase: {
+            apiKey: "AIzaSyDEZFJmcXK2LxYAZ-Yjv_M1HbC6zi_qilg",
+            authDomain: "exambotdb.firebaseapp.com",
+            databaseURL: "https://exambotdb-default-rtdb.firebaseio.com",
+            projectId: "exambotdb",
+            storageBucket: "exambotdb.firebasestorage.app",
+            messagingSenderId: "950600562980",
+            appId: "1:950600562980:web:f993c22d45e5cfdd3d9bb1"
+        }
     };
 
-    /** =============================================
-     *  APP LOGIC
-     *  ============================================= */
-    
-    // --- State Variables ---
-    const State = {
-        questions: [],   // Flat list of all Qs
-        hierarchy: {},   // Tree: Term -> Subj -> Lesson
-        path: [],        // Navigation Stack
-        progress: {},    // { qId: 'correct' | 'wrong' }
-        quizQueue: [],   // Active questions
-        currQIndex: 0,
-        settings: { mode: 'new', qty: 5 },
-        selectedContext: null // { type: 'chapter'|'lesson', name: ... }
-    };
-    
-    const STORAGE_KEYS = {
-        DATA: 'EXAMBOT_DATA_V1',
-        PROGRESS: 'EXAMBOT_PROGRESS'
-    };
-
-    // --- Services ---
+    /**
+     * === SYSTEM ===
+     */
     const TG = window.Telegram.WebApp;
-    let DB = null; // Firebase DB Instance
-    let USER_ID = 'guest';
+    let DB = null;
+    let UserID = "guest";
+    let AppData = {
+        questions: [],
+        progress: {}, // { id: 'correct'|'wrong' }
+        quizQueue: [],
+        currIdx: 0
+    };
 
-    async function init() {
+    function init() {
         TG.ready(); TG.expand();
-        if(TG.initDataUnsafe?.user?.id) USER_ID = TG.initDataUnsafe.user.id;
-        
+        if(TG.initDataUnsafe?.user?.id) UserID = TG.initDataUnsafe.user.id;
+
         // Theme
         if (TG.colorScheme === 'dark') document.body.classList.add('dark-mode');
-        
-        // Firebase Setup
-        try {
-            if (window.firebase && !firebase.apps.length) {
-                firebase.initializeApp(FIREBASE_CONFIG);
-                DB = firebase.database();
-            }
-        } catch(e) { console.error("Firebase Init Error:", e); }
 
-        // Load Cache first (Offline)
-        loadFromCache();
-
-        // If data loaded from cache, hide loader immediately
-        if (State.questions.length > 0) {
-            document.getElementById('loader').classList.add('hidden');
-            document.getElementById('app').classList.remove('hidden');
-            renderMenu();
-            renderStats();
-            setSyncStatus('Offline ⚡');
-        }
-
-        // Try Network Sync
-        if (navigator.onLine) {
-            await syncData();
-        } else {
-            showToast('أنت في وضع عدم الاتصال');
-        }
-
-        window.addEventListener('online', () => { 
-            showToast('تم استعادة الاتصال'); 
-            syncData(); 
-        });
-        window.addEventListener('offline', () => setSyncStatus('Offline ⚡'));
-    }
-
-    /** =============================================
-     *  DATA SYNC ENGINE
-     *  ============================================= */
-    
-    function loadFromCache() {
-        try {
-            const cachedData = localStorage.getItem(STORAGE_KEYS.DATA);
-            if(cachedData) State.questions = JSON.parse(cachedData);
-            
-            const cachedProg = localStorage.getItem(STORAGE_KEYS.PROGRESS + '_' + USER_ID);
-            if(cachedProg) State.progress = JSON.parse(cachedProg);
-            
-            if(State.questions.length > 0) buildHierarchy();
-        } catch(e) { console.error("Cache load error", e); }
-    }
-
-    async function syncData() {
-        setSyncStatus('Connecting...');
-        try {
-            // 1. Sync Content
-            const manifestReq = await fetch('questions_list.json?t=' + Date.now());
-            if(manifestReq.ok) {
-                const files = await manifestReq.json();
-                const fetches = files.map(f => fetch('Questions/' + f).then(r => r.json()));
-                const rawResults = await Promise.all(fetches);
-                
-                // Merge & Process
-                let allQs = [];
-                rawResults.forEach(file => {
-                    const meta = file.meta || {};
-                    // Normalizing hierarchy keys
-                    const term = meta.source || 'General';
-                    const subject = meta.subject || 'All';
-                    const lesson = meta.lesson || 'Misc';
-                    
-                    file.questions.forEach(q => {
-                        allQs.push({
-                            ...q,
-                            // Enrich Q with hierarchy data for filtering
-                            h: { term, subject, lesson, chapter: q.chapter || 'Chapter 1' } 
-                        });
-                    });
-                });
-
-                // Update Cache if Changed
-                if (JSON.stringify(allQs).length !== JSON.stringify(State.questions).length) {
-                    State.questions = allQs;
-                    localStorage.setItem(STORAGE_KEYS.DATA, JSON.stringify(allQs));
-                    buildHierarchy();
-                    renderMenu();
-                    showToast('تم تحديث بنك الأسئلة ✅');
-                }
-            }
-
-            // 2. Sync Progress (Cloud -> Local Merge)
-            if(DB && USER_ID !== 'guest') {
-                const snap = await DB.ref(`users/${USER_ID}/progress`).once('value');
-                const cloudProg = snap.val() || {};
-                
-                // Cloud wins for conflict (Simple Merge)
-                State.progress = { ...State.progress, ...cloudProg };
-                localStorage.setItem(STORAGE_KEYS.PROGRESS + '_' + USER_ID, JSON.stringify(State.progress));
-                renderStats();
-            }
-
-            setSyncStatus('Online 🟢');
-
-        } catch(e) {
-            console.error(e);
-            setSyncStatus('Offline ⚡');
-            if(State.questions.length === 0) {
-                 document.getElementById('loaderMsg').innerText = "خطأ في الاتصال، حاول لاحقاً";
-            }
-        }
-    }
-
-    function buildHierarchy() {
-        State.hierarchy = {};
-        State.questions.forEach(q => {
-            const h = q.h;
-            // Structure: Term -> Subject -> Lesson -> Chapter
-            setDeep(State.hierarchy, [h.term, h.subject, h.lesson, h.chapter], 1, true);
-        });
-    }
-
-    // Helper to count and set deep keys
-    function setDeep(obj, path, val, increment=false) {
-        let curr = obj;
-        for(let i=0; i<path.length-1; i++){
-            let key = path[i];
-            if(!curr[key]) curr[key] = {};
-            curr = curr[key];
-        }
-        let lastKey = path[path.length-1];
-        if(increment) curr[lastKey] = (curr[lastKey] || 0) + val;
-        else curr[lastKey] = val;
-    }
-
-    // Recursively count leaf nodes (Total questions under a category)
-    function countTotal(node) {
-        if (typeof node === 'number') return node;
-        let sum = 0;
-        Object.values(node).forEach(v => sum += countTotal(v));
-        return sum;
-    }
-
-    /** =============================================
-     *  UI RENDERING
-     *  ============================================= */
-
-    function renderMenu() {
-        const listEl = document.getElementById('menu-list');
-        listEl.innerHTML = '';
-        
-        let pointer = State.hierarchy;
-        // Traverse to current path
-        State.path.forEach(key => pointer = pointer[key]);
-        
-        // Show/Hide Back Button
-        const bc = document.getElementById('breadcrumbs');
-        if(State.path.length > 0) {
-            bc.classList.remove('hidden');
-            document.getElementById('crumbText').innerText = State.path.join(' > ');
-        } else {
-            bc.classList.add('hidden');
-        }
-
-        // Determine Level: (0:Term, 1:Subject, 2:Lesson, 3:Chapter)
-        const isLeaves = Object.values(pointer)[0] && typeof Object.values(pointer)[0] === 'number';
-        const level = State.path.length;
-        const Icons = ['📅', '📘', '📑', '🔖'];
-
-        // Add "Test All" Option if deep enough
-        if(level >= 2 && !isLeaves) { 
-             const allCard = createCard('🎯', 'اختبار شامل في (كل الدروس)', countTotal(pointer), true);
-             allCard.onclick = () => openSetup('group', 'All');
-             listEl.appendChild(allCard);
-        }
-        if(isLeaves) {
-             const allCard = createCard('📚', 'اختبار شامل (كل الفصول)', countTotal(pointer), true);
-             allCard.onclick = () => openSetup('group', 'All');
-             listEl.appendChild(allCard);
-        }
-
-        // Render Children
-        Object.keys(pointer).forEach(key => {
-            const val = pointer[key];
-            const count = isLeaves ? val : countTotal(val);
-            const card = createCard(Icons[level] || '📂', key, count);
-            
-            card.onclick = () => {
-                if(isLeaves) openSetup('chapter', key); // Selected a specific chapter
-                else {
-                    State.path.push(key);
-                    renderMenu();
-                }
-            };
-            listEl.appendChild(card);
-        });
-    }
-
-    function createCard(icon, title, count, highlight=false) {
-        const div = document.createElement('div');
-        div.className = 'menu-card';
-        if(highlight) div.style.borderColor = 'var(--primary)';
-        div.innerHTML = `
-            <div style="display:flex; align-items:center; gap:12px">
-                <span style="font-size:1.4rem">${icon}</span>
-                <div><div class="menu-title">${title}</div></div>
-            </div>
-            <div class="count-pill">${count}</div>
-        `;
-        return div;
-    }
-
-    function renderStats() {
-        let c = 0, w = 0;
-        Object.values(State.progress).forEach(s => s==='correct'?c++ : w++);
-        document.getElementById('lblCorrect').innerText = c;
-        document.getElementById('lblWrong').innerText = w;
-    }
-
-    /** =============================================
-     *  QUIZ SETUP & LOGIC
-     *  ============================================= */
-
-    function goBack() {
-        if(State.path.length > 0) {
-            State.path.pop();
-            renderMenu();
-        }
-    }
-
-    function openSetup(type, name) {
-        State.selectedContext = { type, name };
-        
-        switchView('view-setup');
-        const levelNames = ['الترم', 'المادة', 'الدرس', 'الفصل'];
-        let ctx = State.path.length < 3 ? 'شامل' : State.path[2]; 
-        
-        // Dynamic title
-        document.getElementById('setup-title').innerText = `إعداد اختبار: ${name==='All'?'الكل':name}`;
-        document.getElementById('error-msg').classList.add('hidden');
-    }
-
-    function selectMode(m, el) { 
-        State.settings.mode = m; 
-        document.querySelectorAll('#chip-mode .chip').forEach(c => c.classList.remove('active'));
-        el.classList.add('active');
-    }
-
-    function selectQty(q, el) { 
-        State.settings.qty = q; 
-        document.querySelectorAll('#chip-qty .chip').forEach(c => c.classList.remove('active'));
-        el.classList.add('active');
-    }
-
-    function startQuiz() {
-        const mode = State.settings.mode;
-        // Current Path: [Term, Subject, Lesson]
-        // Filter logic:
-        const pathFilters = {
-            term: State.path[0],
-            subject: State.path[1],
-            lesson: State.path[2]
-        };
-
-        let candidates = State.questions.filter(q => {
-            const h = q.h;
-            // Match current Path (if defined)
-            if(pathFilters.term && h.term !== pathFilters.term) return false;
-            if(pathFilters.subject && h.subject !== pathFilters.subject) return false;
-            // Lesson matching is tricky depending on 'Test All' at higher level
-            if(State.path.length >= 3 && pathFilters.lesson && h.lesson !== pathFilters.lesson) return false;
-            
-            // Chapter matching
-            if(State.selectedContext.name !== 'All') {
-                 if(State.selectedContext.type === 'chapter' && h.chapter !== State.selectedContext.name) return false;
-            }
-            return true;
-        });
-
-        // Filter by Mode
-        if (mode === 'new') {
-            candidates = candidates.filter(q => State.progress[q.id] !== 'correct');
-        } else if (mode === 'mistake') {
-            candidates = candidates.filter(q => State.progress[q.id] === 'wrong');
-        }
-
-        if(candidates.length === 0) {
-            document.getElementById('error-msg').classList.remove('hidden');
+        // Check Network
+        if (!navigator.onLine) {
+            document.getElementById('loadMsg').innerHTML = "<span style='color:red'>لا يوجد اتصال انترنت!<br>التطبيق يتطلب انترنت للعمل</span>";
             return;
         }
 
-        // Shuffle & Limit
-        candidates.sort(() => Math.random() - 0.5);
-        State.quizQueue = candidates.slice(0, State.settings.qty);
-        State.currQIndex = 0;
+        // Init Firebase
+        if (window.firebase && !firebase.apps.length) {
+            firebase.initializeApp(CONFIG.firebase);
+            DB = firebase.database();
+        }
 
-        switchView('view-quiz');
-        renderQuestion();
+        fetchData();
     }
 
-    /** =============================================
-     *  ACTIVE QUIZ
-     *  ============================================= */
+    // --- Data Engine (Network Only) ---
+    async function fetchData() {
+        try {
+            document.getElementById('loadMsg').innerText = "تحميل الأسئلة...";
+            // 1. Fetch JSON List
+            const lReq = await fetch('questions_list.json?t='+Date.now());
+            const files = await lReq.json();
 
-    function renderQuestion() {
-        const Q = State.quizQueue[State.currQIndex];
-        
-        // Reset UI
-        document.getElementById('q-counter').innerText = `${State.currQIndex+1} / ${State.quizQueue.length}`;
-        document.getElementById('btn-next').classList.add('hidden');
-        document.getElementById('q-expl').style.display = 'none';
-        
-        // Text & Image
-        document.getElementById('q-text').innerText = Q.question;
-        const imgWrap = document.getElementById('q-image');
-        // Example check: adjust property if your JSON has images differently
-        if(Q.image || Q.img) {
-             imgWrap.querySelector('img').src = Q.image || Q.img;
-             imgWrap.style.display = 'block';
-        } else {
-            imgWrap.style.display = 'none';
-        }
+            // 2. Fetch Files Parallel
+            const jobs = files.map(f => fetch('Questions/'+f).then(r=>r.json()));
+            const results = await Promise.all(jobs);
 
-        // Options
-        const optsDiv = document.getElementById('opt-container');
-        optsDiv.innerHTML = '';
-
-        if(Q.type === 'matching') {
-            optsDiv.innerHTML = `<div style="padding:20px; text-align:center; color:orange">⚠️ سؤال توصيل (يرجى حله في وضع الشاشة الكاملة على سطح المكتب)</div>`;
-            document.getElementById('btn-next').classList.remove('hidden');
-        } else {
-            // MCQ
-            Q.options.forEach((txt, i) => {
-                const btn = document.createElement('div');
-                btn.className = 'opt-btn';
-                btn.innerText = txt;
-                btn.onclick = () => submitAnswer(i, Q, btn);
-                optsDiv.appendChild(btn);
+            // 3. Process
+            let allQ = [];
+            results.forEach(res => {
+                let meta = res.meta || {};
+                let term = meta.source || "General";
+                let lesson = meta.lesson || "Misc";
+                
+                res.questions.forEach(q => {
+                    allQ.push({
+                        ...q,
+                        h: { term, lesson, chapter: q.chapter || "فصل 1" }
+                    });
+                });
             });
+            AppData.questions = allQ;
+
+            // 4. Fetch Progress (Firebase)
+            document.getElementById('loadMsg').innerText = "جاري مزامنة حسابك...";
+            if (UserID !== 'guest' && DB) {
+                const snap = await DB.ref('users/'+UserID).once('value');
+                const uData = snap.val() || {};
+                AppData.progress = uData.progress || {};
+            }
+
+            // Ready
+            document.getElementById('loader').classList.add('hidden');
+            document.getElementById('app').classList.remove('hidden');
+            updateScoreHeader();
+
+        } catch (e) {
+            alert("خطأ في الاتصال: " + e.message);
+            document.getElementById('loadMsg').innerHTML = `<button onclick="location.reload()">محاولة مرة أخرى</button>`;
         }
+    }
+
+    /**
+     * === UI & LOGIC ===
+     */
+    
+    // --- Helper for safe alerts in Old Telegram ---
+    function safeConfirm(msg, callback) {
+        // Fallback for version 6.0 which doesn't support showConfirm
+        if(TG.showConfirm && TG.isVersionAtLeast && TG.isVersionAtLeast('6.2')) {
+            TG.showConfirm(msg, (ok) => callback(ok));
+        } else {
+            let res = confirm(msg);
+            callback(res);
+        }
+    }
+    
+    function safeHaptic(type) {
+        if(TG.HapticFeedback && TG.isVersionAtLeast && TG.isVersionAtLeast('6.1')) {
+            TG.HapticFeedback.notificationOccurred(type);
+        }
+    }
+
+    function switchView(id) {
+        ['v-home','v-nav','v-leader','v-quiz','v-mistakes-menu'].forEach(v => {
+            document.getElementById(v).classList.add('hidden');
+        });
+        document.getElementById(id).classList.remove('hidden');
         
-        // Auto scroll top
+        // Update Bottom Nav Active State
+        document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
+        if(id === 'v-leader') document.querySelectorAll('.nav-item')[1].classList.add('active');
+        else document.querySelectorAll('.nav-item')[0].classList.add('active');
+    }
+
+    function showHome() { switchView('v-home'); updateScoreHeader(); }
+
+    function updateScoreHeader() {
+        // Calculate Logic
+        let score = 0;
+        Object.values(AppData.progress).forEach(s => { if(s==='correct') score++; });
+        document.getElementById('headerScore').innerText = score;
+    }
+
+    // --- 1. Browse & Nav Logic ---
+    let NavStack = []; // stores keys
+
+    function startNavigation() {
+        NavStack = [];
+        renderNavTree(AppData.questions, 0); // Level 0: Terms (or flat list depending on data)
+        switchView('v-nav');
+    }
+
+    function renderNavTree(dataSource) {
+        // Group By Hierarchy based on depth
+        // Assumption: JSON structure is simple, lets group by Meta.Lesson for simplicity or Term -> Lesson
+        
+        // For this Demo, we just List all Lessons found in questions
+        const container = document.getElementById('navContainer');
+        container.innerHTML = '';
+        
+        // Extract Unique Lessons
+        let lessons = [...new Set(AppData.questions.map(q => q.h.lesson))];
+        
+        if (lessons.length === 0) container.innerHTML = "لا توجد بيانات.";
+
+        lessons.forEach(lsn => {
+            const count = AppData.questions.filter(q => q.h.lesson === lsn).length;
+            const card = document.createElement('div');
+            card.className = 'btn-card';
+            card.innerHTML = `<div><h3>${lsn}</h3><p>${count} سؤال</p></div><div>➡️</div>`;
+            card.onclick = () => startQuizContext(lsn);
+            container.appendChild(card);
+        });
+    }
+
+    function startQuizContext(lessonName) {
+        // Filter by Lesson + New Questions (Default logic)
+        let qList = AppData.questions.filter(q => q.h.lesson === lessonName);
+        
+        // Exclude solved Correctly
+        qList = qList.filter(q => AppData.progress[q.id] !== 'correct');
+
+        if(qList.length === 0) {
+            alert("لقد أتممت حل جميع أسئلة هذا الدرس بنجاح! 👏");
+            return;
+        }
+
+        launchQuiz(qList);
+    }
+
+    // --- 2. Mistakes Logic ---
+    function openMistakeList() {
+        // Get all Wrong IDs
+        const wrongIds = Object.keys(AppData.progress).filter(k => AppData.progress[k] === 'wrong');
+        
+        if(wrongIds.length === 0) {
+            alert("سجلك نظيف! لا توجد أخطاء مسجلة ✅");
+            return;
+        }
+
+        const container = document.getElementById('mistakesContainer');
+        container.innerHTML = '';
+
+        // Group IDs by Lesson
+        let groups = {};
+        wrongIds.forEach(id => {
+            const q = AppData.questions.find(x => x.id == id);
+            if(q) {
+                let l = q.h.lesson;
+                if(!groups[l]) groups[l] = [];
+                groups[l].push(q);
+            }
+        });
+
+        Object.keys(groups).forEach(lesson => {
+            const card = document.createElement('div');
+            card.className = 'btn-card';
+            card.style.borderLeft = "4px solid var(--danger)";
+            card.innerHTML = `<div><h3>${lesson}</h3><p>${groups[lesson].length} أخطاء</p></div><div>🖍</div>`;
+            card.onclick = () => launchQuiz(groups[lesson]);
+            container.appendChild(card);
+        });
+
+        switchView('v-mistakes-menu');
+    }
+
+    // --- 3. QUIZ RUNTIME ---
+    function launchQuiz(queue) {
+        // Shuffle and limit
+        queue.sort(() => Math.random() - 0.5);
+        if(queue.length > 20) queue = queue.slice(0, 20); // Max 20 per session
+
+        AppData.quizQueue = queue;
+        AppData.currIdx = 0;
+        
+        switchView('v-quiz');
+        renderCurrentQuestion();
+    }
+
+    function renderCurrentQuestion() {
+        if(AppData.currIdx >= AppData.quizQueue.length) {
+            safeConfirm("انتهى الاختبار! هل تريد العودة؟", (ok)=> showHome());
+            return;
+        }
+
+        const Q = AppData.quizQueue[AppData.currIdx];
+        
+        // 1. Header Info
+        document.getElementById('quizCounter').innerText = `${AppData.currIdx+1} / ${AppData.quizQueue.length}`;
+        // >>> New: Show ID <<<
+        document.getElementById('quizIdDisplay').innerText = `ID: ${Q.id}`;
+
+        // 2. Content
+        const contentDiv = document.getElementById('qContent');
+        let imgHtml = Q.image ? `<img src="${Q.image}" style="max-width:100%; border-radius:10px; margin-bottom:15px">` : '';
+        
+        let html = `
+            ${imgHtml}
+            <div class="q-text">${Q.question}</div>
+            <div id="optsBlock"></div>
+            <div id="explBlock" class="hidden" style="margin-top:20px; padding:15px; background:#fff3cd; border-radius:8px; line-height:1.5;"></div>
+            <button id="nextBtn" class="hidden" onclick="goNext()" style="width:100%; padding:15px; background:var(--primary); color:white; border:none; border-radius:10px; margin-top:20px; font-size:1.1em">التالي ⬅️</button>
+        `;
+        contentDiv.innerHTML = html;
+
+        // Render Options
+        const optsBlock = document.getElementById('optsBlock');
+        
+        if (Q.type === 'matching') {
+            optsBlock.innerHTML = "<div style='text-align:center; padding:20px; color:#777'>سؤال توصيل (غير مدعوم على نسخة الويب الخفيفة)، تخطي.</div>";
+            document.getElementById('nextBtn').classList.remove('hidden');
+            return;
+        }
+
+        Q.options.forEach((txt, i) => {
+            const btn = document.createElement('div');
+            btn.className = 'opt-btn';
+            btn.innerText = txt;
+            btn.onclick = () => handleAnswer(i, Q, btn);
+            optsBlock.appendChild(btn);
+        });
+        
         window.scrollTo(0,0);
     }
 
-    function submitAnswer(selIdx, Q, btnElement) {
-        if(btnElement.parentElement.classList.contains('locked')) return;
-        btnElement.parentElement.classList.add('locked');
+    function handleAnswer(selIdx, Q, btnEl) {
+        if(btnEl.parentElement.classList.contains('disabled')) return;
+        btnEl.parentElement.classList.add('disabled');
+        // Visually lock all
+        Array.from(btnEl.parentElement.children).forEach(b => b.classList.add('locked'));
 
-        const correct = selIdx === Q.correct_option_id; // JSON property
-        const status = correct ? 'correct' : 'wrong';
+        const isCorrect = (selIdx === Q.correct_option_id);
+        const status = isCorrect ? 'correct' : 'wrong';
 
-        if(correct) {
-            btnElement.classList.add('correct');
-            showToast('إجابة صحيحة 👏');
+        if(isCorrect) {
+            btnEl.classList.add('correct');
+            safeHaptic('success');
         } else {
-            btnElement.classList.add('wrong');
-            // Highlight right one
-            const allBtns = document.getElementById('opt-container').children;
-            if(allBtns[Q.correct_option_id]) allBtns[Q.correct_option_id].classList.add('correct');
-            TG.HapticFeedback && TG.HapticFeedback.notificationOccurred('error');
+            btnEl.classList.add('wrong');
+            // Show real answer
+            btnEl.parentElement.children[Q.correct_option_id]?.classList.add('correct');
+            safeHaptic('error');
         }
 
         // Show Explanation
         if(Q.explanation) {
-            const exp = document.getElementById('q-expl');
-            exp.innerHTML = `<strong>توضيح:</strong><br>${Q.explanation}`;
-            exp.style.display = 'block';
+            const expl = document.getElementById('explBlock');
+            expl.innerHTML = `<b>💡 الشرح:</b><br>${Q.explanation}`;
+            expl.classList.remove('hidden');
         }
 
-        // Save Logic
-        State.progress[Q.id] = status;
-        localStorage.setItem(STORAGE_KEYS.PROGRESS + '_' + USER_ID, JSON.stringify(State.progress));
-        renderStats();
+        // Save to Firebase & Local
+        saveProgress(Q.id, status);
 
-        // Cloud Push (Fire & Forget)
-        if(DB && USER_ID !== 'guest' && navigator.onLine) {
-            DB.ref(`users/${USER_ID}/progress/${Q.id}`).set(status);
-        }
-
-        document.getElementById('btn-next').classList.remove('hidden');
+        // Show Next Button
+        document.getElementById('nextBtn').classList.remove('hidden');
     }
 
-    function nextQuestion() {
-        if(State.currQIndex < State.quizQueue.length - 1) {
-            State.currQIndex++;
-            renderQuestion();
-        } else {
-            // End
-            showToast('أتممت الاختبار بنجاح 🎉');
-            setTimeout(showHome, 1000);
+    function saveProgress(qid, status) {
+        AppData.progress[qid] = status;
+        if(UserID !== 'guest' && DB) {
+            DB.ref('users/'+UserID+'/progress/'+qid).set(status);
+            // Increment simple score counter for leaderboard sorting
+            if(status === 'correct') {
+                 // Transaction to atomically increase score
+                 DB.ref('users/'+UserID+'/score').transaction((curr) => (curr || 0) + 1);
+            }
         }
     }
 
-    function confirmExit() {
-        TG.showConfirm("هل تود الخروج من الاختبار؟", (ok) => {
-            if(ok) showHome();
+    function goNext() {
+        AppData.currIdx++;
+        renderCurrentQuestion();
+    }
+
+    function safeExit() {
+        safeConfirm("هل تود الخروج من الاختبار؟", (ok)=>{
+             if(ok) showHome();
         });
     }
 
-    // --- View Navigation Helper ---
-    function switchView(viewId) {
-        ['view-home', 'view-setup', 'view-quiz'].forEach(id => {
-            document.getElementById(id).classList.add('hidden');
-        });
-        document.getElementById(viewId).classList.remove('hidden');
-    }
-
-    function showHome() { 
-        switchView('view-home');
-        renderStats();
-    }
-    
-    function forceSync() {
-        if(!navigator.onLine) { showToast('لا يوجد اتصال انترنت!'); return; }
-        document.getElementById('loader').classList.remove('hidden');
-        document.getElementById('loaderMsg').innerText = "جاري التحميل والتحديث...";
+    // --- 4. LEADERBOARD ---
+    async function showLeaderboard() {
+        switchView('v-leader');
+        const listEl = document.getElementById('leaderboardList');
         
-        syncData().then(() => {
-            setTimeout(() => {
-                document.getElementById('loader').classList.add('hidden');
-            }, 800);
-        });
+        // 1. My Stats
+        let myScore = Object.values(AppData.progress).filter(s=>s==='correct').length;
+        document.getElementById('myScoreDetails').innerText = myScore;
+
+        if(!DB) { listEl.innerHTML = "<p>غير متصل بفايربيس.</p>"; return; }
+
+        try {
+            // Fetch All Users Score (Simplified Approach: Assuming we stored 'score' property)
+            // Ideally use Cloud Functions or limitToLast query
+            const snap = await DB.ref('users').orderByChild('score').limitToLast(20).once('value');
+            
+            let players = [];
+            snap.forEach(child => {
+                let val = child.val();
+                // Simple Guest or ID display. If user info like Name saved, display it.
+                // Assuming TG passed first_name to FB earlier, else use "Student"
+                players.push({
+                    uid: child.key,
+                    score: val.score || 0,
+                    name: (child.key === UserID) ? "أنت" : "طالب" 
+                });
+            });
+
+            // Sort Descending
+            players.reverse(); 
+
+            let myRank = players.findIndex(p => p.uid === UserID);
+            
+            // UI
+            document.getElementById('totalPlayers').innerText = players.length + "+"; // Simulation
+            document.getElementById('myRank').innerText = myRank !== -1 ? `#${myRank+1}` : "#--";
+
+            let html = "";
+            players.forEach((p, idx) => {
+                let badge = "";
+                if(idx===0) badge="🥇";
+                if(idx===1) badge="🥈";
+                if(idx===2) badge="🥉";
+
+                html += `
+                    <div class="leader-row" style="${p.uid === UserID ? 'background:#e3f2fd' : ''}">
+                        <div><span class="medal">${badge || idx+1}</span> ${p.name}</div>
+                        <div style="font-weight:bold">${p.score}</div>
+                    </div>
+                `;
+            });
+            
+            listEl.innerHTML = html;
+
+        } catch(e) {
+            listEl.innerHTML = `<p style="padding:15px; color:red">تعذر تحميل القائمة<br>${e.message}</p>`;
+        }
     }
 
-    // --- Helpers ---
-    function setSyncStatus(msg) { document.getElementById('syncStatus').innerText = msg; }
-    
-    function showToast(msg) {
-        const t = document.getElementById('toast');
-        t.innerText = msg; t.style.display='block';
-        setTimeout(()=>t.style.display='none', 3000);
-    }
-
-    // --- Boot ---
+    // --- Init ---
     window.addEventListener('load', init);
 
 </script>
