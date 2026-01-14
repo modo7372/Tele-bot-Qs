@@ -3,222 +3,213 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Exam Bot Online</title>
+    <title>Exam Bot Elite</title>
     
-    <!-- Telegram SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    
-    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
     <style>
         :root {
-            --bg-color: #f0f2f5;
-            --card-bg: #ffffff;
-            --text-primary: #111;
-            --text-secondary: #555;
-            --primary: #0088cc; /* Telegram Blue */
-            --danger: #e53935;
-            --success: #43a047;
-            --radius: 12px;
-            --shadow: 0 2px 5px rgba(0,0,0,0.05);
+            --bg: #f5f5f5; --card: #fff; --text: #333; --hint: #777;
+            --primary: #2481cc; --accent: #2e8b57; --danger: #e53935;
+            --radius: 12px; --shadow: 0 2px 4px rgba(0,0,0,0.08);
         }
-
         body.dark-mode {
-            --bg-color: #1e1e1e;
-            --card-bg: #2b2b2b;
-            --text-primary: #fff;
-            --text-secondary: #aaa;
-            --shadow: 0 2px 5px rgba(0,0,0,0.5);
+            --bg: #1c1c1e; --card: #2c2c2e; --text: #fff; --hint: #aaa;
+            --primary: #3b9cd4; --shadow: 0 2px 4px rgba(0,0,0,0.4);
         }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-            background: var(--bg-color); color: var(--text-primary);
-            margin: 0; padding-bottom: 70px;
-            user-select: none; -webkit-tap-highlight-color: transparent;
-        }
-
-        /* --- Header --- */
-        header {
-            background: var(--card-bg); padding: 15px; position: sticky; top: 0; z-index: 50;
-            display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow);
-        }
-        .header-title { font-weight: bold; font-size: 1.1em; }
-        .score-display { font-size: 0.9em; font-weight: 500; background: rgba(0,0,0,0.05); padding: 5px 10px; border-radius: 20px; }
-
-        /* --- Loader --- */
-        .loader-overlay {
-            position: fixed; inset: 0; background: var(--bg-color); z-index: 999;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-        }
-        .spinner { width: 40px; height: 40px; border: 4px solid #ddd; border-top-color: var(--primary); border-radius: 50%; animation: spin 1s infinite; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-
-        /* --- Components --- */
-        .container { padding: 15px; max-width: 600px; margin: 0 auto; }
-        .hidden { display: none !important; }
-
-        .btn-card {
-            background: var(--card-bg); border-radius: var(--radius);
-            padding: 20px; margin-bottom: 15px; box-shadow: var(--shadow);
-            display: flex; align-items: center; justify-content: space-between;
-            cursor: pointer; transition: transform 0.1s;
-        }
-        .btn-card:active { transform: scale(0.98); }
-        .btn-card h3 { margin: 0; font-size: 1.1em; }
-        .btn-card p { margin: 5px 0 0; font-size: 0.8em; color: var(--text-secondary); }
-
-        /* --- Leaderboard Styles --- */
-        .rank-card {
-            background: linear-gradient(135deg, var(--primary), #005f8d); color: white;
-            border-radius: var(--radius); padding: 20px; text-align: center; margin-bottom: 20px;
-        }
-        .rank-big { font-size: 2.5em; font-weight: bold; }
-        .leader-row {
-            display: flex; justify-content: space-between; padding: 12px;
-            border-bottom: 1px solid rgba(128,128,128,0.1); align-items: center;
-        }
-        .medal { width: 25px; display: inline-block; text-align: center; }
-
-        /* --- Quiz Styles --- */
-        .q-meta-bar {
-            display: flex; justify-content: space-between; font-size: 0.85em;
-            color: var(--text-secondary); margin-bottom: 15px;
-        }
-        .q-id-badge { background: #eee; padding: 2px 6px; border-radius: 4px; font-family: monospace; font-weight: bold; color: #555; }
-        .q-text { font-size: 1.15em; font-weight: 600; line-height: 1.5; margin-bottom: 20px; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 80px; user-select: none; }
         
+        /* HEADER */
+        header { background: var(--card); padding: 12px 16px; box-shadow: var(--shadow); position: sticky; top:0; z-index:10; display:flex; justify-content:space-between; align-items:center; }
+        .score-pill { background:rgba(0,0,0,0.05); padding:4px 12px; border-radius:20px; font-weight:bold; font-size:0.9em; }
+
+        /* CONTAINERS */
+        .view { display: none; padding: 16px; max-width:600px; margin:0 auto; animation: fadeIn 0.2s; }
+        .view.active { display: block; }
+        @keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+
+        /* LIST ITEMS (Nav) */
+        .list-item {
+            background: var(--card); border-radius: var(--radius); padding: 16px; margin-bottom: 10px;
+            display: flex; align-items: center; justify-content: space-between;
+            box-shadow: var(--shadow); cursor: pointer; transition: 0.1s;
+        }
+        .list-item:active { transform: scale(0.98); }
+        .checkbox-wrapper { display: flex; align-items: center; gap: 12px; flex-grow: 1; }
+        input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--primary); cursor: pointer; }
+
+        /* BUTTONS */
+        .btn-main {
+            background: var(--primary); color: white; border: none; padding: 15px; width: 100%;
+            border-radius: var(--radius); font-size: 1em; font-weight: bold; cursor: pointer;
+            box-shadow: 0 4px 10px rgba(36, 129, 204, 0.3); margin-top:10px;
+        }
+        .fab-action {
+            position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+            background: var(--accent); color: white; padding: 12px 24px; border-radius: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3); font-weight: bold; display: none; cursor: pointer; z-index: 100;
+        }
+
+        /* CHIPS (Setup) */
+        .chips-grid { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0 20px 0; }
+        .chip {
+            background: var(--card); border: 1px solid rgba(128,128,128,0.3); padding: 8px 16px;
+            border-radius: 20px; cursor: pointer; font-size: 0.9em; transition: 0.2s;
+        }
+        .chip.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        /* QUIZ */
+        .q-badge { background: #eee; color:#444; padding:3px 6px; border-radius:4px; font-family:monospace; font-size:0.8em; }
+        .q-text { font-size: 1.15em; font-weight: 600; margin: 15px 0 20px; line-height: 1.5; }
         .opt-btn {
-            background: var(--card-bg); border: 1px solid rgba(0,0,0,0.1);
-            padding: 15px; border-radius: 10px; width: 100%; text-align: right;
-            margin-bottom: 10px; font-size: 1em; cursor: pointer; color: var(--text-primary);
+            background: var(--card); padding: 15px; border-radius: 10px; width: 100%; text-align: right;
+            border: 1px solid rgba(0,0,0,0.08); margin-bottom: 10px; color: var(--text);
         }
         .opt-btn.correct { background: #d4edda; border-color: #28a745; color: #155724; }
         .opt-btn.wrong { background: #f8d7da; border-color: #dc3545; color: #721c24; }
-        .opt-btn.locked { pointer-events: none; opacity: 0.8; }
-
-        /* --- Bottom Nav --- */
+        
+        /* BOTTOM NAV */
         .nav-bar {
-            position: fixed; bottom: 0; left: 0; width: 100%;
-            background: var(--card-bg); height: 60px; display: flex;
-            border-top: 1px solid rgba(0,0,0,0.1);
-            z-index: 100;
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 65px; background: var(--card);
+            border-top: 1px solid rgba(0,0,0,0.1); display: flex; z-index: 50;
         }
-        .nav-item {
-            flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            font-size: 0.75em; color: var(--text-secondary); background: none; border: none;
-        }
+        .nav-item { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--hint); font-size:0.75em; border:none; background:none; }
         .nav-item.active { color: var(--primary); }
-        .nav-icon { font-size: 1.5em; margin-bottom: 3px; }
+        .nav-icon { font-size: 1.6em; margin-bottom: 2px; }
 
+        /* LEADERBOARD */
+        .rank-row { display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid #eee; font-size: 0.95em; }
+        .rank-hl { background: rgba(36, 129, 204, 0.1); font-weight: bold; border-radius: 8px; border:none; }
+
+        /* LOADING */
+        #loader { position: fixed; inset: 0; background: var(--bg); z-index: 1000; display: flex; align-items: center; justify-content: center; flex-direction: column; }
     </style>
 </head>
 <body>
 
-    <!-- 1. Loader (Internet Required) -->
-    <div id="loader" class="loader-overlay">
-        <div class="spinner"></div>
-        <p style="margin-top:15px" id="loadMsg">الاتصال بالسيرفر...</p>
+    <!-- 1. LOADER -->
+    <div id="loader">
+        <div style="font-size:2em">📥</div>
+        <p id="loaderTxt" style="margin-top:10px">تحميل البيانات...</p>
     </div>
 
-    <!-- 2. Main Views -->
-    <div id="app" class="hidden">
+    <!-- 2. HEADER -->
+    <header>
+        <div style="font-weight:bold">🤖 Exam Bot</div>
+        <div class="score-pill">🏆 <span id="uScore">0</span></div>
+    </header>
+
+    <!-- 3. VIEWS -->
+    
+    <!-- A. HOME -->
+    <div id="v-home" class="view active">
+        <div class="list-item" onclick="browseContent()">
+            <div>
+                <h3>📁 تصفح المنهج</h3>
+                <p style="font-size:0.8em; color:var(--hint)">دروس، فصول، اختبارات مجمعة</p>
+            </div>
+            <div style="font-size:1.5em">📚</div>
+        </div>
+
+        <div class="list-item" onclick="openMistakesMode()">
+            <div>
+                <h3>🛠 مراجعة الأخطاء</h3>
+                <p style="font-size:0.8em; color:var(--hint)">أسئلة أجبتها بشكل خاطئ سابقاً</p>
+            </div>
+            <div style="font-size:1.5em">🚧</div>
+        </div>
         
-        <header>
-            <div class="header-title">🎓 Exam Bot</div>
-            <div class="score-display">🏆 <span id="headerScore">0</span></div>
-        </header>
-
-        <!-- VIEW: Home (Two Buttons) -->
-        <div id="v-home" class="container">
-            <div class="btn-card" onclick="startNavigation()">
-                <div>
-                    <h3>📂 تصفح المنهج</h3>
-                    <p>استعراض الدروس وحل اختبارات جديدة</p>
-                </div>
-                <div style="font-size:2em">📚</div>
-            </div>
-
-            <div class="btn-card" style="border-right: 4px solid var(--danger)" onclick="openMistakeList()">
-                <div>
-                    <h3>🚧 سجل الأخطاء</h3>
-                    <p>مراجعة الأسئلة التي أخطأت فيها (مقسّمة بالدرس)</p>
-                </div>
-                <div style="font-size:2em">🖍</div>
-            </div>
-            
-            <hr style="border:0; border-top:1px solid #ddd; margin: 20px 0;">
-
-            <div style="text-align: center; color: var(--text-secondary); font-size:0.9em;">
-                <p>تطبيق يعمل بالإنترنت فقط لضمان التحديث</p>
-                <button onclick="fetchData()" style="padding:10px 20px; border-radius:20px; border:none; background:var(--bg-color); color:var(--primary); cursor:pointer;">🔄 إعادة تحميل البيانات</button>
-            </div>
+        <div style="text-align:center; margin-top:30px; font-size:0.8em; color:var(--hint)">
+            تأكد من وجود إنترنت لضمان عمل المزامنة<br>
+            <button onclick="window.location.reload()" style="background:none; border:none; color:var(--primary); margin-top:5px">🔄 تحديث</button>
         </div>
-
-        <!-- VIEW: Tree Navigation (Browse) -->
-        <div id="v-nav" class="container hidden">
-            <button onclick="showHome()" style="border:none; background:none; color:var(--primary); margin-bottom:10px; cursor:pointer;">⬅️ القائمة الرئيسية</button>
-            <h3 id="navTitle" style="margin-top:0">المنهج:</h3>
-            <div id="navContainer"></div>
-        </div>
-
-        <!-- VIEW: Leaderboard -->
-        <div id="v-leader" class="container hidden">
-            <div class="rank-card">
-                <div>ترتيبك الحالي</div>
-                <div class="rank-big" id="myRank">#--</div>
-                <div style="font-size:0.9em">بين <span id="totalPlayers">--</span> طالب</div>
-                <div style="margin-top:10px; font-weight:bold">مجموع النقاط: <span id="myScoreDetails">0</span></div>
-            </div>
-
-            <h3 style="border-bottom: 2px solid var(--primary); display:inline-block">🏆 لوحة الشرف</h3>
-            <div style="background:var(--card-bg); border-radius:10px; margin-top:15px; box-shadow:var(--shadow)" id="leaderboardList">
-                <div style="padding:20px; text-align:center">جاري تحميل القائمة...</div>
-            </div>
-        </div>
-
-        <!-- VIEW: Quiz -->
-        <div id="v-quiz" class="container hidden">
-            <div class="q-meta-bar">
-                <span id="quizCounter">1 / 5</span>
-                <span class="q-id-badge" id="quizIdDisplay">ID: 0000</span>
-                <span onclick="safeExit()" style="color:var(--danger); cursor:pointer">خروج ✖</span>
-            </div>
-            
-            <div id="qContent">
-                <!-- Question Loaded Here -->
-            </div>
-        </div>
-
-        <!-- VIEW: Mistakes Menu (Lessons) -->
-        <div id="v-mistakes-menu" class="container hidden">
-             <button onclick="showHome()" style="border:none; background:none; color:var(--primary); margin-bottom:10px;">⬅️ الرئيسية</button>
-             <h3>🔻 دروس تحتوي على أخطاء:</h3>
-             <div id="mistakesContainer"></div>
-        </div>
-
     </div>
 
-    <!-- 3. Bottom Navigation -->
-    <div class="nav-bar" id="bottomBar">
-        <button class="nav-item active" onclick="showHome()">
-            <span class="nav-icon">🏠</span>
-            <span>الرئيسية</span>
+    <!-- B. NAV BROWSER (Dynamic Hierarchy) -->
+    <div id="v-browser" class="view">
+        <button onclick="goHome()" style="background:none; border:none; color:var(--primary); margin-bottom:10px">⬅️ القائمة الرئيسية</button>
+        <h3 id="browserTitle">المحتوى:</h3>
+        
+        <!-- Controls for multi-select -->
+        <div style="margin-bottom:10px; display:flex; justify-content:space-between">
+            <label style="display:flex; align-items:center; gap:5px; font-size:0.9em">
+                <input type="checkbox" onchange="toggleAll(this)" id="checkAllBox"> تحديد الكل
+            </label>
+        </div>
+
+        <div id="browserList"></div>
+    </div>
+
+    <!-- C. SETUP CONFIG (Mode & Qty) -->
+    <div id="v-setup" class="view">
+        <button onclick="backToBrowser()" style="background:none; border:none; color:var(--primary); margin-bottom:10px">⬅️ تعديل الاختيار</button>
+        <h2>⚙️ إعدادات الاختبار</h2>
+        <p style="color:var(--hint); font-size:0.9em" id="setupSubtitle"></p>
+
+        <h4>نوع الأسئلة:</h4>
+        <div class="chips-grid">
+            <div class="chip active" onclick="setMode('new', this)">🆕 جديدة</div>
+            <div class="chip" onclick="setMode('mistake', this)">🖍 أخطاء سابقة</div>
+            <div class="chip" onclick="setMode('mixed', this)">🔀 مختلط</div>
+        </div>
+
+        <h4>العدد:</h4>
+        <div class="chips-grid">
+            <div class="chip active" onclick="setQty(5, this)">5</div>
+            <div class="chip" onclick="setQty(10, this)">10</div>
+            <div class="chip" onclick="setQty(20, this)">20</div>
+            <div class="chip" onclick="setQty(999, this)">الكل</div>
+        </div>
+        
+        <p id="filterError" style="color:var(--danger); display:none; text-align:center">⚠️ لا توجد أسئلة تطابق هذه الشروط.</p>
+
+        <button class="btn-main" onclick="startFinalQuiz()">ابدأ الآن 🚀</button>
+    </div>
+
+    <!-- D. QUIZ -->
+    <div id="v-quiz" class="view">
+        <div style="display:flex; justify-content:space-between; margin-bottom:15px; color:var(--hint); font-size:0.9em">
+            <span id="qCount">1 / 10</span>
+            <span class="q-badge" id="qID">ID: 000</span>
+            <span onclick="confirmExit()" style="color:var(--danger); cursor:pointer">✖</span>
+        </div>
+        <div id="quizContainer"></div>
+    </div>
+
+    <!-- E. LEADERBOARD -->
+    <div id="v-leader" class="view">
+        <h3 style="text-align:center">🏆 المتصدرون</h3>
+        <div class="rank-card" id="leaderList" style="background:var(--card); border-radius:10px; box-shadow:var(--shadow)">
+            <p style="text-align:center; padding:20px">جاري تحميل القائمة...</p>
+        </div>
+        <p style="text-align:center; font-size:0.8em; color:var(--hint); margin-top:10px">يعتمد الترتيب على عدد الإجابات الصحيحة الكلية</p>
+    </div>
+
+    <!-- FLOATING ACTION BUTTON (For Selection) -->
+    <div id="fabBtn" class="fab-action" onclick="goToSetup()">
+        ✅ تكوين اختبار (<span id="selCount">0</span>)
+    </div>
+
+    <!-- 4. BOTTOM NAV -->
+    <div class="nav-bar">
+        <button class="nav-item active" onclick="goHome()">
+            <div class="nav-icon">🏠</div> الرئيسية
         </button>
-        <button class="nav-item" onclick="showLeaderboard()">
-            <span class="nav-icon">📊</span>
-            <span>الأوائل</span>
+        <button class="nav-item" onclick="loadLeaderboard()">
+            <div class="nav-icon">📊</div> الأوائل
         </button>
     </div>
 
 <script>
-    /**
-     * === CONFIG ===
-     */
+    /* =========================================
+       1. CONFIG & INIT
+       ========================================= */
     const CONFIG = {
         firebase: {
+            // !!! ضع بيانات مشروعك هنا !!!
             apiKey: "AIzaSyDEZFJmcXK2LxYAZ-Yjv_M1HbC6zi_qilg",
             authDomain: "exambotdb.firebaseapp.com",
             databaseURL: "https://exambotdb-default-rtdb.firebaseio.com",
@@ -229,388 +220,430 @@
         }
     };
 
-    /**
-     * === SYSTEM ===
-     */
     const TG = window.Telegram.WebApp;
     let DB = null;
-    let UserID = "guest";
-    let AppData = {
-        questions: [],
-        progress: {}, // { id: 'correct'|'wrong' }
+    let UserID = "guest_1";
+    let AppState = {
+        allData: [],      // Flat list of questions
+        tree: {},         // Hierarchy { Subject: { Lesson: [qs] } }
+        progress: {},     // { qId: 'correct'|'wrong' }
+        
+        // Navigation & Selection
+        navLevel: 'root', // root -> subject -> lesson
+        currContext: null,// pointer to current tree node
+        selectedItems: [], // items selected for quiz
+
+        // Setup
+        config: { mode: 'new', qty: 5 },
         quizQueue: [],
-        currIdx: 0
+        qIdx: 0
     };
 
     function init() {
         TG.ready(); TG.expand();
-        if(TG.initDataUnsafe?.user?.id) UserID = TG.initDataUnsafe.user.id;
+        if(TG.initDataUnsafe?.user?.id) UserID = TG.initDataUnsafe.user.id.toString();
+        
+        if(TG.colorScheme === 'dark') document.body.classList.add('dark-mode');
 
-        // Theme
-        if (TG.colorScheme === 'dark') document.body.classList.add('dark-mode');
-
-        // Check Network
-        if (!navigator.onLine) {
-            document.getElementById('loadMsg').innerHTML = "<span style='color:red'>لا يوجد اتصال انترنت!<br>التطبيق يتطلب انترنت للعمل</span>";
-            return;
-        }
-
-        // Init Firebase
-        if (window.firebase && !firebase.apps.length) {
+        if(window.firebase && !firebase.apps.length) {
             firebase.initializeApp(CONFIG.firebase);
             DB = firebase.database();
         }
 
-        fetchData();
+        fetchContent();
     }
 
-    // --- Data Engine (Network Only) ---
-    async function fetchData() {
+    async function fetchContent() {
+        if(!navigator.onLine) {
+            alert("لا يوجد اتصال انترنت!");
+            document.getElementById('loaderTxt').innerText = "خطأ في الشبكة";
+            return;
+        }
+
         try {
-            document.getElementById('loadMsg').innerText = "تحميل الأسئلة...";
-            // 1. Fetch JSON List
-            const lReq = await fetch('questions_list.json?t='+Date.now());
-            const files = await lReq.json();
+            // 1. Get Questions
+            const list = await fetch('questions_list.json?t='+Date.now()).then(r=>r.json());
+            const jobs = list.map(f => fetch('Questions/'+f).then(r=>r.json()));
+            const data = await Promise.all(jobs);
 
-            // 2. Fetch Files Parallel
-            const jobs = files.map(f => fetch('Questions/'+f).then(r=>r.json()));
-            const results = await Promise.all(jobs);
+            // 2. Flatten & Structure
+            let flat = [];
+            let hierarchy = {}; 
 
-            // 3. Process
-            let allQ = [];
-            results.forEach(res => {
-                let meta = res.meta || {};
-                let term = meta.source || "General";
-                let lesson = meta.lesson || "Misc";
+            data.forEach(d => {
+                const meta = d.meta || {};
+                const subj = meta.lesson || "عام"; // Using 'lesson' from meta as Top Category (User specific request) 
                 
-                res.questions.forEach(q => {
-                    allQ.push({
-                        ...q,
-                        h: { term, lesson, chapter: q.chapter || "فصل 1" }
-                    });
+                // Assuming hierarchy: Subject (Folder Name) -> Lesson (Inside file) -> Question
+                // Based on previous chats, structure is confusing. Let's Standardize:
+                // Level 1: "source" or "term"
+                // Level 2: "lesson"
+                
+                // Fallback standardization:
+                const term = meta.source || meta.term || "المنهج";
+                const lessonName = meta.lesson || "غير مصنف";
+
+                if(!hierarchy[term]) hierarchy[term] = {};
+                if(!hierarchy[term][lessonName]) hierarchy[term][lessonName] = [];
+
+                d.questions.forEach(q => {
+                    const enhancedQ = { ...q, _h: {term, lesson: lessonName} };
+                    flat.push(enhancedQ);
+                    hierarchy[term][lessonName].push(enhancedQ);
                 });
             });
-            AppData.questions = allQ;
 
-            // 4. Fetch Progress (Firebase)
-            document.getElementById('loadMsg').innerText = "جاري مزامنة حسابك...";
-            if (UserID !== 'guest' && DB) {
-                const snap = await DB.ref('users/'+UserID).once('value');
-                const uData = snap.val() || {};
-                AppData.progress = uData.progress || {};
+            AppState.allData = flat;
+            AppState.tree = hierarchy;
+
+            // 3. Sync User Progress
+            if(DB && UserID !== 'guest') {
+                const snap = await DB.ref(`users/${UserID}/progress`).once('value');
+                AppState.progress = snap.val() || {};
             }
 
-            // Ready
-            document.getElementById('loader').classList.add('hidden');
-            document.getElementById('app').classList.remove('hidden');
-            updateScoreHeader();
+            // Finish
+            updateHeaderScore();
+            document.getElementById('loader').style.display = 'none';
 
-        } catch (e) {
-            alert("خطأ في الاتصال: " + e.message);
-            document.getElementById('loadMsg').innerHTML = `<button onclick="location.reload()">محاولة مرة أخرى</button>`;
+        } catch(e) {
+            console.error(e);
+            document.getElementById('loaderTxt').innerText = "خطأ في التحميل (تأكد من Rules)";
+            setTimeout(()=> document.getElementById('loader').style.display='none', 2000);
         }
     }
 
-    /**
-     * === UI & LOGIC ===
-     */
+    /* =========================================
+       2. NAVIGATION & BROWSER (Selection Logic)
+       ========================================= */
     
-    // --- Helper for safe alerts in Old Telegram ---
-    function safeConfirm(msg, callback) {
-        // Fallback for version 6.0 which doesn't support showConfirm
-        if(TG.showConfirm && TG.isVersionAtLeast && TG.isVersionAtLeast('6.2')) {
-            TG.showConfirm(msg, (ok) => callback(ok));
-        } else {
-            let res = confirm(msg);
-            callback(res);
-        }
-    }
-    
-    function safeHaptic(type) {
-        if(TG.HapticFeedback && TG.isVersionAtLeast && TG.isVersionAtLeast('6.1')) {
-            TG.HapticFeedback.notificationOccurred(type);
-        }
-    }
-
     function switchView(id) {
-        ['v-home','v-nav','v-leader','v-quiz','v-mistakes-menu'].forEach(v => {
-            document.getElementById(v).classList.add('hidden');
-        });
-        document.getElementById(id).classList.remove('hidden');
-        
-        // Update Bottom Nav Active State
-        document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
-        if(id === 'v-leader') document.querySelectorAll('.nav-item')[1].classList.add('active');
-        else document.querySelectorAll('.nav-item')[0].classList.add('active');
+        document.querySelectorAll('.view').forEach(e => e.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        document.getElementById('fabBtn').style.display = 'none'; // Hide FAB by default
     }
 
-    function showHome() { switchView('v-home'); updateScoreHeader(); }
+    function goHome() { switchView('v-home'); updateHeaderScore(); }
 
-    function updateScoreHeader() {
-        // Calculate Logic
-        let score = 0;
-        Object.values(AppData.progress).forEach(s => { if(s==='correct') score++; });
-        document.getElementById('headerScore').innerText = score;
+    function browseContent() {
+        // Show Top Level (Terms/Sources)
+        renderBrowser(AppState.tree, 'root');
     }
 
-    // --- 1. Browse & Nav Logic ---
-    let NavStack = []; // stores keys
+    // Dynamic Render of Checkbox List
+    function renderBrowser(dataSource, levelName) {
+        switchView('v-browser');
+        const listDiv = document.getElementById('browserList');
+        listDiv.innerHTML = '';
+        AppState.navLevel = levelName;
+        AppState.currContext = dataSource;
+        AppState.selectedItems = []; // Reset selection when changing view depth
+        updateFab();
 
-    function startNavigation() {
-        NavStack = [];
-        renderNavTree(AppData.questions, 0); // Level 0: Terms (or flat list depending on data)
-        switchView('v-nav');
-    }
-
-    function renderNavTree(dataSource) {
-        // Group By Hierarchy based on depth
-        // Assumption: JSON structure is simple, lets group by Meta.Lesson for simplicity or Term -> Lesson
+        const keys = Object.keys(dataSource);
         
-        // For this Demo, we just List all Lessons found in questions
-        const container = document.getElementById('navContainer');
-        container.innerHTML = '';
-        
-        // Extract Unique Lessons
-        let lessons = [...new Set(AppData.questions.map(q => q.h.lesson))];
-        
-        if (lessons.length === 0) container.innerHTML = "لا توجد بيانات.";
+        if(keys.length === 0) { listDiv.innerHTML = "<p>فارغ</p>"; return; }
 
-        lessons.forEach(lsn => {
-            const count = AppData.questions.filter(q => q.h.lesson === lsn).length;
-            const card = document.createElement('div');
-            card.className = 'btn-card';
-            card.innerHTML = `<div><h3>${lsn}</h3><p>${count} سؤال</p></div><div>➡️</div>`;
-            card.onclick = () => startQuizContext(lsn);
-            container.appendChild(card);
-        });
-    }
+        keys.forEach(k => {
+            const isLeaf = Array.isArray(dataSource[k]); // Is it array of questions?
+            const count = isLeaf ? dataSource[k].length : Object.keys(dataSource[k]).length + " وحدات";
 
-    function startQuizContext(lessonName) {
-        // Filter by Lesson + New Questions (Default logic)
-        let qList = AppData.questions.filter(q => q.h.lesson === lessonName);
-        
-        // Exclude solved Correctly
-        qList = qList.filter(q => AppData.progress[q.id] !== 'correct');
-
-        if(qList.length === 0) {
-            alert("لقد أتممت حل جميع أسئلة هذا الدرس بنجاح! 👏");
-            return;
-        }
-
-        launchQuiz(qList);
-    }
-
-    // --- 2. Mistakes Logic ---
-    function openMistakeList() {
-        // Get all Wrong IDs
-        const wrongIds = Object.keys(AppData.progress).filter(k => AppData.progress[k] === 'wrong');
-        
-        if(wrongIds.length === 0) {
-            alert("سجلك نظيف! لا توجد أخطاء مسجلة ✅");
-            return;
-        }
-
-        const container = document.getElementById('mistakesContainer');
-        container.innerHTML = '';
-
-        // Group IDs by Lesson
-        let groups = {};
-        wrongIds.forEach(id => {
-            const q = AppData.questions.find(x => x.id == id);
-            if(q) {
-                let l = q.h.lesson;
-                if(!groups[l]) groups[l] = [];
-                groups[l].push(q);
+            const row = document.createElement('div');
+            row.className = 'list-item';
+            
+            // If leaf (Actual lessons containing questions), Show Checkbox
+            // If folder, Show Folder Icon & Click to enter
+            if(isLeaf) {
+                row.innerHTML = `
+                    <label class="checkbox-wrapper">
+                        <input type="checkbox" value="${k}" onchange="handleSelect('${k}')">
+                        <div>
+                            <div style="font-weight:600">${k}</div>
+                            <div style="font-size:0.8em; color:var(--hint)">${count} سؤال</div>
+                        </div>
+                    </label>
+                `;
+            } else {
+                row.innerHTML = `
+                    <div style="flex-grow:1" onclick="drillDown('${k}')">
+                        <div style="font-weight:600">📂 ${k}</div>
+                        <div style="font-size:0.8em; color:var(--hint)">${count}</div>
+                    </div>
+                    <div>➡️</div>
+                `;
             }
+            listDiv.appendChild(row);
         });
-
-        Object.keys(groups).forEach(lesson => {
-            const card = document.createElement('div');
-            card.className = 'btn-card';
-            card.style.borderLeft = "4px solid var(--danger)";
-            card.innerHTML = `<div><h3>${lesson}</h3><p>${groups[lesson].length} أخطاء</p></div><div>🖍</div>`;
-            card.onclick = () => launchQuiz(groups[lesson]);
-            container.appendChild(card);
-        });
-
-        switchView('v-mistakes-menu');
-    }
-
-    // --- 3. QUIZ RUNTIME ---
-    function launchQuiz(queue) {
-        // Shuffle and limit
-        queue.sort(() => Math.random() - 0.5);
-        if(queue.length > 20) queue = queue.slice(0, 20); // Max 20 per session
-
-        AppData.quizQueue = queue;
-        AppData.currIdx = 0;
         
-        switchView('v-quiz');
-        renderCurrentQuestion();
+        // Hide Check All box if we are just looking at folders
+        const hasLeaves = keys.some(k => Array.isArray(dataSource[k]));
+        document.getElementById('checkAllBox').parentElement.style.display = hasLeaves ? 'flex' : 'none';
+        document.getElementById('checkAllBox').checked = false;
     }
 
-    function renderCurrentQuestion() {
-        if(AppData.currIdx >= AppData.quizQueue.length) {
-            safeConfirm("انتهى الاختبار! هل تريد العودة؟", (ok)=> showHome());
+    function drillDown(key) {
+        renderBrowser(AppState.currContext[key], key);
+        document.getElementById('browserTitle').innerText = key;
+    }
+    
+    function backToBrowser() {
+        switchView('v-browser');
+        document.getElementById('fabBtn').style.display = 'block'; // Show FAB again
+    }
+
+    // -- Selection Handling --
+    function handleSelect(key) {
+        if(AppState.selectedItems.includes(key)) {
+            AppState.selectedItems = AppData.selectedItems.filter(i => i !== key);
+        } else {
+            AppState.selectedItems.push(key);
+        }
+        updateFab();
+    }
+    
+    function toggleAll(chk) {
+        const boxes = document.querySelectorAll('#browserList input[type="checkbox"]');
+        AppState.selectedItems = [];
+        boxes.forEach(b => {
+            b.checked = chk.checked;
+            if(chk.checked) AppState.selectedItems.push(b.value);
+        });
+        updateFab();
+    }
+
+    function updateFab() {
+        const c = AppState.selectedItems.length;
+        document.getElementById('selCount').innerText = c;
+        document.getElementById('fabBtn').style.display = c > 0 ? 'block' : 'none';
+    }
+
+    function goToSetup() {
+        switchView('v-setup');
+        document.getElementById('setupSubtitle').innerText = `تم اختيار: ${AppState.selectedItems.join(' + ')}`;
+        document.getElementById('filterError').style.display = 'none';
+    }
+
+    /* =========================================
+       3. MISTAKES MODE SPECIFIC
+       ========================================= */
+    function openMistakesMode() {
+        // Find ALL wrong IDs
+        const wrongs = Object.keys(AppState.progress).filter(id => AppState.progress[id] === 'wrong');
+        if(wrongs.length === 0) {
+            alert("رائع! سجلك نظيف من الأخطاء ✅");
             return;
         }
 
-        const Q = AppData.quizQueue[AppData.currIdx];
+        // Just collect all wrong questions and push to queue immediately or Setup
+        // Let's send to Setup for consistency
+        const wrongQs = AppState.allData.filter(q => wrongs.includes(q.id.toString()));
         
-        // 1. Header Info
-        document.getElementById('quizCounter').innerText = `${AppData.currIdx+1} / ${AppData.quizQueue.length}`;
-        // >>> New: Show ID <<<
-        document.getElementById('quizIdDisplay').innerText = `ID: ${Q.id}`;
+        // Skip Browse, go strictly to config
+        AppState.tempQueue = wrongQs;
+        switchView('v-setup');
+        document.getElementById('setupSubtitle').innerText = "وضع مراجعة الأخطاء الشامل (كل الدروس)";
+        // Force settings visually
+        setMode('mistake', document.querySelectorAll('#v-setup .chip')[1]);
+    }
 
-        // 2. Content
-        const contentDiv = document.getElementById('qContent');
-        let imgHtml = Q.image ? `<img src="${Q.image}" style="max-width:100%; border-radius:10px; margin-bottom:15px">` : '';
+    /* =========================================
+       4. QUIZ CONFIGURATION & START
+       ========================================= */
+    function setMode(m, el) { 
+        AppState.config.mode = m; 
+        document.querySelectorAll('.chips-grid .chip').forEach(c=>c.classList.remove('active'));
+        if(el) el.classList.add('active');
+    }
+    function setQty(q, el) { 
+        AppState.config.qty = q; 
+        // Visual toggle code similar to above
+         document.querySelectorAll('.chips-grid').forEach(g=>{/*logic omit for brevity*/});
+         el.parentElement.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+         el.classList.add('active');
+    }
+
+    function startFinalQuiz() {
+        // 1. Gather Candidate Questions based on Context
+        let candidates = [];
+        
+        if(AppState.tempQueue) {
+            // Came from "Mistakes" main button
+            candidates = AppState.tempQueue;
+        } else {
+            // Came from Browser Selection
+            // Look up questions inside the selected keys in currContext
+            AppState.selectedItems.forEach(key => {
+                const questions = AppState.currContext[key];
+                if(questions) candidates.push(...questions);
+            });
+        }
+
+        // 2. Filter by Mode (New vs Mistake)
+        const m = AppState.config.mode;
+        if(m === 'new') candidates = candidates.filter(q => AppState.progress[q.id] !== 'correct');
+        else if (m === 'mistake') candidates = candidates.filter(q => AppState.progress[q.id] === 'wrong');
+        
+        // 3. Randomize & Slice
+        if(candidates.length === 0) {
+            document.getElementById('filterError').style.display = 'block';
+            return;
+        }
+
+        candidates.sort(() => Math.random() - 0.5);
+        AppState.quizQueue = candidates.slice(0, AppState.config.qty);
+        AppState.qIdx = 0;
+        AppState.tempQueue = null; // Clear
+
+        runQuiz();
+    }
+
+    /* =========================================
+       5. QUIZ RUNTIME
+       ========================================= */
+    function runQuiz() {
+        switchView('v-quiz');
+        renderQ();
+    }
+
+    function renderQ() {
+        const Q = AppState.quizQueue[AppState.qIdx];
+        document.getElementById('qCount').innerText = (AppState.qIdx+1) + " / " + AppState.quizQueue.length;
+        document.getElementById('qID').innerText = "ID: " + (Q.id || 'N/A');
+        
+        const c = document.getElementById('quizContainer');
         
         let html = `
-            ${imgHtml}
+            ${Q.image ? `<img src="${Q.image}" style="max-width:100%; border-radius:10px">` : ''}
             <div class="q-text">${Q.question}</div>
-            <div id="optsBlock"></div>
-            <div id="explBlock" class="hidden" style="margin-top:20px; padding:15px; background:#fff3cd; border-radius:8px; line-height:1.5;"></div>
-            <button id="nextBtn" class="hidden" onclick="goNext()" style="width:100%; padding:15px; background:var(--primary); color:white; border:none; border-radius:10px; margin-top:20px; font-size:1.1em">التالي ⬅️</button>
+            <div id="opts"></div>
+            <div id="expl" style="display:none; background:#fff3cd; padding:15px; margin-top:15px; border-radius:10px; line-height:1.6"></div>
+            <button id="nextBtn" class="btn-main" onclick="nextQ()" style="display:none">السؤال التالي ⬅️</button>
         `;
-        contentDiv.innerHTML = html;
-
-        // Render Options
-        const optsBlock = document.getElementById('optsBlock');
+        c.innerHTML = html;
         
-        if (Q.type === 'matching') {
-            optsBlock.innerHTML = "<div style='text-align:center; padding:20px; color:#777'>سؤال توصيل (غير مدعوم على نسخة الويب الخفيفة)، تخطي.</div>";
-            document.getElementById('nextBtn').classList.remove('hidden');
+        const optsDiv = document.getElementById('opts');
+        if(Q.type === 'matching') {
+            optsDiv.innerHTML = "<p align='center' style='color:red'>سؤال توصيل - تخطي في الموبايل</p>";
+            document.getElementById('nextBtn').style.display = 'block';
             return;
         }
 
-        Q.options.forEach((txt, i) => {
+        Q.options.forEach((o, i) => {
             const btn = document.createElement('div');
             btn.className = 'opt-btn';
-            btn.innerText = txt;
-            btn.onclick = () => handleAnswer(i, Q, btn);
-            optsBlock.appendChild(btn);
+            btn.innerText = o;
+            btn.onclick = () => checkAns(i, Q, btn);
+            optsDiv.appendChild(btn);
         });
-        
         window.scrollTo(0,0);
     }
 
-    function handleAnswer(selIdx, Q, btnEl) {
-        if(btnEl.parentElement.classList.contains('disabled')) return;
-        btnEl.parentElement.classList.add('disabled');
-        // Visually lock all
-        Array.from(btnEl.parentElement.children).forEach(b => b.classList.add('locked'));
+    function checkAns(idx, Q, btn) {
+        if(btn.parentElement.classList.contains('locked')) return;
+        btn.parentElement.classList.add('locked');
 
-        const isCorrect = (selIdx === Q.correct_option_id);
+        const isCorrect = (idx === Q.correct_option_id);
         const status = isCorrect ? 'correct' : 'wrong';
 
         if(isCorrect) {
-            btnEl.classList.add('correct');
-            safeHaptic('success');
+            btn.classList.add('correct');
         } else {
-            btnEl.classList.add('wrong');
-            // Show real answer
-            btnEl.parentElement.children[Q.correct_option_id]?.classList.add('correct');
-            safeHaptic('error');
+            btn.classList.add('wrong');
+            btn.parentElement.children[Q.correct_option_id]?.classList.add('correct');
         }
 
-        // Show Explanation
         if(Q.explanation) {
-            const expl = document.getElementById('explBlock');
-            expl.innerHTML = `<b>💡 الشرح:</b><br>${Q.explanation}`;
-            expl.classList.remove('hidden');
+            const el = document.getElementById('expl');
+            el.innerHTML = "<b>💡 الشرح:</b><br>" + Q.explanation;
+            el.style.display = 'block';
         }
 
-        // Save to Firebase & Local
-        saveProgress(Q.id, status);
-
-        // Show Next Button
-        document.getElementById('nextBtn').classList.remove('hidden');
-    }
-
-    function saveProgress(qid, status) {
-        AppData.progress[qid] = status;
-        if(UserID !== 'guest' && DB) {
-            DB.ref('users/'+UserID+'/progress/'+qid).set(status);
-            // Increment simple score counter for leaderboard sorting
-            if(status === 'correct') {
-                 // Transaction to atomically increase score
-                 DB.ref('users/'+UserID+'/score').transaction((curr) => (curr || 0) + 1);
+        // SAVE & SYNC
+        AppState.progress[Q.id] = status;
+        if(DB && UserID!=='guest') {
+            // Save Progress
+            DB.ref(`users/${UserID}/progress/${Q.id}`).set(status);
+            // Increment simple total score for leaderboard sorting
+            if(isCorrect) DB.ref(`users/${UserID}/totalScore`).transaction(v => (v||0)+1);
+            // Optional: Save name
+            if(TG.initDataUnsafe?.user?.first_name) {
+                DB.ref(`users/${UserID}/name`).set(TG.initDataUnsafe.user.first_name);
             }
         }
+        
+        document.getElementById('nextBtn').style.display = 'block';
     }
 
-    function goNext() {
-        AppData.currIdx++;
-        renderCurrentQuestion();
+    function nextQ() {
+        if(AppState.qIdx < AppState.quizQueue.length-1) {
+            AppState.qIdx++;
+            renderQ();
+        } else {
+            alert("انتهى الاختبار! 🎉");
+            goHome();
+        }
+    }
+    
+    function confirmExit() { if(confirm("خروج؟")) goHome(); }
+    
+    function updateHeaderScore() {
+        const correctCount = Object.values(AppState.progress).filter(v=>v==='correct').length;
+        document.getElementById('uScore').innerText = correctCount;
     }
 
-    function safeExit() {
-        safeConfirm("هل تود الخروج من الاختبار؟", (ok)=>{
-             if(ok) showHome();
+    /* =========================================
+       6. LEADERBOARD (PERMISSION FIX)
+       ========================================= */
+    
+    function loadLeaderboard() {
+        switchView('v-leader');
+        const list = document.getElementById('leaderList');
+        list.innerHTML = "<p style='text-align:center'>جاري الاتصال...</p>";
+        
+        if(!DB) { list.innerHTML = "<p style='padding:20px; text-align:center'>يجب تفعيل فايربيس أولاً</p>"; return; }
+
+        // The query that usually fails if rules are strictly "auth != null"
+        // Ensure you apply the rules provided below
+        DB.ref('users').orderByChild('totalScore').limitToLast(30).once('value')
+        .then(snap => {
+            let data = [];
+            snap.forEach(child => {
+                const val = child.val();
+                data.push({
+                    name: val.name || "Student",
+                    score: val.totalScore || 0,
+                    id: child.key
+                });
+            });
+            
+            data.sort((a,b) => b.score - a.score); // Highest first
+            
+            let html = "";
+            let rank = 1;
+            data.forEach(p => {
+                const isMe = p.id === UserID;
+                const badge = rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':`#${rank}`;
+                html += `
+                    <div class="rank-row ${isMe ? 'rank-hl' : ''}">
+                        <div><span style="display:inline-block; width:30px">${badge}</span> ${p.name} ${isMe?'(أنت)':''}</div>
+                        <div><b>${p.score}</b></div>
+                    </div>
+                `;
+                rank++;
+            });
+            list.innerHTML = html || "<p style='padding:20px; text-align:center'>لا يوجد منافسين بعد.</p>";
+        })
+        .catch(err => {
+            console.error(err);
+            list.innerHTML = `<div style="padding:15px; color:#c62828; text-align:center; font-size:0.9em">
+                <b>خطأ في الصلاحيات (Permission Denied)</b><br>
+                يجب تعديل الـ Rules في فايربيس للسماح بالقراءة العامة.<br>
+                راجع الـ Console للحصول على الكود المطلوب.
+            </div>`;
         });
     }
 
-    // --- 4. LEADERBOARD ---
-    async function showLeaderboard() {
-        switchView('v-leader');
-        const listEl = document.getElementById('leaderboardList');
-        
-        // 1. My Stats
-        let myScore = Object.values(AppData.progress).filter(s=>s==='correct').length;
-        document.getElementById('myScoreDetails').innerText = myScore;
-
-        if(!DB) { listEl.innerHTML = "<p>غير متصل بفايربيس.</p>"; return; }
-
-        try {
-            // Fetch All Users Score (Simplified Approach: Assuming we stored 'score' property)
-            // Ideally use Cloud Functions or limitToLast query
-            const snap = await DB.ref('users').orderByChild('score').limitToLast(20).once('value');
-            
-            let players = [];
-            snap.forEach(child => {
-                let val = child.val();
-                // Simple Guest or ID display. If user info like Name saved, display it.
-                // Assuming TG passed first_name to FB earlier, else use "Student"
-                players.push({
-                    uid: child.key,
-                    score: val.score || 0,
-                    name: (child.key === UserID) ? "أنت" : "طالب" 
-                });
-            });
-
-            // Sort Descending
-            players.reverse(); 
-
-            let myRank = players.findIndex(p => p.uid === UserID);
-            
-            // UI
-            document.getElementById('totalPlayers').innerText = players.length + "+"; // Simulation
-            document.getElementById('myRank').innerText = myRank !== -1 ? `#${myRank+1}` : "#--";
-
-            let html = "";
-            players.forEach((p, idx) => {
-                let badge = "";
-                if(idx===0) badge="🥇";
-                if(idx===1) badge="🥈";
-                if(idx===2) badge="🥉";
-
-                html += `
-                    <div class="leader-row" style="${p.uid === UserID ? 'background:#e3f2fd' : ''}">
-                        <div><span class="medal">${badge || idx+1}</span> ${p.name}</div>
-                        <div style="font-weight:bold">${p.score}</div>
-                    </div>
-                `;
-            });
-            
-            listEl.innerHTML = html;
-
-        } catch(e) {
-            listEl.innerHTML = `<p style="padding:15px; color:red">تعذر تحميل القائمة<br>${e.message}</p>`;
-        }
-    }
-
-    // --- Init ---
+    // BOOT
     window.addEventListener('load', init);
 
 </script>
