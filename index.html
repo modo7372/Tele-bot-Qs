@@ -3,618 +3,836 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MedQuiz Elite V8.1</title>
+    <title>Exam Bot Elite V8</title>
     
-    <!-- Scripts loaded traditionally -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
     <style>
         /* --- THEMES & VARIABLES --- */
         :root {
-            --primary: #3b82f6; --primary-dark: #2563eb;
-            --bg: #f8fafc; --surface: #ffffff;
-            --text-main: #1e293b; --text-sub: #64748b;
+            --primary: #3b82f6;
+            --primary-bg: #eff6ff;
+            --text-main: #1e293b;
+            --text-sub: #64748b;
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
             --border: #e2e8f0;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --radius: 14px;
+            --shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
             --font-size: 16px;
-            --radius: 12px;
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
 
-        [data-theme="dark"] {
-            --bg: #0f172a; --surface: #1e293b; 
-            --text-main: #f1f5f9; --text-sub: #94a3b8; 
-            --border: #334155; --primary: #60a5fa;
-            --shadow: 0 4px 10px rgba(0,0,0,0.5);
-        }
-        
-        [data-theme="sepia"] {
-            --bg: #f4ecd8; --surface: #fdf6e3; 
-            --text-main: #433422; --text-sub: #5c5548; 
-            --border: #dcd2b8; --primary: #a05a2c;
+        /* Themes */
+        body.theme-dark {
+            --primary: #60a5fa;
+            --primary-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+            --bg-body: #0f172a;
+            --bg-card: #1e293b;
+            --border: #334155;
         }
 
-        * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; font-family: system-ui, -apple-system, sans-serif; }
-        
+        body.theme-warm {
+            --primary: #d97706;
+            --primary-bg: #fffbeb;
+            --bg-body: #fdf6e3;
+            --bg-card: #ffffff;
+        }
+
         body {
-            background-color: var(--bg); color: var(--text-main); font-size: var(--font-size);
-            margin: 0; padding-bottom: 100px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            margin: 0;
+            padding-bottom: 100px; /* Space for floating footer */
+            font-size: var(--font-size);
             transition: background 0.3s, color 0.3s;
             user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        /* HEADER */
-        .app-bar {
-            background: var(--surface); padding: 15px 20px;
-            position: sticky; top: 0; z-index: 100;
+        /* --- LAYOUT --- */
+        .app-header {
+            background: var(--bg-card); padding: 15px; position: sticky; top: 0; z-index: 50;
             display: flex; justify-content: space-between; align-items: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-bottom: 1px solid var(--border);
+            border-bottom: 1px solid var(--border); box-shadow: var(--shadow);
         }
-        .logo { font-weight: 800; font-size: 1.2em; color: var(--primary); }
-        .icon-btn { background: none; border: none; font-size: 1.4em; cursor: pointer; color: var(--text-main); }
+        
+        .view-container { display: none; padding: 15px; max-width: 700px; margin: 0 auto; animation: fadeUp 0.25s ease-out; }
+        .view-container.active { display: block; }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* CARDS */
+        /* --- CARDS & LISTS --- */
         .nav-card {
-            background: var(--surface); padding: 20px; margin-bottom: 12px;
-            border-radius: var(--radius); border: 1px solid var(--border);
-            display: flex; align-items: center; justify-content: space-between;
-            box-shadow: var(--shadow); cursor: pointer;
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+            padding: 18px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;
+            cursor: pointer; transition: transform 0.1s;
         }
-        .nav-card:active { transform: scale(0.98); opacity: 0.8; }
-        .count-badge { background: var(--bg); border: 1px solid var(--border); padding: 4px 8px; border-radius: 6px; font-size: 0.8em; font-weight: bold; }
+        .nav-card:active { transform: scale(0.98); background: var(--primary-bg); }
+        
+        .card-info h3 { margin: 0 0 5px 0; font-size: 1.1em; }
+        .card-info span { font-size: 0.85em; color: var(--text-sub); background: rgba(0,0,0,0.05); padding: 2px 8px; border-radius: 10px; }
 
-        /* CHECKBOX ROWS */
+        /* --- SELECTION ROWS --- */
         .check-row {
-            background: var(--surface); padding: 15px; margin-bottom: 10px;
-            border-radius: var(--radius); border: 1px solid var(--border);
-            display: flex; align-items: center; cursor: pointer;
+            background: var(--bg-card); padding: 15px; border-radius: var(--radius);
+            margin-bottom: 8px; border: 2px solid transparent; box-shadow: var(--shadow);
+            display: flex; align-items: center; gap: 12px; cursor: pointer; transition: 0.2s;
         }
-        .check-row.selected { border-color: var(--primary); background: rgba(59, 130, 246, 0.05); }
+        .check-row.checked { border-color: var(--primary); background: var(--primary-bg); }
         
-        .chk-visual {
-            width: 24px; height: 24px; border: 2px solid var(--text-sub); border-radius: 6px;
-            margin-left: 15px; display: flex; align-items: center; justify-content: center;
+        .custom-chk {
+            width: 24px; height: 24px; border-radius: 6px; border: 2px solid var(--text-sub);
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
         }
-        .check-row.selected .chk-visual { border-color: var(--primary); background: var(--primary); }
-        .chk-visual::after { content: '✔'; color: white; font-size: 0.9em; display: none; }
-        .check-row.selected .chk-visual::after { display: block; }
+        .check-row.checked .custom-chk { background: var(--primary); border-color: var(--primary); color: white; }
+        .custom-chk::after { content: '✔'; font-size: 14px; display: none; }
+        .check-row.checked .custom-chk::after { display: block; }
+
+        /* --- FLOATING FOOTER (Key Requirement) --- */
+        .floating-footer {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background: var(--bg-card); padding: 15px;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.1); z-index: 100;
+            display: flex; justify-content: space-between; align-items: center;
+            border-top: 1px solid var(--border);
+        }
+        .btn-action {
+            background: var(--primary); color: white; border: none;
+            padding: 12px 25px; border-radius: 50px; font-weight: bold; font-size: 1em;
+            cursor: pointer; width: 100%; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transition: 0.2s;
+        }
+        .btn-action:active { transform: translateY(2px); }
+
+        /* --- SELECT ALL BUTTON --- */
+        .select-all-btn {
+            background: var(--bg-card); border: 2px solid var(--border); color: var(--text-main);
+            padding: 12px; border-radius: var(--radius); margin-bottom: 20px;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            cursor: pointer; font-weight: bold; transition: 0.3s;
+        }
+        .select-all-btn.active {
+            background: var(--primary); color: white; border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); /* Glowing effect */
+        }
+
+        /* --- SETTINGS MODAL --- */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200;
+            display: none; align-items: center; justify-content: center;
+        }
+        .modal-box {
+            background: var(--bg-card); width: 90%; max-width: 400px;
+            border-radius: var(--radius); padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        .setting-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .setting-btn { padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-body); cursor: pointer; }
+        .setting-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        /* --- QUIZ --- */
+        .q-meta-tag { font-size: 0.75em; background: var(--border); padding: 3px 8px; border-radius: 4px; color: var(--text-main); margin-left: 8px; }
+        .opt-btn { background: var(--bg-card); padding: 15px; margin-bottom: 10px; border-radius: 10px; border: 2px solid transparent; cursor: pointer; width: 100%; text-align: start; color: var(--text-main); box-shadow: var(--shadow); }
+        .opt-btn.correct { background: #dcfce7; border-color: var(--success); color: #000; }
+        .opt-btn.wrong { background: #fee2e2; border-color: var(--danger); color: #000; }
+
+        /* --- UTILS --- */
+        .hidden { display: none !important; }
+        .breadcrumb { font-size: 0.85em; color: var(--text-sub); margin-bottom: 10px; display: flex; overflow-x: auto; white-space: nowrap; gap: 5px; }
+        .bc-item { color: var(--primary); cursor: pointer; }
         
-        /* SELECT ALL BOX */
-        .select-all-box {
-            background: var(--surface); padding: 15px; border-radius: var(--radius);
-            border: 2px solid var(--border); display: flex; align-items: center; margin-bottom: 20px;
-            cursor: pointer;
-        }
-        .select-all-box.active { border-color: var(--primary); }
-        .select-all-box.active .chk-visual { background: var(--primary); border-color: var(--primary); }
-        
-        /* QUIZ */
-        .q-meta { display:flex; justify-content:space-between; margin-bottom:15px; font-size:0.85em; color:var(--text-sub); background:rgba(0,0,0,0.03); padding:8px; border-radius:8px; }
-        .q-txt { font-weight: 700; font-size: 1.15em; line-height: 1.5; margin: 15px 0; }
-        .opt-btn {
-            width: 100%; padding: 15px; margin-bottom: 10px; border-radius: var(--radius);
-            background: var(--surface); border: 2px solid transparent; color: var(--text-main);
-            text-align: right; cursor: pointer; font-size: 1em; box-shadow: var(--shadow);
-        }
-        .opt-btn.correct { background: #d1fae5; border-color: #10b981; color: #064e3b; }
-        .opt-btn.wrong { background: #fee2e2; border-color: #ef4444; color: #7f1d1d; }
-        .expl-box { display:none; margin-top:20px; padding:15px; background:rgba(245, 158, 11, 0.1); border-right:4px solid #f59e0b; border-radius:8px; }
-
-        /* FAB */
-        .fab-container {
-            position: fixed; bottom: 20px; left: 0; right: 0; 
-            padding: 0 20px; z-index: 200; pointer-events: none;
-            display: flex; justify-content: center;
-        }
-        .fab {
-            background: var(--primary); color: white;
-            padding: 15px 40px; border-radius: 50px; font-weight: 800;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2); border: none; cursor: pointer;
-            pointer-events: auto; display: none;
-        }
-        .fab.visible { display: block; animation: popUp 0.3s; }
-        @keyframes popUp { from{transform:translateY(100px)} to{transform:translateY(0)} }
-
-        /* VIEWS */
-        .view-section { display: none; padding: 20px; max-width: 800px; margin: 0 auto; }
-        .view-section.active { display: block; animation: fadeUp 0.3s; }
-        @keyframes fadeUp { from{opacity:0; transform:translateY(20px);} to{opacity:1; transform:translateY(0);} }
-
-        /* BREADCRUMB */
-        .breadcrumb { margin-bottom: 20px; color: var(--text-sub); display: flex; align-items: center; gap: 5px; font-size: 0.9em; }
-        .bc-link { color: var(--primary); font-weight: bold; cursor: pointer; }
-
-        /* SETTINGS MODAL */
-        .modal {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 300;
-            display: none; align-items: flex-end; 
-        }
-        .modal-content {
-            background: var(--surface); width: 100%; border-radius: 20px 20px 0 0;
-            padding: 25px; animation: slideUp 0.3s;
-        }
-        @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
-        .set-btn { padding: 8px 15px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg); margin-left: 5px; cursor: pointer; color: var(--text-main); }
-        .set-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
-
+        #loader { position: fixed; inset: 0; background: var(--bg-body); z-index: 999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #ccc; border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s infinite linear; }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
+    <!-- LOADER -->
+    <div id="loader">
+        <div class="spinner"></div>
+        <p style="margin-top:15px" data-key="loading">جاري التحميل...</p>
+    </div>
+
+    <!-- HEADER -->
+    <header class="app-header">
+        <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-weight:900; font-size:1.2em">Elite Bot</span>
+            <span class="q-meta-tag">V8</span>
+        </div>
+        <div>
+            <button onclick="toggleSettings()" style="background:none;border:none;font-size:1.5em;cursor:pointer">⚙️</button>
+        </div>
+    </header>
+
     <!-- SETTINGS MODAL -->
-    <div id="settings-modal" class="modal">
-        <div class="modal-content">
-            <h3>⚙️ الإعدادات</h3>
-            <div style="margin-bottom:20px">
-                <p>المظهر:</p>
-                <button class="set-btn active" id="btn-theme-light" onclick="setTheme('light')">☀️ فاتح</button>
-                <button class="set-btn" id="btn-theme-dark" onclick="setTheme('dark')">🌑 مظلم</button>
-                <button class="set-btn" id="btn-theme-sepia" onclick="setTheme('sepia')">📖 قراءة</button>
+    <div id="settingsModal" class="modal-overlay" onclick="if(event.target===this) toggleSettings()">
+        <div class="modal-box">
+            <h3 data-key="settings_title">الإعدادات</h3>
+            
+            <div class="setting-row">
+                <span data-key="lang">اللغة</span>
+                <div>
+                    <button class="setting-btn" id="btn-lang-ar" onclick="setLang('ar')">عربي</button>
+                    <button class="setting-btn" id="btn-lang-en" onclick="setLang('en')">Eng</button>
+                </div>
             </div>
-            <div style="margin-bottom:20px">
-                <p>الخط:</p>
-                <button class="set-btn" id="btn-font-14" onclick="setFont(14)">صغير</button>
-                <button class="set-btn active" id="btn-font-16" onclick="setFont(16)">وسط</button>
-                <button class="set-btn" id="btn-font-18" onclick="setFont(18)">كبير</button>
+
+            <div class="setting-row">
+                <span data-key="theme">المظهر</span>
+                <div>
+                    <button class="setting-btn" onclick="setTheme('light')">☀️</button>
+                    <button class="setting-btn" onclick="setTheme('dark')">🌑</button>
+                    <button class="setting-btn" onclick="setTheme('warm')">☕</button>
+                </div>
             </div>
-            <button onclick="closeSettings()" style="width:100%; padding:15px; background:var(--primary); color:#fff; border:none; border-radius:12px">إغلاق</button>
+
+            <div class="setting-row">
+                <span data-key="fontsize">حجم الخط</span>
+                <div>
+                    <button class="setting-btn" onclick="setFont(14)">A-</button>
+                    <button class="setting-btn" onclick="setFont(16)">A</button>
+                    <button class="setting-btn" onclick="setFont(18)">A+</button>
+                </div>
+            </div>
+
+            <button class="btn-action" onclick="toggleSettings()" data-key="close">إغلاق</button>
         </div>
     </div>
 
-    <!-- APP BAR -->
-    <div class="app-bar">
-        <button class="icon-btn" onclick="openSettings()">⚙️</button>
-        <div class="logo">MedQuiz Elite</div>
-        <div style="font-weight:700">#<span id="q-counter">0</span></div>
+    <!-- VIEW 1: TERMS (HOME) -->
+    <div id="view-terms" class="view-container active">
+        <h2 data-key="select_term">أي ترم دراسي؟</h2>
+        <div id="list-terms"></div>
     </div>
 
-    <!-- VIEWS CONTAINER -->
-    <div id="main-container">
+    <!-- VIEW 2: SUBJECTS -->
+    <div id="view-subjects" class="view-container">
+        <div class="breadcrumb">
+            <span class="bc-item" onclick="goHome()" data-key="home">الرئيسية</span> / <span id="bc-term"></span>
+        </div>
+        <h2 data-key="select_subject">اختر المادة:</h2>
+        <div id="list-subjects"></div>
+    </div>
+
+    <!-- VIEW 3: LESSONS (Multi-Select) -->
+    <div id="view-lessons" class="view-container">
+        <div class="breadcrumb">... / <span class="bc-item" onclick="backToSubjects()">المادة</span> / <span data-key="lessons">الدروس</span></div>
         
-        <!-- Loader -->
-        <div id="v-loader" class="view-section active" style="text-align:center; padding-top:100px;">
-            <div style="font-size:3em">📥</div>
-            <h3>جاري تحميل البيانات...</h3>
+        <div class="select-all-btn" id="btn-all-lessons" onclick="toggleAllLessons()">
+            <span class="custom-chk"></span> <span data-key="select_all">تحديد الكل</span>
         </div>
 
-        <!-- 1. Source (Term) -->
-        <div id="v-source" class="view-section">
-            <h2>اختر الترم الدراسي:</h2>
-            <div id="list-source"></div>
-        </div>
-
-        <!-- 2. Subject -->
-        <div id="v-subject" class="view-section">
-            <div class="breadcrumb"><span class="bc-link" onclick="goBack('source')">الرئيسية</span> / المادة</div>
-            <h2>اختر المادة:</h2>
-            <div id="list-subject"></div>
-        </div>
-
-        <!-- 3. Lesson -->
-        <div id="v-lesson" class="view-section">
-            <div class="breadcrumb"><span class="bc-link" onclick="goBack('subject')">...</span> / <span id="bread-subj"></span></div>
-            <h2>حدد الدروس:</h2>
-            
-            <div class="select-all-box" id="lesson-all-btn" onclick="toggleAllLessons()">
-                <div class="chk-visual"></div>
-                <div class="label" style="margin-right:15px">تحديد الكل</div>
-            </div>
-            
-            <div id="list-lesson"></div>
-        </div>
-
-        <!-- 4. Chapter -->
-        <div id="v-chapter" class="view-section">
-            <div class="breadcrumb"><span class="bc-link" onclick="goBack('lesson')">...</span> / تفاصيل الفصول</div>
-            <h2>حدد الفصول (Topics):</h2>
-            
-            <div class="select-all-box" id="chap-all-btn" onclick="toggleAllChapters()">
-                <div class="chk-visual"></div>
-                <div class="label" style="margin-right:15px">تحديد الكل</div>
-            </div>
-            
-            <div id="list-chapter"></div>
-            <div style="height: 100px;"></div>
-        </div>
-
-        <!-- 5. Quiz -->
-        <div id="v-quiz" class="view-section">
-            <div class="breadcrumb"><span class="bc-link" onclick="exitQuiz()">إنهاء ✖</span></div>
-            
-            <div class="q-meta">
-                <span id="q-ctx">...</span>
-                <span>ID: <span id="q-id"></span></span>
-            </div>
-            
-            <div id="q-content"></div>
-        </div>
-        
+        <div id="list-lessons"></div>
     </div>
 
-    <!-- FAB -->
-    <div class="fab-container">
-        <button id="fab-action" class="fab"></button>
+    <!-- VIEW 4: CHAPTERS (Grouped) -->
+    <div id="view-chapters" class="view-container">
+        <div class="breadcrumb">... / <span class="bc-item" onclick="renderLessons()">الدروس</span> / <span data-key="chapters">الفصول</span></div>
+        
+        <h3 style="margin-top:0"><span data-key="refine_selection">دقة الاختيار</span> (<span id="total-q-count">0</span> <span data-key="qs">سؤال</span>)</h3>
+
+        <!-- Prominent Select All Button -->
+        <div class="select-all-btn" id="btn-all-chapters" onclick="toggleAllChapters()">
+            <span class="custom-chk"></span> <span data-key="select_all_chapters">تحديد كل الشباتر المعروضة</span>
+        </div>
+
+        <div id="list-chapters"></div>
+    </div>
+
+    <!-- VIEW 5: QUIZ -->
+    <div id="view-quiz" class="view-container">
+        <div style="display:flex;justify-content:space-between;margin-bottom:15px;font-size:0.9em;color:var(--text-sub)">
+            <span><span data-key="question">سؤال</span> <span id="q-idx">1</span> / <span id="q-total">10</span></span>
+            <span onclick="confirmExit()" style="color:var(--danger);cursor:pointer;font-weight:bold" data-key="exit">خروج</span>
+        </div>
+
+        <div id="q-content"></div>
+    </div>
+
+    <!-- FLOATING FOOTER (Navigation Actions) -->
+    <div id="floating-footer" class="floating-footer hidden">
+        <div style="font-size:0.9em">
+            <span data-key="selected">محدد:</span> <b id="footer-count">0</b>
+        </div>
+        <button id="footer-btn" class="btn-action" style="width:auto; min-width:120px">التالي ⬅️</button>
     </div>
 
 <script>
-    /** 
-     *  ==============================================
-     *  CONFIG: INSERT YOUR FIREBASE DATA HERE 👇
-     *  ==============================================
-     */
-    const FIREBASE_CONFIG = {        
-        apiKey: "AIzaSyDEZFJmcXK2LxYAZ-Yjv_M1HbC6zi_qilg",
-        authDomain: "exambotdb.firebaseapp.com",
-        databaseURL: "https://exambotdb-default-rtdb.firebaseio.com",
-        projectId: "exambotdb",
-        storageBucket: "exambotdb.firebasestorage.app",
-        messagingSenderId: "950600562980",
-        appId: "1:950600562980:web:f993c22d45e5cfdd3d9bb1"      
+    /* --- CONFIG --- */
+    const CONFIG = {
+        firebase: {
+            apiKey: "AIzaSyDEZFJmcXK2LxYAZ-Yjv_M1HbC6zi_qilg",
+            authDomain: "exambotdb.firebaseapp.com",
+            databaseURL: "https://exambotdb-default-rtdb.firebaseio.com",
+            projectId: "exambotdb",
+            storageBucket: "exambotdb.firebasestorage.app",
+            messagingSenderId: "950600562980",
+            appId: "1:950600562980:web:f993c22d45e5cfdd3d9bb1"            
+        }
     };
-    /* ============================================== */
 
+    /* --- LOCALIZATION --- */
+    const TEXTS = {
+        ar: {
+            loading: "جاري تحميل البيانات...",
+            select_term: "اختر الترم الدراسي:",
+            select_subject: "اختر المادة:",
+            home: "الرئيسية",
+            lessons: "الدروس",
+            chapters: "الفصول",
+            select_all: "تحديد / إلغاء كل الدروس",
+            select_all_chapters: "تحديد / إلغاء كل الشباتر",
+            refine_selection: "تحديد الفصول",
+            qs: "سؤال",
+            question: "سؤال",
+            exit: "إنهاء",
+            selected: "تم تحديد:",
+            next: "التالي ⬅️",
+            start: "بدء الاختبار 🚀",
+            settings_title: "الإعدادات",
+            lang: "اللغة",
+            theme: "المظهر",
+            fontsize: "حجم الخط",
+            close: "إغلاق",
+            no_data: "لا توجد بيانات",
+            correct: "إجابة صحيحة",
+            wrong: "إجابة خاطئة",
+            explanation: "الشرح",
+            id: "كود"
+        },
+        en: {
+            loading: "Loading Data...",
+            select_term: "Select Term:",
+            select_subject: "Select Subject:",
+            home: "Home",
+            lessons: "Lessons",
+            chapters: "Chapters",
+            select_all: "Select / Deselect All Lessons",
+            select_all_chapters: "Select / Deselect All Chapters",
+            refine_selection: "Refine Chapters",
+            qs: "Qs",
+            question: "Q",
+            exit: "Exit",
+            selected: "Selected:",
+            next: "Next ➡️",
+            start: "Start Quiz 🚀",
+            settings_title: "Settings",
+            lang: "Language",
+            theme: "Theme",
+            fontsize: "Font Size",
+            close: "Close",
+            no_data: "No Data",
+            correct: "Correct",
+            wrong: "Wrong",
+            explanation: "Explanation",
+            id: "ID"
+        }
+    };
 
+    /* --- STATE --- */
     const App = {
-        data: [], tree: {}, 
-        nav: { source:null, subject:null },
-        selection: { lessons: new Set(), chapters: new Set() },
-        quiz: { queue: [], idx: 0 },
-        settings: { theme: 'light', font: 16 }
+        data: [], // Flat list
+        tree: {}, // Hierarchy: Tree[Term][Subj][Lesson][Chapter] = [QIDs]
+        metaCounts: {}, // Cache for counts
+        
+        selection: { term: null, subject: null, lessons: [], chapters: [] },
+        
+        quiz: { queue: [], index: 0 },
+        
+        settings: { lang: 'ar', theme: 'light', font: 16 }
     };
 
-    window.onload = function() {
-        if(window.Telegram?.WebApp) {
-            window.Telegram.WebApp.ready();
-            window.Telegram.WebApp.expand();
-        }
+    const TG = window.Telegram.WebApp;
 
-        // Firebase Init
+    /* --- INIT --- */
+    window.onload = async () => {
+        TG.ready(); TG.expand();
+        
+        // Load Settings
+        const saved = localStorage.getItem('elite_settings');
+        if(saved) App.settings = JSON.parse(saved);
+        applySettings();
+
+        // Firebase
         if(window.firebase && !firebase.apps.length) {
-            try {
-                firebase.initializeApp(FIREBASE_CONFIG);
-            } catch(e) { console.error("Firebase Config Error:", e); }
+            try { firebase.initializeApp(CONFIG.firebase); } catch(e){}
         }
 
-        loadSettings();
-        fetchData();
+        await loadData();
     };
 
-    /* DATA LOADING */
-    async function fetchData() {
+    async function loadData() {
         try {
-            const listRes = await fetch('questions_list.json?nocache=' + Date.now());
-            const files = await listRes.json();
+            const list = await fetch('questions_list.json?t='+Date.now()).then(r=>r.json());
+            const jobs = list.map(f => fetch('Questions/'+f).then(r=>r.json()));
+            const files = await Promise.all(jobs);
+
+            processFiles(files);
             
-            const fetches = files.map(f => fetch('Questions/' + f).then(r => r.json()));
-            const responses = await Promise.all(fetches);
-
-            responses.forEach(json => {
-                const src = json.meta?.source || "Other";
-                const sub = json.meta?.subject || "General";
-                const lsn = json.meta?.lesson || "Misc";
-
-                if (!App.tree[src]) App.tree[src] = {};
-                if (!App.tree[src][sub]) App.tree[src][sub] = {};
-                if (!App.tree[src][sub][lsn]) App.tree[src][sub][lsn] = {};
-
-                json.questions.forEach(q => {
-                    const chap = q.chapter || "General";
-                    // Append Context
-                    q._ctx = { s: src, su: sub, l: lsn, c: chap };
-                    
-                    if (!App.tree[src][sub][lsn][chap]) App.tree[src][sub][lsn][chap] = [];
-                    App.tree[src][sub][lsn][chap].push(q);
-                });
-            });
-
-            showView('v-source');
-            renderSources();
+            document.getElementById('loader').classList.add('hidden');
+            renderTerms();
         } catch(e) {
-            console.error(e);
-            document.querySelector('#v-loader h3').innerText = "خطأ في تحميل الملفات!";
+            alert("Error loading data: " + e.message);
         }
     }
 
-    /* HELPERS */
-    function getCount(node) {
-        if(Array.isArray(node)) return node.length;
-        return Object.values(node).reduce((s, c) => s + getCount(c), 0);
+    function processFiles(files) {
+        // Build Tree: Term -> Subject -> Lesson -> Chapter -> Array[Q]
+        let tree = {};
+        let qList = [];
+
+        files.forEach(f => {
+            const meta = f.meta || {};
+            const term = meta.source || "General";
+            const subj = meta.subject || "General";
+            const lsn  = meta.lesson || "Misc";
+
+            f.questions.forEach(q => {
+                const chap = q.chapter || "General";
+                const qObj = { ...q, _meta: { term, subj, lsn, chap } };
+                qList.push(qObj);
+
+                if(!tree[term]) tree[term] = {};
+                if(!tree[term][subj]) tree[term][subj] = {};
+                if(!tree[term][subj][lsn]) tree[term][subj][lsn] = {};
+                if(!tree[term][subj][lsn][chap]) tree[term][subj][lsn][chap] = [];
+                
+                tree[term][subj][lsn][chap].push(qObj);
+            });
+        });
+        
+        App.tree = tree;
+        App.data = qList;
     }
 
-    function showView(id) {
-        document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+    /* --- HELPER: COUNTS --- */
+    function getCount(node) {
+        // Recursively count questions in a node (object or array)
+        if(Array.isArray(node)) return node.length;
+        let sum = 0;
+        Object.values(node).forEach(child => sum += getCount(child));
+        return sum;
+    }
+
+    /* --- NAVIGATION & RENDERING --- */
+
+    function switchView(id) {
+        document.querySelectorAll('.view-container').forEach(e => e.classList.remove('active'));
         document.getElementById(id).classList.add('active');
-        document.getElementById('fab-action').classList.remove('visible');
+        document.getElementById('floating-footer').classList.add('hidden');
         window.scrollTo(0,0);
     }
 
-    function goBack(to) {
-        if(to === 'source') { showView('v-source'); }
-        if(to === 'subject') { renderSubjects(); }
-        if(to === 'lesson') { renderLessons(); }
-    }
-
-    /* RENDERERS */
-    
-    // 1. Source
-    function renderSources() {
-        const div = document.getElementById('list-source');
-        div.innerHTML = '';
-        Object.keys(App.tree).forEach(k => {
-            const count = getCount(App.tree[k]);
-            div.innerHTML += cardHTML(k, count, `navToSubject('${k}')`);
+    /* 1. TERMS */
+    function renderTerms() {
+        switchView('view-terms');
+        const c = document.getElementById('list-terms');
+        c.innerHTML = '';
+        
+        Object.keys(App.tree).forEach(term => {
+            const count = getCount(App.tree[term]);
+            const div = document.createElement('div');
+            div.className = 'nav-card';
+            div.onclick = () => selectTerm(term);
+            div.innerHTML = `
+                <div class="card-info">
+                    <h3>${term}</h3>
+                    <span>${count} ${txt('qs')}</span>
+                </div>
+                <div>⬅️</div>
+            `;
+            c.appendChild(div);
         });
     }
 
-    window.navToSubject = (key) => {
-        App.nav.source = key;
+    function selectTerm(t) {
+        App.selection.term = t;
         renderSubjects();
-    };
+    }
 
-    // 2. Subject
+    /* 2. SUBJECTS */
     function renderSubjects() {
-        const div = document.getElementById('list-subject');
-        div.innerHTML = '';
-        const node = App.tree[App.nav.source];
-        
-        Object.keys(node).forEach(k => {
-            const count = getCount(node[k]);
-            div.innerHTML += cardHTML(k, count, `navToLesson('${k}')`);
+        switchView('view-subjects');
+        document.getElementById('bc-term').innerText = App.selection.term;
+        const c = document.getElementById('list-subjects');
+        c.innerHTML = '';
+
+        const subjects = App.tree[App.selection.term];
+        Object.keys(subjects).forEach(subj => {
+            const count = getCount(subjects[subj]);
+            const div = document.createElement('div');
+            div.className = 'nav-card';
+            div.onclick = () => selectSubject(subj);
+            div.innerHTML = `
+                <div class="card-info">
+                    <h3>${subj}</h3>
+                    <span>${count} ${txt('qs')}</span>
+                </div>
+                <div>⬅️</div>
+            `;
+            c.appendChild(div);
         });
-        showView('v-subject');
     }
 
-    window.navToLesson = (key) => {
-        App.nav.subject = key;
-        // Reset Lower Selection on new path for safety
-        App.selection.lessons.clear(); 
+    function selectSubject(s) {
+        App.selection.subject = s;
+        App.selection.lessons = []; // Reset
         renderLessons();
-    };
+    }
+    
+    function backToSubjects() { renderSubjects(); }
 
-    // 3. Lessons
+    /* 3. LESSONS (CHECKBOXES) */
     function renderLessons() {
-        const div = document.getElementById('list-lesson');
-        div.innerHTML = '';
-        document.getElementById('bread-subj').innerText = App.nav.subject;
+        switchView('view-lessons');
+        const t = App.selection.term;
+        const s = App.selection.subject;
+        const lessons = App.tree[t][s];
+        const container = document.getElementById('list-lessons');
+        container.innerHTML = '';
 
-        const node = App.tree[App.nav.source][App.nav.subject];
-        const allKeys = Object.keys(node);
-
-        allKeys.forEach(k => {
-            const fullKey = `${App.nav.source}|${App.nav.subject}|${k}`;
-            const count = getCount(node[k]);
-            const isSel = App.selection.lessons.has(fullKey);
-
-            div.innerHTML += checkHTML('lesson', fullKey, k, count, isSel);
+        Object.keys(lessons).forEach(lName => {
+            const count = getCount(lessons[lName]);
+            const isSel = App.selection.lessons.includes(lName);
+            
+            const div = document.createElement('div');
+            div.className = `check-row ${isSel ? 'checked' : ''}`;
+            div.onclick = () => toggleLesson(lName);
+            div.innerHTML = `
+                <div class="custom-chk"></div>
+                <div style="flex-grow:1">
+                    <div style="font-weight:600">${lName}</div>
+                    <div style="font-size:0.85em;color:var(--text-sub)">${count} ${txt('qs')}</div>
+                </div>
+            `;
+            container.appendChild(div);
         });
 
-        updateSelectAll('lesson-all-btn', allKeys.length > 0 && allKeys.every(k => App.selection.lessons.has(`${App.nav.source}|${App.nav.subject}|${k}`)));
-        updateLessonFab();
-        showView('v-lesson');
+        updateLessonUI();
     }
 
-    window.toggleCheck = (type, key, el) => {
-        const set = type === 'lesson' ? App.selection.lessons : App.selection.chapters;
-        if(set.has(key)) set.delete(key); else set.add(key);
-        
-        // Re-render to update UI consistency
-        if(type === 'lesson') renderLessons();
-        if(type === 'chapter') renderChapters(); // efficient enough for this list size
-    };
+    function toggleLesson(l) {
+        if(App.selection.lessons.includes(l)) {
+            App.selection.lessons = App.selection.lessons.filter(x => x !== l);
+        } else {
+            App.selection.lessons.push(l);
+        }
+        renderLessons(); // Re-render to update classes
+    }
 
-    // 4. Chapters
+    function toggleAllLessons() {
+        const all = Object.keys(App.tree[App.selection.term][App.selection.subject]);
+        const isFull = all.every(l => App.selection.lessons.includes(l));
+        
+        if(isFull) App.selection.lessons = [];
+        else App.selection.lessons = [...all];
+        
+        renderLessons();
+    }
+
+    function updateLessonUI() {
+        // Sync "Select All" Button
+        const all = Object.keys(App.tree[App.selection.term][App.selection.subject]);
+        const btn = document.getElementById('btn-all-lessons');
+        const isFull = all.length > 0 && all.every(l => App.selection.lessons.includes(l));
+        
+        if(isFull) btn.classList.add('active'); else btn.classList.remove('active');
+
+        // Footer
+        const count = App.selection.lessons.length;
+        const foot = document.getElementById('floating-footer');
+        const fBtn = document.getElementById('footer-btn');
+        
+        if(count > 0) {
+            foot.classList.remove('hidden');
+            document.getElementById('footer-count').innerText = count;
+            fBtn.innerText = txt('next');
+            fBtn.onclick = renderChapters;
+        } else {
+            foot.classList.add('hidden');
+        }
+    }
+
+    /* 4. CHAPTERS (NESTED CHECKBOXES) */
     function renderChapters() {
-        const div = document.getElementById('list-chapter');
-        div.innerHTML = '';
-        let totalChaps = 0;
-        let selectedChaps = 0;
-
-        const src = App.nav.source; const sub = App.nav.subject;
+        // On entry, default select ALL chapters of the chosen lessons if not already set
+        // Strategy: Build a list of all available chapter Keys (Lesson|Chapter)
+        // If selection.chapters is empty or mismatches context, reset.
         
-        App.selection.lessons.forEach(lFull => {
-            const lName = lFull.split('|')[2];
-            const chObj = App.tree[src][sub][lName];
-
-            div.innerHTML += `<div style="margin:20px 0 10px; color:var(--primary); font-weight:bold; border-bottom:1px solid #ccc">📂 ${lName}</div>`;
-            
-            Object.keys(chObj).forEach(cName => {
-                const fullKey = `${src}|${sub}|${lName}|${cName}`;
-                
-                // AUTO SELECT Logic: If newly seen, assume selected? 
-                // For simplicity: Default checked if we just arrived from lessons
-                // Here we simply check the Set.
-                if(!App.selection.chapters.has(fullKey)) App.selection.chapters.add(fullKey); // Force auto-select
-
-                const qArr = chObj[cName];
-                const isSel = App.selection.chapters.has(fullKey);
-                
-                div.innerHTML += checkHTML('chapter', fullKey, cName, qArr.length, isSel);
-                totalChaps++;
-                if(isSel) selectedChaps++;
+        // Simple logic: Always pre-select ALL chapters from the selected lessons,
+        // unless the user unchecks them. To keep it simple, we rebuild the list.
+        // Or better: We only track UNSELECTED chapters? No, tracking Selected is safer.
+        
+        // Let's generate the valid keys for current view
+        const t = App.selection.term;
+        const s = App.selection.subject;
+        let availableChapters = []; // Objects { lesson, chap, count, key }
+        
+        App.selection.lessons.forEach(l => {
+            const chaps = App.tree[t][s][l];
+            Object.keys(chaps).forEach(c => {
+                availableChapters.push({ 
+                    l, c, 
+                    count: chaps[c].length, 
+                    key: `${l}|${c}` 
+                });
             });
         });
 
-        updateSelectAll('chap-all-btn', totalChaps > 0 && selectedChaps === totalChaps);
-        updateChapterFab();
-        showView('v-chapter');
+        // Initialize selection if coming forward (naive check: if empty)
+        // Better: Ensure App.selection.chapters contains valid items.
+        // For V8: Let's Auto-Select ALL initially.
+        if(App.selection.chapters.length === 0) {
+            App.selection.chapters = availableChapters.map(x => x.key);
+        }
+
+        switchView('view-chapters');
+        const cList = document.getElementById('list-chapters');
+        cList.innerHTML = '';
+        
+        // Group by Lesson
+        App.selection.lessons.forEach(lName => {
+            const header = document.createElement('h4');
+            header.style.cssText = "margin:15px 0 5px; color:var(--primary); border-bottom:1px solid var(--border)";
+            header.innerText = `📂 ${lName}`;
+            cList.appendChild(header);
+
+            const lessonChaps = availableChapters.filter(x => x.l === lName);
+            
+            lessonChaps.forEach(item => {
+                const isSel = App.selection.chapters.includes(item.key);
+                const row = document.createElement('div');
+                row.className = `check-row ${isSel?'checked':''}`;
+                row.onclick = () => toggleChapter(item.key);
+                row.innerHTML = `
+                    <div class="custom-chk"></div>
+                    <div style="flex-grow:1">
+                        <div style="font-weight:600">${item.c}</div>
+                        <div style="font-size:0.85em;color:var(--text-sub)">${item.count} ${txt('qs')}</div>
+                    </div>
+                `;
+                cList.appendChild(row);
+            });
+        });
+
+        updateChapterUI(availableChapters);
     }
 
-    // Toggle All Logic
-    window.toggleAllLessons = () => {
-        const node = App.tree[App.nav.source][App.nav.subject];
-        const keys = Object.keys(node).map(k => `${App.nav.source}|${App.nav.subject}|${k}`);
-        
-        const allSel = keys.every(k => App.selection.lessons.has(k));
-        if(allSel) keys.forEach(k => App.selection.lessons.delete(k));
-        else keys.forEach(k => App.selection.lessons.add(k));
-        
-        renderLessons();
-    };
+    function toggleChapter(key) {
+        if(App.selection.chapters.includes(key)) {
+            App.selection.chapters = App.selection.chapters.filter(k => k !== key);
+        } else {
+            App.selection.chapters.push(key);
+        }
+        // Hack to re-render without full rebuild? No, just re-render is safer for UI sync
+        // But we need to pass availableChapters. Let's make it global or re-calc.
+        // Re-calc is fast enough.
+        renderChapters(); 
+    }
 
-    window.toggleAllChapters = () => {
-        // We toggle all visible chapters in the current selected lessons
-        const src = App.nav.source; const sub = App.nav.subject;
+    function toggleAllChapters() {
+        // Get all keys in current context
+        const t = App.selection.term;
+        const s = App.selection.subject;
         let allKeys = [];
-        
-        App.selection.lessons.forEach(lFull => {
-            const l = lFull.split('|')[2];
-            Object.keys(App.tree[src][sub][l]).forEach(c => allKeys.push(`${src}|${sub}|${l}|${c}`));
+        App.selection.lessons.forEach(l => {
+            Object.keys(App.tree[t][s][l]).forEach(c => allKeys.push(`${l}|${c}`));
         });
 
-        const allSel = allKeys.every(k => App.selection.chapters.has(k));
-        if(allSel) allKeys.forEach(k => App.selection.chapters.delete(k));
-        else allKeys.forEach(k => App.selection.chapters.add(k));
+        const isFull = allKeys.every(k => App.selection.chapters.includes(k));
         
+        if(isFull) App.selection.chapters = [];
+        else App.selection.chapters = [...allKeys];
+
         renderChapters();
-    };
-
-    function updateSelectAll(id, active) {
-        const btn = document.getElementById(id);
-        if(active) btn.classList.add('active'); else btn.classList.remove('active');
     }
 
-    /* FAB UPDATERS */
-    function updateLessonFab() {
-        const btn = document.getElementById('fab-action');
-        const count = App.selection.lessons.size;
-        if(count > 0) {
-            btn.innerHTML = `التالي: اختيار الفصول ⬅️`;
-            btn.onclick = () => renderChapters();
-            btn.classList.add('visible');
+    function updateChapterUI(available) {
+        // Select All Button
+        const allKeys = available.map(x => x.key);
+        const isFull = allKeys.length > 0 && allKeys.every(k => App.selection.chapters.includes(k));
+        const btnAll = document.getElementById('btn-all-chapters');
+        
+        if(isFull) btnAll.classList.add('active'); else btnAll.classList.remove('active');
+
+        // Stats
+        let totalQs = 0;
+        available.forEach(x => {
+            if(App.selection.chapters.includes(x.key)) totalQs += x.count;
+        });
+        document.getElementById('total-q-count').innerText = totalQs;
+
+        // Footer
+        const count = App.selection.chapters.length;
+        const foot = document.getElementById('floating-footer');
+        const fBtn = document.getElementById('footer-btn');
+
+        if(count > 0 && totalQs > 0) {
+            foot.classList.remove('hidden');
+            document.getElementById('footer-count').innerText = count;
+            fBtn.innerText = txt('start');
+            fBtn.onclick = startQuiz;
         } else {
-            btn.classList.remove('visible');
+            foot.classList.add('hidden');
         }
     }
 
-    function updateChapterFab() {
-        const btn = document.getElementById('fab-action');
-        
-        // Count questions
-        let qCount = 0;
-        const src = App.nav.source; const sub = App.nav.subject;
+    /* 5. QUIZ ENGINE */
+    function startQuiz() {
+        // Collect questions
+        const t = App.selection.term;
+        const s = App.selection.subject;
+        let pool = [];
+
         App.selection.chapters.forEach(key => {
-            const parts = key.split('|'); // s|su|l|c
-            qCount += App.tree[src][sub][parts[2]][parts[3]].length;
+            const [l, c] = key.split('|');
+            const qs = App.tree[t][s][l][c];
+            if(qs) pool.push(...qs);
         });
 
-        if(qCount > 0) {
-            btn.innerHTML = `بدء الاختبار (${qCount} سؤال) 🚀`;
-            btn.onclick = () => startQuiz(qCount);
-            btn.classList.add('visible');
-        } else {
-            btn.classList.remove('visible');
-        }
-    }
-
-    /* QUIZ */
-    function startQuiz(total) {
-        App.quiz.queue = [];
-        const src = App.nav.source; const sub = App.nav.subject;
-        
-        App.selection.chapters.forEach(key => {
-            const parts = key.split('|');
-            const arr = App.tree[src][sub][parts[2]][parts[3]];
-            App.quiz.queue.push(...arr);
-        });
-
-        App.quiz.queue.sort(() => Math.random() - 0.5);
-        App.quiz.idx = 0;
+        // Shuffle
+        pool.sort(() => Math.random() - 0.5);
+        App.quiz.queue = pool;
+        App.quiz.index = 0;
         
         renderQuestion();
     }
 
     function renderQuestion() {
-        showView('v-quiz');
-        const q = App.quiz.queue[App.quiz.idx];
-        const total = App.quiz.queue.length;
-
-        document.getElementById('q-counter').innerText = `${App.quiz.idx + 1} / ${total}`;
-        document.getElementById('q-id').innerText = q.id;
-        document.getElementById('q-ctx').innerText = `${q._ctx.l} > ${q._ctx.c}`;
-
-        const box = document.getElementById('q-content');
-        box.innerHTML = `<div class="q-txt">${q.question}</div><div id="opts"></div><div class="expl-box" id="expl"></div>`;
+        switchView('view-quiz');
+        const q = App.quiz.queue[App.quiz.index];
         
-        const opts = document.getElementById('opts');
-        q.options.forEach((txt, i) => {
-             const btn = document.createElement('div');
-             btn.className = 'opt-btn'; btn.innerText = txt;
-             btn.onclick = () => answer(i, q, btn);
-             opts.appendChild(btn);
-        });
+        document.getElementById('q-idx').innerText = App.quiz.index + 1;
+        document.getElementById('q-total').innerText = App.quiz.queue.length;
 
-        const fab = document.getElementById('fab-action');
-        fab.classList.remove('visible');
-        fab.innerHTML = (App.quiz.idx < total-1) ? "التالي ⬅️" : "إنهاء 🏁";
-        fab.onclick = () => { App.quiz.idx++; renderQuestion(); };
+        const container = document.getElementById('q-content');
+        // Structure: Question Text, Meta (ID | Lesson | Chap), Options, Explanation
+        container.innerHTML = `
+            <div style="margin-bottom:20px">
+                <span style="font-size:0.8em;color:var(--primary);background:var(--primary-bg);padding:4px 8px;border-radius:6px">
+                    ${txt('id')}: ${q.id} | ${q._meta.lsn} | ${q._meta.chap}
+                </span>
+            </div>
+            <div style="font-weight:bold;font-size:1.15em;margin-bottom:20px;line-height:1.5">
+                ${q.question}
+            </div>
+            <div id="opts-area"></div>
+            <div id="expl-area" class="hidden" style="margin-top:20px;background:var(--primary-bg);padding:15px;border-radius:10px;border:1px solid var(--primary)"></div>
+            <button id="next-q-btn" class="btn-action hidden" onclick="nextQ()" style="margin-top:20px">${txt('next')}</button>
+        `;
+
+        const optsArea = document.getElementById('opts-area');
+        q.options.forEach((opt, idx) => {
+            const btn = document.createElement('div');
+            btn.className = 'opt-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(q, idx, btn);
+            optsArea.appendChild(btn);
+        });
     }
 
-    function answer(idx, q, el) {
+    function checkAnswer(q, idx, el) {
         if(el.parentElement.classList.contains('locked')) return;
         el.parentElement.classList.add('locked');
 
-        const correct = idx === q.correct_option_id;
-        if(correct) {
+        const isCorrect = (idx === q.correct_option_id); // Assuming JSON has correct_option_id (0-based)
+        // Note: Some JSONs use 1-based or letters. Adjust if needed. 
+        // Based on previous files: correct_option_id seems to be index.
+        
+        if(isCorrect) {
             el.classList.add('correct');
         } else {
             el.classList.add('wrong');
+            // Show correct
             el.parentElement.children[q.correct_option_id].classList.add('correct');
         }
 
-        const expl = document.getElementById('expl');
+        // Show Explanation
         if(q.explanation) {
-            expl.style.display = 'block';
-            expl.innerHTML = `<b>توضيح:</b> ${q.explanation}`;
+            const exp = document.getElementById('expl-area');
+            exp.classList.remove('hidden');
+            exp.innerHTML = `<b>${txt('explanation')}:</b><br>${q.explanation}`;
         }
-        document.getElementById('fab-action').classList.add('visible');
+
+        document.getElementById('next-q-btn').classList.remove('hidden');
+        // Auto scroll
+        document.getElementById('next-q-btn').scrollIntoView({behavior:'smooth'});
     }
 
-    window.exitQuiz = () => { if(confirm("الخروج؟")) location.reload(); };
-
-    /* HTML GENERATORS */
-    function cardHTML(title, count, act) {
-        return `<div class="nav-card" onclick="${act}">
-            <div style="display:flex;align-items:center"><div class="card-icon">📂</div><b style="margin-right:15px">${title}</b></div>
-            <span class="count-badge">${count}</span></div>`;
+    function nextQ() {
+        if(App.quiz.index < App.quiz.queue.length - 1) {
+            App.quiz.index++;
+            renderQuestion();
+        } else {
+            alert("Quiz Finished!");
+            goHome();
+        }
     }
 
-    function checkHTML(type, key, title, count, checked) {
-        return `<div class="check-row ${checked?'selected':''}" onclick="toggleCheck('${type}', '${key}', this)">
-            <div class="chk-visual"></div>
-            <div style="flex:1; margin-right:15px"><b>${title}</b><div style="font-size:0.8em;color:var(--text-sub)">${count} أسئلة</div></div>
-        </div>`;
-    }
-
-    /* SETTINGS */
-    function loadSettings() {
-        const s = localStorage.getItem('MedQuizSet');
-        if(s) App.settings = JSON.parse(s);
-        applySet();
+    function confirmExit() {
+        if(confirm("هل أنت متأكد من الخروج؟")) goHome();
     }
     
-    function applySet() {
-        document.documentElement.setAttribute('data-theme', App.settings.theme);
-        document.documentElement.style.setProperty('--font-size', App.settings.font+'px');
+    function goHome() {
+        switchView('view-terms');
+        App.selection = { term:null, subject:null, lessons:[], chapters:[] };
+    }
+
+    /* --- SETTINGS & UTILS --- */
+    function toggleSettings() {
+        const m = document.getElementById('settingsModal');
+        m.style.display = (m.style.display === 'flex') ? 'none' : 'flex';
+    }
+
+    function setLang(l) {
+        App.settings.lang = l;
+        applySettings();
+    }
+
+    function setTheme(t) {
+        App.settings.theme = t;
+        applySettings();
+    }
+
+    function setFont(s) {
+        App.settings.font = s;
+        applySettings();
+    }
+
+    function applySettings() {
+        const s = App.settings;
         
-        ['light','dark','sepia'].forEach(t => toggleCls(`btn-theme-${t}`, t === App.settings.theme));
-        [14,16,18].forEach(s => toggleCls(`btn-font-${s}`, s === App.settings.font));
-    }
-    
-    function toggleCls(id, active) {
-        const e = document.getElementById(id);
-        if(active) e.classList.add('active'); else e.classList.remove('active');
+        // Lang
+        document.documentElement.lang = s.lang;
+        document.documentElement.dir = (s.lang === 'ar') ? 'rtl' : 'ltr';
+        document.querySelectorAll('[data-key]').forEach(el => {
+            el.innerText = txt(el.getAttribute('data-key'));
+        });
+
+        // Theme
+        document.body.className = `theme-${s.theme}`;
+
+        // Font
+        document.documentElement.style.setProperty('--font-size', s.font + 'px');
+
+        // Save
+        localStorage.setItem('elite_settings', JSON.stringify(s));
+
+        // Highlight buttons
+        document.querySelectorAll('.setting-btn').forEach(b => b.classList.remove('active'));
+        if(document.getElementById(`btn-lang-${s.lang}`)) 
+           document.getElementById(`btn-lang-${s.lang}`).classList.add('active');
     }
 
-    window.openSettings = () => document.getElementById('settings-modal').style.display='flex';
-    window.closeSettings = () => document.getElementById('settings-modal').style.display='none';
-    
-    window.setTheme = (t) => { App.settings.theme = t; saveSet(); };
-    window.setFont = (f) => { App.settings.font = f; saveSet(); };
-    
-    function saveSet() {
-        localStorage.setItem('MedQuizSet', JSON.stringify(App.settings));
-        applySet();
+    function txt(key) {
+        return TEXTS[App.settings.lang][key] || key;
     }
 
 </script>
