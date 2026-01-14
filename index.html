@@ -1,503 +1,765 @@
 <!DOCTYPE html>
-<html lang="en" dir="auto">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Medical Quiz App</title>
+    <title>Exam Bot Pro</title>
+    
+    <!-- Telegram Web App SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <!-- Firebase SDKs (Compat version for simplicity) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
     <style>
         :root {
-            --tg-theme-bg-color: #ffffff;
-            --tg-theme-text-color: #222222;
-            --tg-theme-hint-color: #888888;
-            --tg-theme-link-color: #2481cc;
-            --tg-theme-button-color: #2481cc;
-            --tg-theme-button-text-color: #ffffff;
-            
-            /* Custom Colors */
-            --correct: #2e7d32;
-            --correct-bg: #e8f5e9;
-            --wrong: #c62828;
-            --wrong-bg: #ffebee;
-            --surface: rgba(128, 128, 128, 0.08);
+            --bg-color: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-primary: #212529;
+            --text-secondary: #6c757d;
+            --primary: #3b82f6; /* Modern Blue */
+            --correct: #10b981;
+            --correct-bg: #d1fae5;
+            --wrong: #ef4444;
+            --wrong-bg: #fee2e2;
+            --border: #e9ecef;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --radius: 12px;
+        }
+
+        body.dark-mode {
+            --bg-color: #111827;
+            --card-bg: #1f2937;
+            --text-primary: #f9fafb;
+            --text-secondary: #9ca3af;
+            --border: #374151;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
         }
 
         body {
-            background-color: var(--tg-theme-bg-color);
-            color: var(--tg-theme-text-color);
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
             margin: 0;
-            padding: 0;
+            padding-bottom: 80px; /* For Bottom Nav */
             user-select: none;
-            overflow-x: hidden;
-            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            transition: background 0.3s ease;
         }
 
-        /* Loading Screen */
+        /* --- Header --- */
+        header {
+            background: var(--card-bg);
+            padding: 12px 16px;
+            box-shadow: var(--shadow);
+            position: sticky; top: 0; z-index: 50;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .app-title { font-weight: 700; font-size: 1.1rem; }
+        .sync-badge {
+            font-size: 0.7rem; padding: 4px 8px; border-radius: 20px;
+            background: #e5e7eb; color: #4b5563; font-weight: 600;
+        }
+        body.dark-mode .sync-badge { background: #374151; color: #d1d5db; }
+
+        .score-box { font-size: 0.85rem; font-weight: 500; }
+        
+        /* --- Loader --- */
         #loader {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--tg-theme-bg-color);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
+            position: fixed; inset: 0; background: var(--bg-color); z-index: 999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
         .spinner {
-            width: 40px; height: 40px;
-            border: 4px solid var(--surface);
-            border-top-color: var(--tg-theme-button-color);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
+            width: 40px; height: 40px; border: 4px solid var(--border);
+            border-top-color: var(--primary); border-radius: 50%;
+            animation: spin 0.8s linear infinite;
         }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* Main Container */
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 16px;
-            padding-bottom: 80px; /* Space for FAB */
-            display: none; /* Hidden until loaded */
+        /* --- Toast Notification --- */
+        #toast {
+            position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
+            background: rgba(31, 41, 55, 0.95); color: white; padding: 10px 20px;
+            border-radius: 30px; font-size: 0.85rem; z-index: 1000;
+            display: none; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
         }
 
-        /* Header */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding: 10px;
-            background: var(--surface);
-            border-radius: 12px;
+        /* --- Menus & Lists --- */
+        .container { max-width: 600px; margin: 0 auto; padding: 16px; }
+
+        .menu-card {
+            background: var(--card-bg); border-radius: var(--radius);
+            padding: 16px; margin-bottom: 12px;
+            box-shadow: var(--shadow);
+            display: flex; justify-content: space-between; align-items: center;
+            cursor: pointer; transition: transform 0.1s; border: 1px solid var(--border);
         }
-        .user-name { font-weight: bold; font-size: 0.9em; }
-        .score-badge { 
-            background: var(--tg-theme-button-color); 
-            color: var(--tg-theme-button-text-color);
-            padding: 4px 10px; border-radius: 20px; font-weight: bold;
+        .menu-card:active { transform: scale(0.98); }
+        .menu-title { font-weight: 600; font-size: 1rem; }
+        .menu-meta { font-size: 0.8rem; color: var(--text-secondary); }
+        .count-pill {
+            background: var(--bg-color); color: var(--text-secondary);
+            padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 700;
         }
 
-        /* Question Card */
-        .q-card {
-            animation: fadeIn 0.3s ease;
+        /* --- Breadcrumb --- */
+        .breadcrumb {
+            display: flex; align-items: center; gap: 8px;
+            margin-bottom: 16px; font-size: 0.9rem; font-weight: 500;
+            color: var(--primary); cursor: pointer;
         }
+
+        /* --- Chips --- */
+        .chips-grid { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+        .chip {
+            padding: 8px 16px; border-radius: 20px;
+            background: var(--card-bg); border: 1px solid var(--border);
+            font-size: 0.9rem; font-weight: 500; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .chip.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        /* --- Quiz Interface --- */
+        .q-img-wrap { width: 100%; border-radius: var(--radius); overflow: hidden; margin-bottom: 16px; display: none; }
+        .q-img-wrap img { width: 100%; height: auto; object-fit: contain; }
+        
+        .question-text {
+            font-size: 1.15rem; font-weight: 600; line-height: 1.6; margin-bottom: 24px;
+        }
+
+        .options-list { display: flex; flex-direction: column; gap: 12px; }
+        .opt-btn {
+            background: var(--card-bg); padding: 16px; border-radius: var(--radius);
+            border: 2px solid var(--border); cursor: pointer; text-align: right;
+            font-size: 1rem; transition: all 0.2s; position: relative; color: var(--text-primary);
+        }
+        
+        /* Feedback States */
+        .opt-btn.correct { background: var(--correct-bg); border-color: var(--correct); color: #064e3b; }
+        .opt-btn.wrong { background: var(--wrong-bg); border-color: var(--wrong); color: #7f1d1d; }
+
+        /* Explanation Box */
+        .explanation {
+            margin-top: 24px; background: #fffbeb; padding: 16px;
+            border-right: 4px solid #f59e0b; border-radius: 8px;
+            font-size: 0.95rem; line-height: 1.5; color: #78350f;
+            display: none; animation: fadeIn 0.4s ease;
+        }
+        body.dark-mode .explanation { background: #451a03; color: #fbbf24; border-color: #fbbf24; }
+
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .q-meta { font-size: 0.8em; color: var(--tg-theme-hint-color); margin-bottom: 8px; text-transform: uppercase; }
-        .q-text { font-size: 1.2em; font-weight: 600; line-height: 1.5; margin-bottom: 24px; }
-        
-        /* Options (MCQ) */
-        .options-list { display: flex; flex-direction: column; gap: 12px; }
-        .option-btn {
-            background: var(--surface);
-            border: 2px solid transparent;
-            padding: 16px;
-            border-radius: 12px;
-            color: var(--tg-theme-text-color);
-            text-align: start;
-            font-size: 1em;
-            cursor: pointer;
-            transition: all 0.2s;
-            position: relative;
+        /* --- Primary Action Button --- */
+        .primary-btn {
+            width: 100%; padding: 16px; border-radius: var(--radius);
+            background: var(--primary); color: white; font-weight: bold; font-size: 1rem;
+            border: none; cursor: pointer; margin-top: 20px;
+            box-shadow: 0 4px 6px rgba(59, 130, 246, 0.4);
+            display: flex; justify-content: center; align-items: center; gap: 8px;
         }
-        .option-btn:active { transform: scale(0.98); }
-        
-        /* Matching Style */
-        .matching-area {
-            display: flex; gap: 10px; justify-content: space-between;
-            position: relative;
-            user-select: none;
-        }
-        .match-col { flex: 1; display: flex; flex-direction: column; gap: 15px; z-index: 2; }
-        .match-item {
-            background: var(--surface); border: 2px solid #ccc;
-            padding: 12px; border-radius: 8px; text-align: center; font-size: 0.9em;
-            cursor: pointer; transition: 0.2s; min-height: 50px; display: flex; align-items: center; justify-content: center;
-        }
-        .match-item.selected { border-color: var(--tg-theme-button-color); background: rgba(36, 129, 204, 0.1); }
-        .match-item.matched { border-color: var(--tg-theme-hint-color); opacity: 0.6; pointer-events: none; }
-        .match-canvas { position: absolute; top:0; left:0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
 
-        /* States */
-        .correct { background-color: var(--correct-bg) !important; border-color: var(--correct) !important; color: #1b5e20 !important; }
-        .wrong { background-color: var(--wrong-bg) !important; border-color: var(--wrong) !important; color: #b71c1c !important; }
-
-        /* Explanation */
-        .explanation {
-            margin-top: 24px;
-            padding: 16px;
-            border-radius: 12px;
-            background: #fff3e0;
-            color: #e65100;
-            font-size: 0.95em;
-            line-height: 1.5;
-            display: none;
-        }
-        [data-theme="dark"] .explanation { background: #3e2723; color: #ffcc80; }
-
-        /* FAB Button */
-        .fab {
-            position: fixed; bottom: 20px; right: 20px;
-            background: var(--tg-theme-button-color);
-            color: var(--tg-theme-button-text-color);
-            border: none; padding: 16px 24px;
-            border-radius: 50px;
-            font-size: 1.1em; font-weight: bold;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            cursor: pointer;
+        /* --- Bottom Nav --- */
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: var(--card-bg); height: 60px;
+            border-top: 1px solid var(--border);
+            display: flex; justify-content: space-around; align-items: center;
             z-index: 100;
-            display: none;
-            transition: transform 0.2s;
         }
-        .fab:active { transform: scale(0.95); }
+        .nav-item {
+            display: flex; flex-direction: column; align-items: center;
+            font-size: 0.75rem; color: var(--text-secondary); background: none; border: none;
+            gap: 4px; padding: 8px 16px; width: 50%;
+        }
+        .nav-item.active { color: var(--primary); }
+        .nav-icon { font-size: 1.2rem; }
 
+        /* Helpers */
+        .hidden { display: none !important; }
+        .center-msg { text-align: center; color: var(--text-secondary); margin-top: 40px; }
     </style>
 </head>
 <body>
 
-    <!-- Loading -->
+    <!-- Loading Screen -->
     <div id="loader">
         <div class="spinner"></div>
-        <p style="margin-top: 15px; color: var(--tg-theme-hint-color)">Loading Question Bank...</p>
+        <p style="margin-top: 16px; font-weight: 500; color: var(--text-secondary)" id="loaderMsg">جاري التحميل...</p>
     </div>
 
-    <!-- Main App -->
-    <div class="container" id="app">
-        <header class="header">
-            <div class="user-name" id="userName">Student</div>
-            <div class="score-badge" id="scoreDisplay">0/0</div>
+    <!-- Notification Toast -->
+    <div id="toast"></div>
+
+    <!-- Main Application -->
+    <div id="app" class="hidden">
+        
+        <header>
+            <div>
+                <div class="app-title">المساعد الذكي 🎓</div>
+                <div class="sync-badge" id="syncStatus">Wait...</div>
+            </div>
+            <div class="score-box">
+                <span style="color: var(--correct)">✅ <span id="lblCorrect">0</span></span>
+                <span style="margin: 0 8px; color: var(--border)">|</span>
+                <span style="color: var(--wrong)">❌ <span id="lblWrong">0</span></span>
+            </div>
         </header>
 
-        <div id="quizContent"></div>
+        <!-- View 1: Home / Menu -->
+        <div id="view-home" class="container">
+            <div id="breadcrumbs" class="breadcrumb hidden" onclick="goBack()">
+                <span>⬅️</span> <span id="crumbText">الرئيسية</span>
+            </div>
+            
+            <div id="menu-list">
+                <!-- Javascript will inject items here -->
+            </div>
+        </div>
 
-        <button class="fab" id="nextBtn" onclick="nextQuestion()">Next ➔</button>
+        <!-- View 2: Quiz Setup -->
+        <div id="view-setup" class="container hidden">
+            <h2 id="setup-title">إعدادات الاختبار</h2>
+            
+            <p style="margin-top: 24px; margin-bottom: 8px; font-weight:600">نوع الأسئلة:</p>
+            <div class="chips-grid" id="chip-mode">
+                <div class="chip active" onclick="selectMode('new', this)">أسئلة جديدة</div>
+                <div class="chip" onclick="selectMode('mistake', this)">مراجعة أخطائي</div>
+                <div class="chip" onclick="selectMode('mixed', this)">مختلط</div>
+            </div>
+
+            <p style="margin-bottom: 8px; font-weight:600">العدد:</p>
+            <div class="chips-grid" id="chip-qty">
+                <div class="chip active" onclick="selectQty(5, this)">5</div>
+                <div class="chip" onclick="selectQty(10, this)">10</div>
+                <div class="chip" onclick="selectQty(25, this)">25</div>
+                <div class="chip" onclick="selectQty(999, this)">الكل</div>
+            </div>
+
+            <p id="error-msg" class="hidden" style="color: var(--wrong); text-align: center;">عذراً، لا توجد أسئلة تطابق اختياراتك.</p>
+
+            <button class="primary-btn" onclick="startQuiz()">
+                ابدأ الاختبار 🚀
+            </button>
+        </div>
+
+        <!-- View 3: Active Quiz -->
+        <div id="view-quiz" class="container hidden">
+            <div style="display:flex; justify-content:space-between; margin-bottom: 12px; font-size: 0.9rem; color: var(--text-secondary)">
+                <span id="q-counter">السؤال 1 / 5</span>
+                <span onclick="confirmExit()" style="cursor:pointer; color: var(--wrong)">خروج</span>
+            </div>
+
+            <div class="q-img-wrap" id="q-image">
+                <img src="" alt="QImage">
+            </div>
+
+            <div class="question-text" id="q-text">Loading...</div>
+            
+            <div class="options-list" id="opt-container">
+                <!-- Options injected here -->
+            </div>
+
+            <div class="explanation" id="q-expl"></div>
+
+            <button id="btn-next" class="primary-btn hidden" onclick="nextQuestion()">
+                التالي ⬅️
+            </button>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <div class="bottom-nav">
+            <button class="nav-item active" onclick="showHome()">
+                <span class="nav-icon">🏠</span>
+                <span>الرئيسية</span>
+            </button>
+            <button class="nav-item" onclick="forceSync()">
+                <span class="nav-icon">🔄</span>
+                <span>تحديث</span>
+            </button>
+        </div>
     </div>
 
 <script>
-    // --- APP CONFIGURATION ---
-    const tg = window.Telegram.WebApp;
-    tg.ready();
-    tg.expand();
-
-    // Color Theme integration
-    const updateTheme = () => {
-        document.documentElement.style.setProperty('--tg-theme-bg-color', tg.themeParams.bg_color || '#ffffff');
-        document.documentElement.style.setProperty('--tg-theme-text-color', tg.themeParams.text_color || '#222222');
-        document.documentElement.style.setProperty('--tg-theme-button-color', tg.themeParams.button_color || '#2481cc');
-        document.documentElement.style.setProperty('--tg-theme-button-text-color', tg.themeParams.button_text_color || '#ffffff');
-    };
-    updateTheme();
-    tg.onEvent('themeChanged', updateTheme);
-
-    // --- STATE MANAGEMENT ---
-    let gameState = {
-        questions: [],
-        currentIdx: 0,
-        score: 0,
-        matches: {},
-        lines: []
+    /** =============================================
+     *  CONFIG (UPDATE THIS!)
+     *  ============================================= */
+    const FIREBASE_CONFIG = {
+        apiKey: "AIzaSyDEZFJmcXK2LxYAZ-Yjv_M1HbC6zi_qilg", 
+        authDomain: "exambotdb.firebaseapp.com",
+        databaseURL: "https://exambotdb-default-rtdb.firebaseio.com",
+        projectId: "exambotdb",
+        storageBucket: "exambotdb.firebasestorage.app",
+        messagingSenderId: "950600562980",
+        appId: "1:950600562980:web:f993c22d45e5cfdd3d9bb1"
     };
 
-    // --- DATA LOADING & PARSING ---
+    /** =============================================
+     *  APP LOGIC
+     *  ============================================= */
     
-    // Parser for the Specific JSON structure provided (Term 7 format)
-    function parseSourceData(json) {
-        if (!json.questions) return [];
-        
-        return json.questions.map(q => {
-            // Check if it's explicitly a matching question or implied MCQ
-            // Based on the provided file, they are mostly MCQs, but logic supports Matching
-            let type = "mcq";
-            if (q.left_column && q.right_column) type = "matching";
-            else if (q.options) type = "mcq";
+    // --- State Variables ---
+    const State = {
+        questions: [],   // Flat list of all Qs
+        hierarchy: {},   // Tree: Term -> Subj -> Lesson
+        path: [],        // Navigation Stack
+        progress: {},    // { qId: 'correct' | 'wrong' }
+        quizQueue: [],   // Active questions
+        currQIndex: 0,
+        settings: { mode: 'new', qty: 5 },
+        selectedContext: null // { type: 'chapter'|'lesson', name: ... }
+    };
+    
+    const STORAGE_KEYS = {
+        DATA: 'EXAMBOT_DATA_V1',
+        PROGRESS: 'EXAMBOT_PROGRESS'
+    };
 
-            return {
-                id: q.id,
-                text: q.question,
-                type: type,
-                // Handle MCQ data
-                options: q.options || [],
-                correctIndex: q.correct_option_id !== undefined ? q.correct_option_id : -1,
-                // Handle Matching data (future proofing)
-                leftCol: q.left_column || [],
-                rightCol: q.right_column || [],
-                correctMatches: q.correct_matches || {}, // Map Key -> Value
-                // Common
-                explanation: q.explanation,
-                meta: `${json.meta?.subject || ''} - ${json.meta?.lesson || ''}`
-            };
+    // --- Services ---
+    const TG = window.Telegram.WebApp;
+    let DB = null; // Firebase DB Instance
+    let USER_ID = 'guest';
+
+    async function init() {
+        TG.ready(); TG.expand();
+        if(TG.initDataUnsafe?.user?.id) USER_ID = TG.initDataUnsafe.user.id;
+        
+        // Theme
+        if (TG.colorScheme === 'dark') document.body.classList.add('dark-mode');
+        
+        // Firebase Setup
+        try {
+            if (window.firebase && !firebase.apps.length) {
+                firebase.initializeApp(FIREBASE_CONFIG);
+                DB = firebase.database();
+            }
+        } catch(e) { console.error("Firebase Init Error:", e); }
+
+        // Load Cache first (Offline)
+        loadFromCache();
+
+        // If data loaded from cache, hide loader immediately
+        if (State.questions.length > 0) {
+            document.getElementById('loader').classList.add('hidden');
+            document.getElementById('app').classList.remove('hidden');
+            renderMenu();
+            renderStats();
+            setSyncStatus('Offline ⚡');
+        }
+
+        // Try Network Sync
+        if (navigator.onLine) {
+            await syncData();
+        } else {
+            showToast('أنت في وضع عدم الاتصال');
+        }
+
+        window.addEventListener('online', () => { 
+            showToast('تم استعادة الاتصال'); 
+            syncData(); 
         });
+        window.addEventListener('offline', () => setSyncStatus('Offline ⚡'));
     }
 
-    async function loadAllData() {
+    /** =============================================
+     *  DATA SYNC ENGINE
+     *  ============================================= */
+    
+    function loadFromCache() {
         try {
-            // 1. Get List of files
-            const response = await fetch('questions_list.json?nocache=' + Date.now());
-            if (!response.ok) throw new Error("Manifest not found");
-            const fileList = await response.json();
-
-            // 2. Fetch all files
-            const fetchPromises = fileList.map(fileName => 
-                fetch(`Questions/${fileName}`).then(res => res.json())
-            );
+            const cachedData = localStorage.getItem(STORAGE_KEYS.DATA);
+            if(cachedData) State.questions = JSON.parse(cachedData);
             
-            const rawFiles = await Promise.all(fetchPromises);
+            const cachedProg = localStorage.getItem(STORAGE_KEYS.PROGRESS + '_' + USER_ID);
+            if(cachedProg) State.progress = JSON.parse(cachedProg);
             
-            // 3. Merge & Parse
-            let allQuestions = [];
-            rawFiles.forEach(file => {
-                const parsed = parseSourceData(file);
-                allQuestions = [...allQuestions, ...parsed];
-            });
+            if(State.questions.length > 0) buildHierarchy();
+        } catch(e) { console.error("Cache load error", e); }
+    }
 
-            // 4. Shuffle (Optional)
-            gameState.questions = allQuestions.sort(() => Math.random() - 0.5);
+    async function syncData() {
+        setSyncStatus('Connecting...');
+        try {
+            // 1. Sync Content
+            const manifestReq = await fetch('questions_list.json?t=' + Date.now());
+            if(manifestReq.ok) {
+                const files = await manifestReq.json();
+                const fetches = files.map(f => fetch('Questions/' + f).then(r => r.json()));
+                const rawResults = await Promise.all(fetches);
+                
+                // Merge & Process
+                let allQs = [];
+                rawResults.forEach(file => {
+                    const meta = file.meta || {};
+                    // Normalizing hierarchy keys
+                    const term = meta.source || 'General';
+                    const subject = meta.subject || 'All';
+                    const lesson = meta.lesson || 'Misc';
+                    
+                    file.questions.forEach(q => {
+                        allQs.push({
+                            ...q,
+                            // Enrich Q with hierarchy data for filtering
+                            h: { term, subject, lesson, chapter: q.chapter || 'Chapter 1' } 
+                        });
+                    });
+                });
 
-            // 5. Initialize UI
-            document.getElementById('loader').style.display = 'none';
-            document.getElementById('app').style.display = 'block';
-            
-            const user = tg.initDataUnsafe?.user;
-            if(user) document.getElementById('userName').innerText = user.first_name;
+                // Update Cache if Changed
+                if (JSON.stringify(allQs).length !== JSON.stringify(State.questions).length) {
+                    State.questions = allQs;
+                    localStorage.setItem(STORAGE_KEYS.DATA, JSON.stringify(allQs));
+                    buildHierarchy();
+                    renderMenu();
+                    showToast('تم تحديث بنك الأسئلة ✅');
+                }
+            }
 
-            // Load progress from localStorage
-            loadProgress();
+            // 2. Sync Progress (Cloud -> Local Merge)
+            if(DB && USER_ID !== 'guest') {
+                const snap = await DB.ref(`users/${USER_ID}/progress`).once('value');
+                const cloudProg = snap.val() || {};
+                
+                // Cloud wins for conflict (Simple Merge)
+                State.progress = { ...State.progress, ...cloudProg };
+                localStorage.setItem(STORAGE_KEYS.PROGRESS + '_' + USER_ID, JSON.stringify(State.progress));
+                renderStats();
+            }
 
-            renderQuestion();
+            setSyncStatus('Online 🟢');
 
-        } catch (e) {
-            document.getElementById('loader').innerHTML = `<p style="color:red">Error: ${e.message}<br>Check questions_list.json</p>`;
+        } catch(e) {
+            console.error(e);
+            setSyncStatus('Offline ⚡');
+            if(State.questions.length === 0) {
+                 document.getElementById('loaderMsg').innerText = "خطأ في الاتصال، حاول لاحقاً";
+            }
         }
     }
 
-    // --- QUIZ ENGINE ---
+    function buildHierarchy() {
+        State.hierarchy = {};
+        State.questions.forEach(q => {
+            const h = q.h;
+            // Structure: Term -> Subject -> Lesson -> Chapter
+            setDeep(State.hierarchy, [h.term, h.subject, h.lesson, h.chapter], 1, true);
+        });
+    }
 
-    function renderQuestion() {
-        const q = gameState.questions[gameState.currentIdx];
-        const container = document.getElementById('quizContent');
-        const nextBtn = document.getElementById('nextBtn');
-        nextBtn.style.display = 'none';
+    // Helper to count and set deep keys
+    function setDeep(obj, path, val, increment=false) {
+        let curr = obj;
+        for(let i=0; i<path.length-1; i++){
+            let key = path[i];
+            if(!curr[key]) curr[key] = {};
+            curr = curr[key];
+        }
+        let lastKey = path[path.length-1];
+        if(increment) curr[lastKey] = (curr[lastKey] || 0) + val;
+        else curr[lastKey] = val;
+    }
 
-        if (!q) {
-            // End of Quiz
-            container.innerHTML = `
-                <div style="text-align:center; padding: 40px;">
-                    <h1>🎉 Completed!</h1>
-                    <p>Final Score: ${gameState.score} / ${gameState.questions.length}</p>
-                    <button class="fab" style="position:static; display:inline-block" onclick="resetQuiz()">Restart</button>
-                </div>
-            `;
+    // Recursively count leaf nodes (Total questions under a category)
+    function countTotal(node) {
+        if (typeof node === 'number') return node;
+        let sum = 0;
+        Object.values(node).forEach(v => sum += countTotal(v));
+        return sum;
+    }
+
+    /** =============================================
+     *  UI RENDERING
+     *  ============================================= */
+
+    function renderMenu() {
+        const listEl = document.getElementById('menu-list');
+        listEl.innerHTML = '';
+        
+        let pointer = State.hierarchy;
+        // Traverse to current path
+        State.path.forEach(key => pointer = pointer[key]);
+        
+        // Show/Hide Back Button
+        const bc = document.getElementById('breadcrumbs');
+        if(State.path.length > 0) {
+            bc.classList.remove('hidden');
+            document.getElementById('crumbText').innerText = State.path.join(' > ');
+        } else {
+            bc.classList.add('hidden');
+        }
+
+        // Determine Level: (0:Term, 1:Subject, 2:Lesson, 3:Chapter)
+        const isLeaves = Object.values(pointer)[0] && typeof Object.values(pointer)[0] === 'number';
+        const level = State.path.length;
+        const Icons = ['📅', '📘', '📑', '🔖'];
+
+        // Add "Test All" Option if deep enough
+        if(level >= 2 && !isLeaves) { 
+             const allCard = createCard('🎯', 'اختبار شامل في (كل الدروس)', countTotal(pointer), true);
+             allCard.onclick = () => openSetup('group', 'All');
+             listEl.appendChild(allCard);
+        }
+        if(isLeaves) {
+             const allCard = createCard('📚', 'اختبار شامل (كل الفصول)', countTotal(pointer), true);
+             allCard.onclick = () => openSetup('group', 'All');
+             listEl.appendChild(allCard);
+        }
+
+        // Render Children
+        Object.keys(pointer).forEach(key => {
+            const val = pointer[key];
+            const count = isLeaves ? val : countTotal(val);
+            const card = createCard(Icons[level] || '📂', key, count);
+            
+            card.onclick = () => {
+                if(isLeaves) openSetup('chapter', key); // Selected a specific chapter
+                else {
+                    State.path.push(key);
+                    renderMenu();
+                }
+            };
+            listEl.appendChild(card);
+        });
+    }
+
+    function createCard(icon, title, count, highlight=false) {
+        const div = document.createElement('div');
+        div.className = 'menu-card';
+        if(highlight) div.style.borderColor = 'var(--primary)';
+        div.innerHTML = `
+            <div style="display:flex; align-items:center; gap:12px">
+                <span style="font-size:1.4rem">${icon}</span>
+                <div><div class="menu-title">${title}</div></div>
+            </div>
+            <div class="count-pill">${count}</div>
+        `;
+        return div;
+    }
+
+    function renderStats() {
+        let c = 0, w = 0;
+        Object.values(State.progress).forEach(s => s==='correct'?c++ : w++);
+        document.getElementById('lblCorrect').innerText = c;
+        document.getElementById('lblWrong').innerText = w;
+    }
+
+    /** =============================================
+     *  QUIZ SETUP & LOGIC
+     *  ============================================= */
+
+    function goBack() {
+        if(State.path.length > 0) {
+            State.path.pop();
+            renderMenu();
+        }
+    }
+
+    function openSetup(type, name) {
+        State.selectedContext = { type, name };
+        
+        switchView('view-setup');
+        const levelNames = ['الترم', 'المادة', 'الدرس', 'الفصل'];
+        let ctx = State.path.length < 3 ? 'شامل' : State.path[2]; 
+        
+        // Dynamic title
+        document.getElementById('setup-title').innerText = `إعداد اختبار: ${name==='All'?'الكل':name}`;
+        document.getElementById('error-msg').classList.add('hidden');
+    }
+
+    function selectMode(m, el) { 
+        State.settings.mode = m; 
+        document.querySelectorAll('#chip-mode .chip').forEach(c => c.classList.remove('active'));
+        el.classList.add('active');
+    }
+
+    function selectQty(q, el) { 
+        State.settings.qty = q; 
+        document.querySelectorAll('#chip-qty .chip').forEach(c => c.classList.remove('active'));
+        el.classList.add('active');
+    }
+
+    function startQuiz() {
+        const mode = State.settings.mode;
+        // Current Path: [Term, Subject, Lesson]
+        // Filter logic:
+        const pathFilters = {
+            term: State.path[0],
+            subject: State.path[1],
+            lesson: State.path[2]
+        };
+
+        let candidates = State.questions.filter(q => {
+            const h = q.h;
+            // Match current Path (if defined)
+            if(pathFilters.term && h.term !== pathFilters.term) return false;
+            if(pathFilters.subject && h.subject !== pathFilters.subject) return false;
+            // Lesson matching is tricky depending on 'Test All' at higher level
+            if(State.path.length >= 3 && pathFilters.lesson && h.lesson !== pathFilters.lesson) return false;
+            
+            // Chapter matching
+            if(State.selectedContext.name !== 'All') {
+                 if(State.selectedContext.type === 'chapter' && h.chapter !== State.selectedContext.name) return false;
+            }
+            return true;
+        });
+
+        // Filter by Mode
+        if (mode === 'new') {
+            candidates = candidates.filter(q => State.progress[q.id] !== 'correct');
+        } else if (mode === 'mistake') {
+            candidates = candidates.filter(q => State.progress[q.id] === 'wrong');
+        }
+
+        if(candidates.length === 0) {
+            document.getElementById('error-msg').classList.remove('hidden');
             return;
         }
 
-        // Update Header
-        document.getElementById('scoreDisplay').innerText = `Q: ${gameState.currentIdx + 1}/${gameState.questions.length} | Score: ${gameState.score}`;
+        // Shuffle & Limit
+        candidates.sort(() => Math.random() - 0.5);
+        State.quizQueue = candidates.slice(0, State.settings.qty);
+        State.currQIndex = 0;
 
-        // Render Template
-        let html = `
-            <div class="q-card">
-                <div class="q-meta">${q.meta} • ${q.type.toUpperCase()}</div>
-                <div class="q-text" dir="auto">${q.text}</div>
-        `;
-
-        if (q.type === 'mcq') {
-            html += `<div class="options-list">`;
-            q.options.forEach((opt, idx) => {
-                html += `<button class="option-btn" onclick="checkMCQ(this, ${idx})" dir="auto">${opt}</button>`;
-            });
-            html += `</div>`;
-        } 
-        else if (q.type === 'matching') {
-            html += renderMatchingHTML(q);
-        }
-
-        // Add Explanation Box
-        html += `<div id="explanation" class="explanation"><strong>Explanation:</strong><br>${q.explanation || 'No details provided.'}</div>`;
-        html += `</div>`;
-
-        container.innerHTML = html;
-
-        if (q.type === 'matching') initMatchingLogic(q);
-    }
-
-    // --- MCQ LOGIC ---
-    function checkMCQ(btn, selectedIdx) {
-        if (btn.parentElement.classList.contains('locked')) return;
-        
-        const q = gameState.questions[gameState.currentIdx];
-        const allBtns = btn.parentElement.querySelectorAll('.option-btn');
-        btn.parentElement.classList.add('locked'); // Prevent multi-clicks
-
-        let isCorrect = (selectedIdx === q.correctIndex);
-
-        // UI Updates
-        if (isCorrect) {
-            btn.classList.add('correct');
-            gameState.score++;
-            playSound('success');
-        } else {
-            btn.classList.add('wrong');
-            // Highlight correct one
-            if(q.correctIndex !== -1 && allBtns[q.correctIndex]) {
-                allBtns[q.correctIndex].classList.add('correct');
-            }
-            playSound('error');
-        }
-
-        revealAndSave();
-    }
-
-    // --- MATCHING LOGIC (With Canvas) ---
-    function renderMatchingHTML(q) {
-        // Shuffle right column for display, keep keys correct in logic
-        return `
-            <div class="matching-area" id="matchArea">
-                <canvas id="matchCanvas" class="match-canvas"></canvas>
-                <div class="match-col" id="leftCol">
-                    ${q.leftCol.map((txt, i) => `<div class="match-item" data-idx="${i}" data-side="left">${txt}</div>`).join('')}
-                </div>
-                <div class="match-col" id="rightCol">
-                    ${q.rightCol.map((txt, i) => `<div class="match-item" data-idx="${i}" data-side="right">${txt}</div>`).sort(() => Math.random() - 0.5).join('')}
-                </div>
-            </div>
-            <button onclick="submitMatching()" class="option-btn" style="margin-top:20px; background:var(--tg-theme-button-color); color:#fff; text-align:center">Submit Matches</button>
-        `;
-    }
-
-    let selectedLeft = null;
-    let connections = []; // {leftEl, rightEl}
-
-    function initMatchingLogic(q) {
-        connections = [];
-        const items = document.querySelectorAll('.match-item');
-        
-        items.forEach(item => {
-            item.addEventListener('click', (e) => {
-                if (document.getElementById('nextBtn').style.display === 'block') return; // Ended
-                
-                const el = e.currentTarget;
-                if (el.classList.contains('matched')) return;
-
-                if (el.dataset.side === 'left') {
-                    // Select Left
-                    document.querySelectorAll('.match-item[data-side="left"]').forEach(i => i.classList.remove('selected'));
-                    el.classList.add('selected');
-                    selectedLeft = el;
-                } else {
-                    // Select Right (Try connect)
-                    if (selectedLeft) {
-                        // Create connection
-                        createConnection(selectedLeft, el);
-                        selectedLeft.classList.remove('selected');
-                        selectedLeft.classList.add('matched');
-                        el.classList.add('matched');
-                        selectedLeft = null;
-                    }
-                }
-            });
-        });
-        
-        // Resize listener
-        window.addEventListener('resize', drawLines);
-        drawLines();
-    }
-
-    function createConnection(leftEl, rightEl) {
-        connections.push({ left: leftEl, right: rightEl });
-        drawLines();
-    }
-
-    function drawLines(color = '#2481cc') {
-        const canvas = document.getElementById('matchCanvas');
-        if (!canvas) return;
-        
-        const container = document.querySelector('.matching-area');
-        canvas.width = container.offsetWidth;
-        canvas.height = container.offsetHeight;
-        
-        const ctx = canvas.getContext('2d');
-        ctx.lineWidth = 3;
-        ctx.strokeStyle = color;
-
-        connections.forEach(conn => {
-            const r1 = conn.left.getBoundingClientRect();
-            const r2 = conn.right.getBoundingClientRect();
-            const contR = container.getBoundingClientRect();
-
-            ctx.beginPath();
-            ctx.moveTo(r1.right - contR.left, r1.top + r1.height/2 - contR.top);
-            ctx.lineTo(r2.left - contR.left, r2.top + r2.height/2 - contR.top);
-            ctx.stroke();
-        });
-    }
-
-    function submitMatching() {
-        // Currently simplied logic for "Matching" defined in JSON (Though user sample was only MCQ)
-        // If real matching JSON existed: 
-        // 1. Check against q.correctMatches 
-        // 2. Score points
-        // 3. revealAndSave()
-        
-        // Since matching logic needs proper JSON key-value pairs which we are simulating:
-        gameState.score++; // Assume correct for demo if all matched
-        playSound('success');
-        revealAndSave();
-    }
-
-
-    // --- HELPERS ---
-    function revealAndSave() {
-        const explanation = document.getElementById('explanation');
-        explanation.style.display = 'block';
-        explanation.scrollIntoView({ behavior: 'smooth' });
-        
-        document.getElementById('nextBtn').style.display = 'block';
-        saveProgress();
-    }
-
-    function nextQuestion() {
-        gameState.currentIdx++;
+        switchView('view-quiz');
         renderQuestion();
+    }
+
+    /** =============================================
+     *  ACTIVE QUIZ
+     *  ============================================= */
+
+    function renderQuestion() {
+        const Q = State.quizQueue[State.currQIndex];
+        
+        // Reset UI
+        document.getElementById('q-counter').innerText = `${State.currQIndex+1} / ${State.quizQueue.length}`;
+        document.getElementById('btn-next').classList.add('hidden');
+        document.getElementById('q-expl').style.display = 'none';
+        
+        // Text & Image
+        document.getElementById('q-text').innerText = Q.question;
+        const imgWrap = document.getElementById('q-image');
+        // Example check: adjust property if your JSON has images differently
+        if(Q.image || Q.img) {
+             imgWrap.querySelector('img').src = Q.image || Q.img;
+             imgWrap.style.display = 'block';
+        } else {
+            imgWrap.style.display = 'none';
+        }
+
+        // Options
+        const optsDiv = document.getElementById('opt-container');
+        optsDiv.innerHTML = '';
+
+        if(Q.type === 'matching') {
+            optsDiv.innerHTML = `<div style="padding:20px; text-align:center; color:orange">⚠️ سؤال توصيل (يرجى حله في وضع الشاشة الكاملة على سطح المكتب)</div>`;
+            document.getElementById('btn-next').classList.remove('hidden');
+        } else {
+            // MCQ
+            Q.options.forEach((txt, i) => {
+                const btn = document.createElement('div');
+                btn.className = 'opt-btn';
+                btn.innerText = txt;
+                btn.onclick = () => submitAnswer(i, Q, btn);
+                optsDiv.appendChild(btn);
+            });
+        }
+        
+        // Auto scroll top
         window.scrollTo(0,0);
     }
 
-    function saveProgress() {
-        localStorage.setItem('quiz_progress', JSON.stringify({
-            idx: gameState.currentIdx + 1, // Store NEXT index
-            score: gameState.score,
-            date: Date.now()
-        }));
+    function submitAnswer(selIdx, Q, btnElement) {
+        if(btnElement.parentElement.classList.contains('locked')) return;
+        btnElement.parentElement.classList.add('locked');
+
+        const correct = selIdx === Q.correct_option_id; // JSON property
+        const status = correct ? 'correct' : 'wrong';
+
+        if(correct) {
+            btnElement.classList.add('correct');
+            showToast('إجابة صحيحة 👏');
+        } else {
+            btnElement.classList.add('wrong');
+            // Highlight right one
+            const allBtns = document.getElementById('opt-container').children;
+            if(allBtns[Q.correct_option_id]) allBtns[Q.correct_option_id].classList.add('correct');
+            TG.HapticFeedback && TG.HapticFeedback.notificationOccurred('error');
+        }
+
+        // Show Explanation
+        if(Q.explanation) {
+            const exp = document.getElementById('q-expl');
+            exp.innerHTML = `<strong>توضيح:</strong><br>${Q.explanation}`;
+            exp.style.display = 'block';
+        }
+
+        // Save Logic
+        State.progress[Q.id] = status;
+        localStorage.setItem(STORAGE_KEYS.PROGRESS + '_' + USER_ID, JSON.stringify(State.progress));
+        renderStats();
+
+        // Cloud Push (Fire & Forget)
+        if(DB && USER_ID !== 'guest' && navigator.onLine) {
+            DB.ref(`users/${USER_ID}/progress/${Q.id}`).set(status);
+        }
+
+        document.getElementById('btn-next').classList.remove('hidden');
     }
 
-    function loadProgress() {
-        const saved = localStorage.getItem('quiz_progress');
-        if (saved) {
-            const data = JSON.parse(saved);
-            // Expire after 24 hours
-            if (Date.now() - data.date < 86400000) {
-               gameState.currentIdx = data.idx || 0;
-               gameState.score = data.score || 0;
-            }
+    function nextQuestion() {
+        if(State.currQIndex < State.quizQueue.length - 1) {
+            State.currQIndex++;
+            renderQuestion();
+        } else {
+            // End
+            showToast('أتممت الاختبار بنجاح 🎉');
+            setTimeout(showHome, 1000);
         }
     }
 
-    function resetQuiz() {
-        localStorage.removeItem('quiz_progress');
-        gameState.currentIdx = 0;
-        gameState.score = 0;
-        location.reload();
+    function confirmExit() {
+        TG.showConfirm("هل تود الخروج من الاختبار؟", (ok) => {
+            if(ok) showHome();
+        });
     }
 
-    function playSound(type) {
-        if(tg.HapticFeedback) {
-             tg.HapticFeedback.notificationOccurred(type);
-        }
+    // --- View Navigation Helper ---
+    function switchView(viewId) {
+        ['view-home', 'view-setup', 'view-quiz'].forEach(id => {
+            document.getElementById(id).classList.add('hidden');
+        });
+        document.getElementById(viewId).classList.remove('hidden');
     }
 
-    // Start App
-    loadAllData();
+    function showHome() { 
+        switchView('view-home');
+        renderStats();
+    }
+    
+    function forceSync() {
+        if(!navigator.onLine) { showToast('لا يوجد اتصال انترنت!'); return; }
+        document.getElementById('loader').classList.remove('hidden');
+        document.getElementById('loaderMsg').innerText = "جاري التحميل والتحديث...";
+        
+        syncData().then(() => {
+            setTimeout(() => {
+                document.getElementById('loader').classList.add('hidden');
+            }, 800);
+        });
+    }
+
+    // --- Helpers ---
+    function setSyncStatus(msg) { document.getElementById('syncStatus').innerText = msg; }
+    
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.innerText = msg; t.style.display='block';
+        setTimeout(()=>t.style.display='none', 3000);
+    }
+
+    // --- Boot ---
+    window.addEventListener('load', init);
 
 </script>
 </body>
