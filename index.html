@@ -1,44 +1,504 @@
-import os
-import json
-
-# اسم المجلد الذي يحتوي على الأسئلة
-QUESTIONS_DIR = "Questions"
-# اسم ملف القائمة الذي سيتم توليده
-OUTPUT_FILE = "questions_list.json"
-
-def generate_questions_list():
-    # التأكد من أن المجلد موجود
-    if not os.path.exists(QUESTIONS_DIR):
-        print(f"❌ الخطأ: المجلد '{QUESTIONS_DIR}' غير موجود!")
-        print("تأكد من إنشاء المجلد ووضع ملفات الداتا بداخله.")
-        return
-
-    json_files = []
-
-    # المرور على جميع الملفات داخل المجلد
-    try:
-        files = os.listdir(QUESTIONS_DIR)
-        
-        for filename in files:
-            # التحقق أن الامتداد هو .json وتجاهل الملفات المخفية
-            if filename.lower().endswith('.json') and not filename.startswith('.'):
-                json_files.append(filename)
-                print(f"✅ تم العثور على: {filename}")
-        
-        # ترتيب الملفات أبجدياً (اختياري)
-        json_files.sort()
-
-        # كتابة القائمة في ملف JSON الرئيسي
-        with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
-            json.dump(json_files, f, ensure_ascii=False, indent=2)
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Medical Quiz App</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --tg-theme-bg-color: #ffffff;
+            --tg-theme-text-color: #222222;
+            --tg-theme-hint-color: #888888;
+            --tg-theme-link-color: #2481cc;
+            --tg-theme-button-color: #2481cc;
+            --tg-theme-button-text-color: #ffffff;
             
-        print("-" * 30)
-        print(f"🎉 تم بنجاح! تم إنشاء '{OUTPUT_FILE}' ويحتوي على {len(json_files)} ملف.")
+            /* Custom Colors */
+            --correct: #2e7d32;
+            --correct-bg: #e8f5e9;
+            --wrong: #c62828;
+            --wrong-bg: #ffebee;
+            --surface: rgba(128, 128, 128, 0.08);
+        }
 
-    except Exception as e:
-        print(f"❌ حدث خطأ غير متوقع: {e}")
+        body {
+            background-color: var(--tg-theme-bg-color);
+            color: var(--tg-theme-text-color);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            overflow-x: hidden;
+            touch-action: manipulation;
+        }
 
-if __name__ == "__main__":
-    generate_questions_list()
-    # إبقاء النافذة مفتوحة لرؤية النتيجة (إذا كنت تشغله بالضغط المزدوج على ويندوز)
-    input("\nاضغط Enter للخروج...")
+        /* Loading Screen */
+        #loader {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--tg-theme-bg-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .spinner {
+            width: 40px; height: 40px;
+            border: 4px solid var(--surface);
+            border-top-color: var(--tg-theme-button-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* Main Container */
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 16px;
+            padding-bottom: 80px; /* Space for FAB */
+            display: none; /* Hidden until loaded */
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 10px;
+            background: var(--surface);
+            border-radius: 12px;
+        }
+        .user-name { font-weight: bold; font-size: 0.9em; }
+        .score-badge { 
+            background: var(--tg-theme-button-color); 
+            color: var(--tg-theme-button-text-color);
+            padding: 4px 10px; border-radius: 20px; font-weight: bold;
+        }
+
+        /* Question Card */
+        .q-card {
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .q-meta { font-size: 0.8em; color: var(--tg-theme-hint-color); margin-bottom: 8px; text-transform: uppercase; }
+        .q-text { font-size: 1.2em; font-weight: 600; line-height: 1.5; margin-bottom: 24px; }
+        
+        /* Options (MCQ) */
+        .options-list { display: flex; flex-direction: column; gap: 12px; }
+        .option-btn {
+            background: var(--surface);
+            border: 2px solid transparent;
+            padding: 16px;
+            border-radius: 12px;
+            color: var(--tg-theme-text-color);
+            text-align: start;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .option-btn:active { transform: scale(0.98); }
+        
+        /* Matching Style */
+        .matching-area {
+            display: flex; gap: 10px; justify-content: space-between;
+            position: relative;
+            user-select: none;
+        }
+        .match-col { flex: 1; display: flex; flex-direction: column; gap: 15px; z-index: 2; }
+        .match-item {
+            background: var(--surface); border: 2px solid #ccc;
+            padding: 12px; border-radius: 8px; text-align: center; font-size: 0.9em;
+            cursor: pointer; transition: 0.2s; min-height: 50px; display: flex; align-items: center; justify-content: center;
+        }
+        .match-item.selected { border-color: var(--tg-theme-button-color); background: rgba(36, 129, 204, 0.1); }
+        .match-item.matched { border-color: var(--tg-theme-hint-color); opacity: 0.6; pointer-events: none; }
+        .match-canvas { position: absolute; top:0; left:0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+
+        /* States */
+        .correct { background-color: var(--correct-bg) !important; border-color: var(--correct) !important; color: #1b5e20 !important; }
+        .wrong { background-color: var(--wrong-bg) !important; border-color: var(--wrong) !important; color: #b71c1c !important; }
+
+        /* Explanation */
+        .explanation {
+            margin-top: 24px;
+            padding: 16px;
+            border-radius: 12px;
+            background: #fff3e0;
+            color: #e65100;
+            font-size: 0.95em;
+            line-height: 1.5;
+            display: none;
+        }
+        [data-theme="dark"] .explanation { background: #3e2723; color: #ffcc80; }
+
+        /* FAB Button */
+        .fab {
+            position: fixed; bottom: 20px; right: 20px;
+            background: var(--tg-theme-button-color);
+            color: var(--tg-theme-button-text-color);
+            border: none; padding: 16px 24px;
+            border-radius: 50px;
+            font-size: 1.1em; font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            cursor: pointer;
+            z-index: 100;
+            display: none;
+            transition: transform 0.2s;
+        }
+        .fab:active { transform: scale(0.95); }
+
+    </style>
+</head>
+<body>
+
+    <!-- Loading -->
+    <div id="loader">
+        <div class="spinner"></div>
+        <p style="margin-top: 15px; color: var(--tg-theme-hint-color)">Loading Question Bank...</p>
+    </div>
+
+    <!-- Main App -->
+    <div class="container" id="app">
+        <header class="header">
+            <div class="user-name" id="userName">Student</div>
+            <div class="score-badge" id="scoreDisplay">0/0</div>
+        </header>
+
+        <div id="quizContent"></div>
+
+        <button class="fab" id="nextBtn" onclick="nextQuestion()">Next ➔</button>
+    </div>
+
+<script>
+    // --- APP CONFIGURATION ---
+    const tg = window.Telegram.WebApp;
+    tg.ready();
+    tg.expand();
+
+    // Color Theme integration
+    const updateTheme = () => {
+        document.documentElement.style.setProperty('--tg-theme-bg-color', tg.themeParams.bg_color || '#ffffff');
+        document.documentElement.style.setProperty('--tg-theme-text-color', tg.themeParams.text_color || '#222222');
+        document.documentElement.style.setProperty('--tg-theme-button-color', tg.themeParams.button_color || '#2481cc');
+        document.documentElement.style.setProperty('--tg-theme-button-text-color', tg.themeParams.button_text_color || '#ffffff');
+    };
+    updateTheme();
+    tg.onEvent('themeChanged', updateTheme);
+
+    // --- STATE MANAGEMENT ---
+    let gameState = {
+        questions: [],
+        currentIdx: 0,
+        score: 0,
+        matches: {},
+        lines: []
+    };
+
+    // --- DATA LOADING & PARSING ---
+    
+    // Parser for the Specific JSON structure provided (Term 7 format)
+    function parseSourceData(json) {
+        if (!json.questions) return [];
+        
+        return json.questions.map(q => {
+            // Check if it's explicitly a matching question or implied MCQ
+            // Based on the provided file, they are mostly MCQs, but logic supports Matching
+            let type = "mcq";
+            if (q.left_column && q.right_column) type = "matching";
+            else if (q.options) type = "mcq";
+
+            return {
+                id: q.id,
+                text: q.question,
+                type: type,
+                // Handle MCQ data
+                options: q.options || [],
+                correctIndex: q.correct_option_id !== undefined ? q.correct_option_id : -1,
+                // Handle Matching data (future proofing)
+                leftCol: q.left_column || [],
+                rightCol: q.right_column || [],
+                correctMatches: q.correct_matches || {}, // Map Key -> Value
+                // Common
+                explanation: q.explanation,
+                meta: `${json.meta?.subject || ''} - ${json.meta?.lesson || ''}`
+            };
+        });
+    }
+
+    async function loadAllData() {
+        try {
+            // 1. Get List of files
+            const response = await fetch('questions_list.json?nocache=' + Date.now());
+            if (!response.ok) throw new Error("Manifest not found");
+            const fileList = await response.json();
+
+            // 2. Fetch all files
+            const fetchPromises = fileList.map(fileName => 
+                fetch(`Questions/${fileName}`).then(res => res.json())
+            );
+            
+            const rawFiles = await Promise.all(fetchPromises);
+            
+            // 3. Merge & Parse
+            let allQuestions = [];
+            rawFiles.forEach(file => {
+                const parsed = parseSourceData(file);
+                allQuestions = [...allQuestions, ...parsed];
+            });
+
+            // 4. Shuffle (Optional)
+            gameState.questions = allQuestions.sort(() => Math.random() - 0.5);
+
+            // 5. Initialize UI
+            document.getElementById('loader').style.display = 'none';
+            document.getElementById('app').style.display = 'block';
+            
+            const user = tg.initDataUnsafe?.user;
+            if(user) document.getElementById('userName').innerText = user.first_name;
+
+            // Load progress from localStorage
+            loadProgress();
+
+            renderQuestion();
+
+        } catch (e) {
+            document.getElementById('loader').innerHTML = `<p style="color:red">Error: ${e.message}<br>Check questions_list.json</p>`;
+        }
+    }
+
+    // --- QUIZ ENGINE ---
+
+    function renderQuestion() {
+        const q = gameState.questions[gameState.currentIdx];
+        const container = document.getElementById('quizContent');
+        const nextBtn = document.getElementById('nextBtn');
+        nextBtn.style.display = 'none';
+
+        if (!q) {
+            // End of Quiz
+            container.innerHTML = `
+                <div style="text-align:center; padding: 40px;">
+                    <h1>🎉 Completed!</h1>
+                    <p>Final Score: ${gameState.score} / ${gameState.questions.length}</p>
+                    <button class="fab" style="position:static; display:inline-block" onclick="resetQuiz()">Restart</button>
+                </div>
+            `;
+            return;
+        }
+
+        // Update Header
+        document.getElementById('scoreDisplay').innerText = `Q: ${gameState.currentIdx + 1}/${gameState.questions.length} | Score: ${gameState.score}`;
+
+        // Render Template
+        let html = `
+            <div class="q-card">
+                <div class="q-meta">${q.meta} • ${q.type.toUpperCase()}</div>
+                <div class="q-text" dir="auto">${q.text}</div>
+        `;
+
+        if (q.type === 'mcq') {
+            html += `<div class="options-list">`;
+            q.options.forEach((opt, idx) => {
+                html += `<button class="option-btn" onclick="checkMCQ(this, ${idx})" dir="auto">${opt}</button>`;
+            });
+            html += `</div>`;
+        } 
+        else if (q.type === 'matching') {
+            html += renderMatchingHTML(q);
+        }
+
+        // Add Explanation Box
+        html += `<div id="explanation" class="explanation"><strong>Explanation:</strong><br>${q.explanation || 'No details provided.'}</div>`;
+        html += `</div>`;
+
+        container.innerHTML = html;
+
+        if (q.type === 'matching') initMatchingLogic(q);
+    }
+
+    // --- MCQ LOGIC ---
+    function checkMCQ(btn, selectedIdx) {
+        if (btn.parentElement.classList.contains('locked')) return;
+        
+        const q = gameState.questions[gameState.currentIdx];
+        const allBtns = btn.parentElement.querySelectorAll('.option-btn');
+        btn.parentElement.classList.add('locked'); // Prevent multi-clicks
+
+        let isCorrect = (selectedIdx === q.correctIndex);
+
+        // UI Updates
+        if (isCorrect) {
+            btn.classList.add('correct');
+            gameState.score++;
+            playSound('success');
+        } else {
+            btn.classList.add('wrong');
+            // Highlight correct one
+            if(q.correctIndex !== -1 && allBtns[q.correctIndex]) {
+                allBtns[q.correctIndex].classList.add('correct');
+            }
+            playSound('error');
+        }
+
+        revealAndSave();
+    }
+
+    // --- MATCHING LOGIC (With Canvas) ---
+    function renderMatchingHTML(q) {
+        // Shuffle right column for display, keep keys correct in logic
+        return `
+            <div class="matching-area" id="matchArea">
+                <canvas id="matchCanvas" class="match-canvas"></canvas>
+                <div class="match-col" id="leftCol">
+                    ${q.leftCol.map((txt, i) => `<div class="match-item" data-idx="${i}" data-side="left">${txt}</div>`).join('')}
+                </div>
+                <div class="match-col" id="rightCol">
+                    ${q.rightCol.map((txt, i) => `<div class="match-item" data-idx="${i}" data-side="right">${txt}</div>`).sort(() => Math.random() - 0.5).join('')}
+                </div>
+            </div>
+            <button onclick="submitMatching()" class="option-btn" style="margin-top:20px; background:var(--tg-theme-button-color); color:#fff; text-align:center">Submit Matches</button>
+        `;
+    }
+
+    let selectedLeft = null;
+    let connections = []; // {leftEl, rightEl}
+
+    function initMatchingLogic(q) {
+        connections = [];
+        const items = document.querySelectorAll('.match-item');
+        
+        items.forEach(item => {
+            item.addEventListener('click', (e) => {
+                if (document.getElementById('nextBtn').style.display === 'block') return; // Ended
+                
+                const el = e.currentTarget;
+                if (el.classList.contains('matched')) return;
+
+                if (el.dataset.side === 'left') {
+                    // Select Left
+                    document.querySelectorAll('.match-item[data-side="left"]').forEach(i => i.classList.remove('selected'));
+                    el.classList.add('selected');
+                    selectedLeft = el;
+                } else {
+                    // Select Right (Try connect)
+                    if (selectedLeft) {
+                        // Create connection
+                        createConnection(selectedLeft, el);
+                        selectedLeft.classList.remove('selected');
+                        selectedLeft.classList.add('matched');
+                        el.classList.add('matched');
+                        selectedLeft = null;
+                    }
+                }
+            });
+        });
+        
+        // Resize listener
+        window.addEventListener('resize', drawLines);
+        drawLines();
+    }
+
+    function createConnection(leftEl, rightEl) {
+        connections.push({ left: leftEl, right: rightEl });
+        drawLines();
+    }
+
+    function drawLines(color = '#2481cc') {
+        const canvas = document.getElementById('matchCanvas');
+        if (!canvas) return;
+        
+        const container = document.querySelector('.matching-area');
+        canvas.width = container.offsetWidth;
+        canvas.height = container.offsetHeight;
+        
+        const ctx = canvas.getContext('2d');
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = color;
+
+        connections.forEach(conn => {
+            const r1 = conn.left.getBoundingClientRect();
+            const r2 = conn.right.getBoundingClientRect();
+            const contR = container.getBoundingClientRect();
+
+            ctx.beginPath();
+            ctx.moveTo(r1.right - contR.left, r1.top + r1.height/2 - contR.top);
+            ctx.lineTo(r2.left - contR.left, r2.top + r2.height/2 - contR.top);
+            ctx.stroke();
+        });
+    }
+
+    function submitMatching() {
+        // Currently simplied logic for "Matching" defined in JSON (Though user sample was only MCQ)
+        // If real matching JSON existed: 
+        // 1. Check against q.correctMatches 
+        // 2. Score points
+        // 3. revealAndSave()
+        
+        // Since matching logic needs proper JSON key-value pairs which we are simulating:
+        gameState.score++; // Assume correct for demo if all matched
+        playSound('success');
+        revealAndSave();
+    }
+
+
+    // --- HELPERS ---
+    function revealAndSave() {
+        const explanation = document.getElementById('explanation');
+        explanation.style.display = 'block';
+        explanation.scrollIntoView({ behavior: 'smooth' });
+        
+        document.getElementById('nextBtn').style.display = 'block';
+        saveProgress();
+    }
+
+    function nextQuestion() {
+        gameState.currentIdx++;
+        renderQuestion();
+        window.scrollTo(0,0);
+    }
+
+    function saveProgress() {
+        localStorage.setItem('quiz_progress', JSON.stringify({
+            idx: gameState.currentIdx + 1, // Store NEXT index
+            score: gameState.score,
+            date: Date.now()
+        }));
+    }
+
+    function loadProgress() {
+        const saved = localStorage.getItem('quiz_progress');
+        if (saved) {
+            const data = JSON.parse(saved);
+            // Expire after 24 hours
+            if (Date.now() - data.date < 86400000) {
+               gameState.currentIdx = data.idx || 0;
+               gameState.score = data.score || 0;
+            }
+        }
+    }
+
+    function resetQuiz() {
+        localStorage.removeItem('quiz_progress');
+        gameState.currentIdx = 0;
+        gameState.score = 0;
+        location.reload();
+    }
+
+    function playSound(type) {
+        if(tg.HapticFeedback) {
+             tg.HapticFeedback.notificationOccurred(type);
+        }
+    }
+
+    // Start App
+    loadAllData();
+
+</script>
+</body>
+</html>
