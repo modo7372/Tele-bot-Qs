@@ -3,1102 +3,618 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Exam Bot Elite V7 (Full Suite)</title>
+    <title>MedQuiz Elite V8.1</title>
     
-    <!-- Telegram SDK -->
+    <!-- Scripts loaded traditionally -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    
-    <!-- Firebase SDKs (Compat Version) -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
     <style>
-        /* --- CSS VARIABLES & THEME --- */
+        /* --- THEMES & VARIABLES --- */
         :root {
-            --bg-body: #f1f5f9;
-            --bg-card: #ffffff;
-            --text-primary: #1e293b;
-            --text-secondary: #64748b;
-            --primary-color: #3b82f6;
-            --primary-dark: #2563eb;
-            --accent-color: #8b5cf6;
-            --success-color: #22c55e;
-            --error-color: #ef4444;
-            --warning-color: #f59e0b;
-            --border-color: #e2e8f0;
-            --radius-lg: 16px;
-            --radius-sm: 8px;
-            --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
-            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
-            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            --primary: #3b82f6; --primary-dark: #2563eb;
+            --bg: #f8fafc; --surface: #ffffff;
+            --text-main: #1e293b; --text-sub: #64748b;
+            --border: #e2e8f0;
+            --font-size: 16px;
+            --radius: 12px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
 
-        body.dark-mode {
-            --bg-body: #0f172a;
-            --bg-card: #1e293b;
-            --text-primary: #f8fafc;
-            --text-secondary: #94a3b8;
-            --border-color: #334155;
-            --primary-color: #60a5fa;
-            --primary-dark: #3b82f6;
-            --shadow-sm: 0 1px 2px rgba(0,0,0,0.5);
-            --shadow-md: 0 4px 6px rgba(0,0,0,0.4);
+        [data-theme="dark"] {
+            --bg: #0f172a; --surface: #1e293b; 
+            --text-main: #f1f5f9; --text-sub: #94a3b8; 
+            --border: #334155; --primary: #60a5fa;
+            --shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+        
+        [data-theme="sepia"] {
+            --bg: #f4ecd8; --surface: #fdf6e3; 
+            --text-main: #433422; --text-sub: #5c5548; 
+            --border: #dcd2b8; --primary: #a05a2c;
         }
 
-        /* --- GLOBAL RESET & BASE STYLES --- */
-        * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
+        * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; font-family: system-ui, -apple-system, sans-serif; }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-body);
-            color: var(--text-primary);
-            margin: 0;
-            padding-bottom: 90px; /* Space for Bottom Nav */
+            background-color: var(--bg); color: var(--text-main); font-size: var(--font-size);
+            margin: 0; padding-bottom: 100px;
+            transition: background 0.3s, color 0.3s;
             user-select: none;
-            overflow-x: hidden;
-            transition: background 0.3s ease;
         }
 
-        /* --- LOADING SCREEN --- */
-        #loading-screen {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: var(--bg-body);
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            transition: opacity 0.5s;
-        }
-        .loader-icon { font-size: 3rem; margin-bottom: 20px; animation: bounce 1.5s infinite; }
-        .spinner {
-            width: 40px; height: 40px; border: 4px solid var(--border-color);
-            border-top-color: var(--primary-color); border-radius: 50%;
-            animation: spin 0.8s infinite linear;
-        }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-
-        /* --- HEADER --- */
-        .app-header {
-            background: var(--bg-card);
-            padding: 16px 20px;
-            position: sticky; top: 0; z-index: 50;
+        /* HEADER */
+        .app-bar {
+            background: var(--surface); padding: 15px 20px;
+            position: sticky; top: 0; z-index: 100;
             display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 1px solid var(--border-color);
-            box-shadow: var(--shadow-sm);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-bottom: 1px solid var(--border);
         }
-        .header-logo {
-            font-weight: 800; font-size: 1.15rem;
-            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
-        .header-badge {
-            background: rgba(0,0,0,0.04); color: var(--text-secondary);
-            padding: 6px 12px; border-radius: 20px;
-            font-size: 0.85rem; font-weight: 600;
-            display: flex; align-items: center; gap: 6px;
-        }
+        .logo { font-weight: 800; font-size: 1.2em; color: var(--primary); }
+        .icon-btn { background: none; border: none; font-size: 1.4em; cursor: pointer; color: var(--text-main); }
 
-        /* --- VIEW CONTAINERS & ANIMATION --- */
-        .view-section {
-            display: none; 
-            padding: 20px; 
-            max-width: 700px; 
-            margin: 0 auto;
-            animation: fadeInSlide 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .view-section.active { display: block; }
-        @keyframes fadeInSlide {
-            from { opacity: 0; transform: translateY(15px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* --- NAVIGATION CARDS (Level 1 & 2) --- */
-        .nav-block {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-lg);
-            padding: 20px; margin-bottom: 16px;
+        /* CARDS */
+        .nav-card {
+            background: var(--surface); padding: 20px; margin-bottom: 12px;
+            border-radius: var(--radius); border: 1px solid var(--border);
             display: flex; align-items: center; justify-content: space-between;
-            box-shadow: var(--shadow-sm);
+            box-shadow: var(--shadow); cursor: pointer;
+        }
+        .nav-card:active { transform: scale(0.98); opacity: 0.8; }
+        .count-badge { background: var(--bg); border: 1px solid var(--border); padding: 4px 8px; border-radius: 6px; font-size: 0.8em; font-weight: bold; }
+
+        /* CHECKBOX ROWS */
+        .check-row {
+            background: var(--surface); padding: 15px; margin-bottom: 10px;
+            border-radius: var(--radius); border: 1px solid var(--border);
+            display: flex; align-items: center; cursor: pointer;
+        }
+        .check-row.selected { border-color: var(--primary); background: rgba(59, 130, 246, 0.05); }
+        
+        .chk-visual {
+            width: 24px; height: 24px; border: 2px solid var(--text-sub); border-radius: 6px;
+            margin-left: 15px; display: flex; align-items: center; justify-content: center;
+        }
+        .check-row.selected .chk-visual { border-color: var(--primary); background: var(--primary); }
+        .chk-visual::after { content: '✔'; color: white; font-size: 0.9em; display: none; }
+        .check-row.selected .chk-visual::after { display: block; }
+        
+        /* SELECT ALL BOX */
+        .select-all-box {
+            background: var(--surface); padding: 15px; border-radius: var(--radius);
+            border: 2px solid var(--border); display: flex; align-items: center; margin-bottom: 20px;
             cursor: pointer;
-            transition: var(--transition);
         }
-        .nav-block:active { transform: scale(0.98); }
-        .nav-block-content { display: flex; align-items: center; gap: 16px; }
-        .block-icon {
-            width: 48px; height: 48px;
-            background: rgba(59, 130, 246, 0.1); color: var(--primary-color);
-            border-radius: 12px; display: flex; align-items: center; justify-content: center;
-            font-size: 1.5rem;
-        }
-
-        /* --- SELECTION LISTS (Checkboxes) --- */
-        .group-header {
-            font-weight: 700; color: var(--primary-color); margin-top: 24px; margin-bottom: 8px;
-            font-size: 1.1rem; border-bottom: 2px solid var(--border-color); padding-bottom: 4px;
-        }
-
-        .check-item {
-            background: var(--bg-card); padding: 16px;
-            border-radius: var(--radius-lg); margin-bottom: 10px;
-            display: flex; align-items: center; gap: 14px;
-            border: 1px solid var(--border-color);
-            transition: var(--transition); cursor: pointer;
-        }
-        .check-item.selected {
-            border-color: var(--primary-color);
-            background: rgba(59, 130, 246, 0.05);
-        }
-        .custom-checkbox {
-            width: 24px; height: 24px; border-radius: 6px; border: 2px solid var(--text-secondary);
-            display: flex; align-items: center; justify-content: center;
-            transition: var(--transition);
-        }
-        .check-item.selected .custom-checkbox {
-            background: var(--primary-color); border-color: var(--primary-color);
-        }
-        .custom-checkbox::after { content: '✔'; color: white; font-size: 14px; display: none; }
-        .check-item.selected .custom-checkbox::after { display: block; }
-
-        /* --- BREADCRUMB --- */
-        .breadcrumbs-bar {
-            display: flex; align-items: center; gap: 8px; 
-            margin-bottom: 24px; flex-wrap: wrap; font-size: 0.9rem;
-        }
-        .crumb { color: var(--text-secondary); cursor: pointer; }
-        .crumb.active { color: var(--primary-color); font-weight: bold; }
-        .crumb-sep { color: var(--border-color); }
-
-        /* --- FLOATING ACTION BUTTON (FAB) --- */
-        .fab-next {
-            position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
-            background: var(--text-primary); color: var(--bg-card);
-            padding: 14px 32px; border-radius: 50px;
-            font-weight: bold; box-shadow: 0 10px 25px rgba(0,0,0,0.25);
-            cursor: pointer; display: none; z-index: 100;
-            animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        body.dark-mode .fab-next { background: var(--primary-color); color: white; }
-        @keyframes popIn { from { transform: translate(-50%, 20px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
-
-        /* --- SETUP CHIPS --- */
-        .chip-group { display: flex; flex-wrap: wrap; gap: 10px; margin: 15px 0 25px; }
-        .choice-chip {
-            background: var(--bg-card); border: 1px solid var(--border-color);
-            padding: 10px 20px; border-radius: 40px; cursor: pointer;
-            flex: 1; text-align: center; font-size: 0.9rem; transition: 0.2s; white-space: nowrap;
-        }
-        .choice-chip.active {
-            background: var(--primary-color); color: white;
-            border-color: var(--primary-color);
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-        }
-
-        /* --- ACTION BUTTONS --- */
-        .btn-block {
-            width: 100%; background: var(--primary-color); color: white;
-            padding: 18px; border-radius: var(--radius-lg); border: none;
-            font-size: 1.1rem; font-weight: 700; cursor: pointer;
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); margin-top: 15px;
-            transition: transform 0.1s;
-        }
-        .btn-block:active { transform: translateY(2px); }
-
-        /* --- QUIZ UI --- */
-        .quiz-image { width: 100%; border-radius: var(--radius-lg); margin-bottom: 20px; display: block; border: 1px solid var(--border-color); }
-        .question-txt { font-size: 1.25rem; font-weight: 600; line-height: 1.6; margin: 20px 0; }
-        .option-card {
-            background: var(--bg-card); width: 100%; padding: 18px; margin-bottom: 12px;
-            border-radius: 12px; border: 2px solid transparent; cursor: pointer;
-            box-shadow: var(--shadow-sm); text-align: right; font-size: 1rem; color: var(--text-primary);
-            transition: all 0.2s;
-        }
-        .option-card:hover { border-color: var(--primary-color); }
-        .option-card.correct { background: #dcfce7; border-color: #16a34a; color: #14532d; }
-        .option-card.wrong { background: #fee2e2; border-color: #ef4444; color: #7f1d1d; }
+        .select-all-box.active { border-color: var(--primary); }
+        .select-all-box.active .chk-visual { background: var(--primary); border-color: var(--primary); }
         
-        .explanation-box {
-            display: none; background: #fffbeb; color: #92400e; 
-            padding: 20px; border-radius: 12px; margin-top: 20px; line-height: 1.6;
-            border: 1px solid #fcd34d; animation: fadeInSlide 0.3s ease;
+        /* QUIZ */
+        .q-meta { display:flex; justify-content:space-between; margin-bottom:15px; font-size:0.85em; color:var(--text-sub); background:rgba(0,0,0,0.03); padding:8px; border-radius:8px; }
+        .q-txt { font-weight: 700; font-size: 1.15em; line-height: 1.5; margin: 15px 0; }
+        .opt-btn {
+            width: 100%; padding: 15px; margin-bottom: 10px; border-radius: var(--radius);
+            background: var(--surface); border: 2px solid transparent; color: var(--text-main);
+            text-align: right; cursor: pointer; font-size: 1em; box-shadow: var(--shadow);
         }
-        body.dark-mode .explanation-box { background: #451a03; color: #fcd34d; border-color: #92400e; }
+        .opt-btn.correct { background: #d1fae5; border-color: #10b981; color: #064e3b; }
+        .opt-btn.wrong { background: #fee2e2; border-color: #ef4444; color: #7f1d1d; }
+        .expl-box { display:none; margin-top:20px; padding:15px; background:rgba(245, 158, 11, 0.1); border-right:4px solid #f59e0b; border-radius:8px; }
 
-        /* --- BOTTOM BAR --- */
-        .nav-bottom {
-            position: fixed; bottom: 0; left: 0; width: 100%; height: 75px;
-            background: var(--bg-card); border-top: 1px solid var(--border-color);
-            display: flex; justify-content: space-around; align-items: center; z-index: 80;
-            padding-bottom: 10px; /* Safe Area */
+        /* FAB */
+        .fab-container {
+            position: fixed; bottom: 20px; left: 0; right: 0; 
+            padding: 0 20px; z-index: 200; pointer-events: none;
+            display: flex; justify-content: center;
         }
-        .tab-btn { background:none; border:none; display:flex; flex-direction:column; align-items:center; gap:4px; color:var(--text-secondary); cursor:pointer; }
-        .tab-btn.active { color: var(--primary-color); }
-        .tab-btn svg { width: 26px; height: 26px; fill: currentColor; }
-        .tab-lbl { font-size: 0.75rem; font-weight: 500; }
+        .fab {
+            background: var(--primary); color: white;
+            padding: 15px 40px; border-radius: 50px; font-weight: 800;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2); border: none; cursor: pointer;
+            pointer-events: auto; display: none;
+        }
+        .fab.visible { display: block; animation: popUp 0.3s; }
+        @keyframes popUp { from{transform:translateY(100px)} to{transform:translateY(0)} }
 
-        /* --- SELECT ALL HEADER --- */
-        .bulk-select-bar {
-            display: flex; align-items: center; gap: 10px;
-            background: var(--bg-card); padding: 12px 16px; border-radius: var(--radius-lg);
-            border: 1px solid var(--border-color); margin-bottom: 20px;
+        /* VIEWS */
+        .view-section { display: none; padding: 20px; max-width: 800px; margin: 0 auto; }
+        .view-section.active { display: block; animation: fadeUp 0.3s; }
+        @keyframes fadeUp { from{opacity:0; transform:translateY(20px);} to{opacity:1; transform:translateY(0);} }
+
+        /* BREADCRUMB */
+        .breadcrumb { margin-bottom: 20px; color: var(--text-sub); display: flex; align-items: center; gap: 5px; font-size: 0.9em; }
+        .bc-link { color: var(--primary); font-weight: bold; cursor: pointer; }
+
+        /* SETTINGS MODAL */
+        .modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 300;
+            display: none; align-items: flex-end; 
         }
-        
-        .empty-state { text-align: center; padding: 40px 20px; color: var(--text-secondary); }
+        .modal-content {
+            background: var(--surface); width: 100%; border-radius: 20px 20px 0 0;
+            padding: 25px; animation: slideUp 0.3s;
+        }
+        @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+        .set-btn { padding: 8px 15px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg); margin-left: 5px; cursor: pointer; color: var(--text-main); }
+        .set-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
 
     </style>
 </head>
 <body>
 
-    <!-- === LOADER === -->
-    <div id="loading-screen">
-        <div class="loader-icon">📂</div>
-        <div class="spinner"></div>
-        <p style="margin-top: 20px; color: var(--text-secondary);">جاري تهيئة النظام...</p>
-    </div>
-
-    <!-- === HEADER === -->
-    <header class="app-header">
-        <div class="header-logo">ExaM Bot Elite V7</div>
-        <div class="header-badge">
-            🏆 <span id="lbl-score">--</span>
-        </div>
-    </header>
-
-    <!-- === VIEW 1: DASHBOARD (HOME) === -->
-    <div id="v-home" class="view-section active">
-        <div style="margin-bottom: 20px;">
-            <h1 style="margin:0; font-size:1.5rem">مرحباً بك 👋</h1>
-            <p style="margin:5px 0 0; color:var(--text-secondary)">اختر ماذا تريد أن تفعل اليوم</p>
-        </div>
-
-        <div class="nav-block" onclick="startNewSession()">
-            <div class="nav-block-content">
-                <div class="block-icon">📚</div>
-                <div>
-                    <div style="font-weight:700; font-size:1.1rem">تصفح المنهج</div>
-                    <div style="font-size:0.85rem; color:var(--text-secondary)">
-                        اختيار ترم > مادة > دروس > فصول
-                    </div>
-                </div>
+    <!-- SETTINGS MODAL -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <h3>⚙️ الإعدادات</h3>
+            <div style="margin-bottom:20px">
+                <p>المظهر:</p>
+                <button class="set-btn active" id="btn-theme-light" onclick="setTheme('light')">☀️ فاتح</button>
+                <button class="set-btn" id="btn-theme-dark" onclick="setTheme('dark')">🌑 مظلم</button>
+                <button class="set-btn" id="btn-theme-sepia" onclick="setTheme('sepia')">📖 قراءة</button>
             </div>
-            <div style="color:var(--text-secondary)">⬅️</div>
-        </div>
-
-        <div class="nav-block" onclick="startMistakesMode()">
-            <div class="nav-block-content">
-                <div class="block-icon" style="color:var(--danger); background:rgba(239,68,68,0.1)">💊</div>
-                <div>
-                    <div style="font-weight:700; font-size:1.1rem">مراجعة الأخطاء</div>
-                    <div style="font-size:0.85rem; color:var(--text-secondary)">
-                        إعادة الاختبار في الأسئلة الصعبة
-                    </div>
-                </div>
+            <div style="margin-bottom:20px">
+                <p>الخط:</p>
+                <button class="set-btn" id="btn-font-14" onclick="setFont(14)">صغير</button>
+                <button class="set-btn active" id="btn-font-16" onclick="setFont(16)">وسط</button>
+                <button class="set-btn" id="btn-font-18" onclick="setFont(18)">كبير</button>
             </div>
-            <div style="color:var(--text-secondary)">⬅️</div>
+            <button onclick="closeSettings()" style="width:100%; padding:15px; background:var(--primary); color:#fff; border:none; border-radius:12px">إغلاق</button>
+        </div>
+    </div>
+
+    <!-- APP BAR -->
+    <div class="app-bar">
+        <button class="icon-btn" onclick="openSettings()">⚙️</button>
+        <div class="logo">MedQuiz Elite</div>
+        <div style="font-weight:700">#<span id="q-counter">0</span></div>
+    </div>
+
+    <!-- VIEWS CONTAINER -->
+    <div id="main-container">
+        
+        <!-- Loader -->
+        <div id="v-loader" class="view-section active" style="text-align:center; padding-top:100px;">
+            <div style="font-size:3em">📥</div>
+            <h3>جاري تحميل البيانات...</h3>
+        </div>
+
+        <!-- 1. Source (Term) -->
+        <div id="v-source" class="view-section">
+            <h2>اختر الترم الدراسي:</h2>
+            <div id="list-source"></div>
+        </div>
+
+        <!-- 2. Subject -->
+        <div id="v-subject" class="view-section">
+            <div class="breadcrumb"><span class="bc-link" onclick="goBack('source')">الرئيسية</span> / المادة</div>
+            <h2>اختر المادة:</h2>
+            <div id="list-subject"></div>
+        </div>
+
+        <!-- 3. Lesson -->
+        <div id="v-lesson" class="view-section">
+            <div class="breadcrumb"><span class="bc-link" onclick="goBack('subject')">...</span> / <span id="bread-subj"></span></div>
+            <h2>حدد الدروس:</h2>
+            
+            <div class="select-all-box" id="lesson-all-btn" onclick="toggleAllLessons()">
+                <div class="chk-visual"></div>
+                <div class="label" style="margin-right:15px">تحديد الكل</div>
+            </div>
+            
+            <div id="list-lesson"></div>
+        </div>
+
+        <!-- 4. Chapter -->
+        <div id="v-chapter" class="view-section">
+            <div class="breadcrumb"><span class="bc-link" onclick="goBack('lesson')">...</span> / تفاصيل الفصول</div>
+            <h2>حدد الفصول (Topics):</h2>
+            
+            <div class="select-all-box" id="chap-all-btn" onclick="toggleAllChapters()">
+                <div class="chk-visual"></div>
+                <div class="label" style="margin-right:15px">تحديد الكل</div>
+            </div>
+            
+            <div id="list-chapter"></div>
+            <div style="height: 100px;"></div>
+        </div>
+
+        <!-- 5. Quiz -->
+        <div id="v-quiz" class="view-section">
+            <div class="breadcrumb"><span class="bc-link" onclick="exitQuiz()">إنهاء ✖</span></div>
+            
+            <div class="q-meta">
+                <span id="q-ctx">...</span>
+                <span>ID: <span id="q-id"></span></span>
+            </div>
+            
+            <div id="q-content"></div>
         </div>
         
-        <div style="text-align: center; margin-top: 40px;">
-             <button onclick="window.location.reload()" style="background:none; border:none; color:var(--primary-color); font-weight:bold; cursor:pointer;">
-                 🔄 تحديث قاعدة البيانات
-             </button>
-        </div>
     </div>
 
-    <!-- === VIEW 2: TERM SELECTION === -->
-    <div id="v-terms" class="view-section">
-        <div class="breadcrumbs-bar">
-            <span class="crumb active">الرئيسية</span> <span class="crumb-sep">/</span> <span class="crumb">الترم</span>
-        </div>
-        <h2>أي ترم دراسي؟</h2>
-        <div id="container-terms"></div>
+    <!-- FAB -->
+    <div class="fab-container">
+        <button id="fab-action" class="fab"></button>
     </div>
-
-    <!-- === VIEW 3: SUBJECT SELECTION === -->
-    <div id="v-subjects" class="view-section">
-        <div class="breadcrumbs-bar">
-            <span class="crumb" onclick="goHome()">الرئيسية</span> <span class="crumb-sep">/</span>
-            <span class="crumb" onclick="startNewSession()">التررمات</span> <span class="crumb-sep">/</span>
-            <span class="crumb active">المادة</span>
-        </div>
-        <h2>اختر المادة:</h2>
-        <div id="container-subjects"></div>
-    </div>
-
-    <!-- === VIEW 4: LESSONS (MULTI-SELECT) === -->
-    <div id="v-lessons" class="view-section">
-        <div class="breadcrumbs-bar">
-            <span class="crumb" onclick="backToSubjects()">المادة</span> <span class="crumb-sep">/</span>
-            <span class="crumb active">تحديد الدروس</span>
-        </div>
-        
-        <h2 style="margin-bottom:5px">الخطوة 1: اختر الدروس</h2>
-        <p style="color:var(--text-secondary); margin-top:0">يمكنك اختيار درس واحد أو أكثر</p>
-
-        <div class="bulk-select-bar">
-            <div class="custom-checkbox" id="icon-all-lessons" onclick="toggleAllVisibleLessons()"></div>
-            <span style="font-weight:bold; cursor:pointer" onclick="toggleAllVisibleLessons()">تحديد الكل</span>
-        </div>
-
-        <div id="container-lessons"></div>
-        <div style="height:60px"></div>
-    </div>
-
-    <!-- === VIEW 5: CHAPTERS (NESTED SELECT) === -->
-    <div id="v-chapters" class="view-section">
-        <div class="breadcrumbs-bar">
-            <span class="crumb" onclick="renderLessonsView()">الدروس</span> <span class="crumb-sep">/</span>
-            <span class="crumb active">تحديد الفصول</span>
-        </div>
-        
-        <h2 style="margin-bottom:5px">الخطوة 2: دقة الاختيار</h2>
-        <p style="color:var(--text-secondary); margin-top:0">قم باستبعاد الفصول التي لا تريدها (إن وجد)</p>
-
-        <!-- Dynamic List Grouped by Lesson -->
-        <div id="container-chapters"></div>
-        <div style="height:80px"></div>
-    </div>
-
-    <!-- === VIEW 6: QUIZ SETUP === -->
-    <div id="v-setup" class="view-section">
-        <div class="breadcrumbs-bar">
-            <span class="crumb" onclick="backFromSetup()">⬅️ عودة للتعديل</span>
-        </div>
-
-        <div style="text-align:center; margin-bottom:30px">
-            <div style="font-size:3rem; margin-bottom:10px">⚙️</div>
-            <h2 style="margin:0">إعدادات الجلسة</h2>
-            <p id="txt-selection-summary" style="color:var(--text-secondary)"></p>
-        </div>
-
-        <label style="font-weight:700">نوع الأسئلة:</label>
-        <div class="chip-group" id="grp-mode">
-            <div class="choice-chip active" onclick="setMode('new', this)">🌟 جديدة فقط</div>
-            <div class="choice-chip" onclick="setMode('mistake', this)">🚨 أخطاء سابقة</div>
-            <div class="choice-chip" onclick="setMode('mixed', this)">🔀 مختلط</div>
-        </div>
-
-        <label style="font-weight:700">عدد الأسئلة:</label>
-        <div class="chip-group" id="grp-qty">
-            <div class="choice-chip active" onclick="setQty(5, this)">5</div>
-            <div class="choice-chip" onclick="setQty(10, this)">10</div>
-            <div class="choice-chip" onclick="setQty(25, this)">25</div>
-            <div class="choice-chip" onclick="setQty(999, this)">الكل</div>
-        </div>
-        
-        <div id="msg-error" style="background:#fee2e2; color:#ef4444; padding:15px; border-radius:12px; margin-bottom:15px; text-align:center; display:none">
-            عفواً، لا توجد أسئلة تطابق الفلاتر المختارة!
-        </div>
-
-        <button class="btn-block" onclick="startQuizEngine()">ابدأ الاختبار الآن 🚀</button>
-    </div>
-
-    <!-- === VIEW 7: QUIZ RUNNER === -->
-    <div id="v-quiz" class="view-section">
-        <div style="display:flex; justify-content:space-between; margin-bottom:20px; font-size:0.9rem; color:var(--text-secondary)">
-            <span id="txt-q-progress"> السؤال 1 / 10 </span>
-            <span id="txt-q-id" style="font-family:monospace; background:rgba(0,0,0,0.05); padding:2px 6px; border-radius:4px"></span>
-            <span onclick="confirmEndQuiz()" style="color:var(--error-color); cursor:pointer; font-weight:bold">إنهاء ✖</span>
-        </div>
-
-        <div id="quiz-area">
-            <!-- Dynamic Content -->
-        </div>
-    </div>
-
-    <!-- === VIEW 8: LEADERBOARD === -->
-    <div id="v-leader" class="view-section">
-        <h2 style="text-align:center; margin-bottom:20px">لوحة المتصدرين 👑</h2>
-        <div id="container-leaderboard" style="background:var(--bg-card); border-radius:12px; box-shadow:var(--shadow-md); overflow:hidden;">
-            <!-- Loaded via JS -->
-        </div>
-    </div>
-
-    <!-- FLOATING BUTTON (FAB) -->
-    <div id="fab-next" class="fab-next"></div>
-
-    <!-- BOTTOM NAVIGATION -->
-    <nav class="nav-bottom">
-        <button class="tab-btn active" onclick="goHome()">
-            <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-            <span class="tab-lbl">الرئيسية</span>
-        </button>
-        <button class="tab-btn" onclick="openLeaderboard()">
-            <svg viewBox="0 0 24 24"><path d="M16 11V3H8v6H2v12h20V11h-6zm-6-6h4v14h-4V5zm-6 6h4v8H4v-8zm16 8h-4v-6h4v6z"/></svg>
-            <span class="tab-lbl">الأوائل</span>
-        </button>
-    </nav>
 
 <script>
     /** 
-     * ===============================================
-     * CONFIGURATION (UPDATE THESE VALUES)
-     * ===============================================
+     *  ==============================================
+     *  CONFIG: INSERT YOUR FIREBASE DATA HERE 👇
+     *  ==============================================
      */
-    const CONFIG = {
-        firebase: { 
-            apiKey: "AIzaSyDEZFJmcXK2LxYAZ-Yjv_M1HbC6zi_qilg",
-            authDomain: "exambotdb.firebaseapp.com",
-            databaseURL: "https://exambotdb-default-rtdb.firebaseio.com",
-            projectId: "exambotdb",
-            storageBucket: "exambotdb.firebasestorage.app",
-            messagingSenderId: "950600562980",
-            appId: "1:950600562980:web:f993c22d45e5cfdd3d9bb1"
-        }
+    const FIREBASE_CONFIG = {        
+        apiKey: "AIzaSyDEZFJmcXK2LxYAZ-Yjv_M1HbC6zi_qilg",
+        authDomain: "exambotdb.firebaseapp.com",
+        databaseURL: "https://exambotdb-default-rtdb.firebaseio.com",
+        projectId: "exambotdb",
+        storageBucket: "exambotdb.firebasestorage.app",
+        messagingSenderId: "950600562980",
+        appId: "1:950600562980:web:f993c22d45e5cfdd3d9bb1"      
+    };
+    /* ============================================== */
+
+
+    const App = {
+        data: [], tree: {}, 
+        nav: { source:null, subject:null },
+        selection: { lessons: new Set(), chapters: new Set() },
+        quiz: { queue: [], idx: 0 },
+        settings: { theme: 'light', font: 16 }
     };
 
-    /** 
-     * ===============================================
-     * GLOBAL APP STATE 
-     * ===============================================
-     */
-    const TG = window.Telegram.WebApp;
-    let DB = null; // Firebase DB Instance
-    let UserID = "guest_v7"; // Default ID
-
-    const State = {
-        // --- DATA ---
-        allQuestions: [],   // Flattened Array
-        
-        // HIERARCHY STRUCTURE
-        // tree[Term][Subject][Lesson] = [Chapter1, Chapter2...] (Set of Unique Strings)
-        // Note: We need this to list chapters given a lesson name
-        tree: {},
-        
-        userProgress: {},   // { questionID: 'correct'|'wrong' }
-        
-        // --- NAVIGATION STATE ---
-        currentTerm: null,
-        currentSubject: null,
-        
-        // --- SELECTION STATE ---
-        // Array of selected Lesson Names (Strings) for the current Subject
-        selectedLessons: [],
-        
-        // Array of selected UNIQUE KEYS for Chapters: "Term|Subject|Lesson|Chapter"
-        selectedChapters: [],
-        
-        // --- QUIZ STATE ---
-        isMistakeMode: false,
-        settings: { mode: 'new', qty: 5 },
-        activeQueue: [],
-        activeIdx: 0,
-    };
-
-    /** 
-     * ===============================================
-     * BOOTSTRAP & DATA LOADING
-     * ===============================================
-     */
     window.onload = function() {
-        // Telegram Init
-        TG.ready(); TG.expand();
-        if(TG.initDataUnsafe?.user?.id) UserID = TG.initDataUnsafe.user.id.toString();
-        if(TG.colorScheme === 'dark') document.body.classList.add('dark-mode');
+        if(window.Telegram?.WebApp) {
+            window.Telegram.WebApp.ready();
+            window.Telegram.WebApp.expand();
+        }
 
         // Firebase Init
         if(window.firebase && !firebase.apps.length) {
             try {
-                firebase.initializeApp(CONFIG.firebase);
-                DB = firebase.database();
+                firebase.initializeApp(FIREBASE_CONFIG);
             } catch(e) { console.error("Firebase Config Error:", e); }
         }
 
-        // Fetch Data
-        initializeData();
+        loadSettings();
+        fetchData();
     };
 
-    async function initializeData() {
-        if(!navigator.onLine) {
-            document.querySelector('#loading-screen h3').innerText = "خطأ: لا يوجد إنترنت!";
-            return;
-        }
-
+    /* DATA LOADING */
+    async function fetchData() {
         try {
-            // 1. Manifest
-            const manifestReq = await fetch('questions_list.json?t=' + Date.now());
-            if(!manifestReq.ok) throw new Error("Manifest load failed");
-            const filesList = await manifestReq.json();
+            const listRes = await fetch('questions_list.json?nocache=' + Date.now());
+            const files = await listRes.json();
+            
+            const fetches = files.map(f => fetch('Questions/' + f).then(r => r.json()));
+            const responses = await Promise.all(fetches);
 
-            // 2. Fetch Files Parallel
-            const jobs = filesList.map(f => fetch('Questions/' + f).then(r => r.json()));
-            const filesData = await Promise.all(jobs);
+            responses.forEach(json => {
+                const src = json.meta?.source || "Other";
+                const sub = json.meta?.subject || "General";
+                const lsn = json.meta?.lesson || "Misc";
 
-            // 3. Process & Index Data
-            processFiles(filesData);
+                if (!App.tree[src]) App.tree[src] = {};
+                if (!App.tree[src][sub]) App.tree[src][sub] = {};
+                if (!App.tree[src][sub][lsn]) App.tree[src][sub][lsn] = {};
 
-            // 4. Fetch User Progress (Async)
-            if(DB && UserID !== 'guest_v7') {
-                DB.ref(`users/${UserID}/progress`).once('value').then(snap => {
-                    State.userProgress = snap.val() || {};
-                    updateScoreBadge();
+                json.questions.forEach(q => {
+                    const chap = q.chapter || "General";
+                    // Append Context
+                    q._ctx = { s: src, su: sub, l: lsn, c: chap };
+                    
+                    if (!App.tree[src][sub][lsn][chap]) App.tree[src][sub][lsn][chap] = [];
+                    App.tree[src][sub][lsn][chap].push(q);
                 });
-            } else {
-                updateScoreBadge(); // 0 for guest
-            }
+            });
 
-            // Finish Loading
-            document.getElementById('loading-screen').style.opacity = '0';
-            setTimeout(() => { document.getElementById('loading-screen').style.display = 'none'; }, 500);
-
-        } catch (e) {
+            showView('v-source');
+            renderSources();
+        } catch(e) {
             console.error(e);
-            alert("فشل تحميل البيانات. يرجى مراجعة Console.");
-            document.getElementById('loading-screen').innerHTML += `<br><button onclick="location.reload()">retry</button>`;
+            document.querySelector('#v-loader h3').innerText = "خطأ في تحميل الملفات!";
         }
     }
 
-    function processFiles(dataArray) {
-        let qArr = [];
-        let hTree = {};
-
-        dataArray.forEach(file => {
-            const meta = file.meta || {};
-            // Level 1: Term (Source)
-            const term = meta.source || meta.term || "General Term";
-            // Level 2: Subject
-            const sub = meta.subject || "General Subject";
-            // Level 3: Lesson
-            const lesson = meta.lesson || "General Lesson";
-
-            // Init Tree Path
-            if(!hTree[term]) hTree[term] = {};
-            if(!hTree[term][sub]) hTree[term][sub] = {};
-            if(!hTree[term][sub][lesson]) hTree[term][sub][lesson] = new Set(); // Using Set for Unique Chapters
-
-            file.questions.forEach(q => {
-                // Level 4: Chapter
-                const chap = q.chapter || "General Topic";
-                
-                // Construct Unique ID Key for tracking selection
-                const uniqueKey = `${term}|${sub}|${lesson}|${chap}`;
-                
-                // Enhanced Question Object
-                const qObj = {
-                    ...q,
-                    _hierarchyKey: uniqueKey, // for easy filtering later
-                    _meta: { term, subject: sub, lesson, chapter: chap }
-                };
-
-                qArr.push(qObj);
-                hTree[term][sub][lesson].add(chap); // Add chapter name to set
-            });
-        });
-
-        // Convert Sets to Arrays for easier rendering later
-        Object.keys(hTree).forEach(t => {
-            Object.keys(hTree[t]).forEach(s => {
-                Object.keys(hTree[t][s]).forEach(l => {
-                    hTree[t][s][l] = Array.from(hTree[t][s][l]).sort();
-                });
-            });
-        });
-
-        State.allQuestions = qArr;
-        State.tree = hTree;
+    /* HELPERS */
+    function getCount(node) {
+        if(Array.isArray(node)) return node.length;
+        return Object.values(node).reduce((s, c) => s + getCount(c), 0);
     }
 
-    /** 
-     * ===============================================
-     * VIEW MANAGEMENT 
-     * ===============================================
-     */
-    function switchView(id) {
-        document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+    function showView(id) {
+        document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
         document.getElementById(id).classList.add('active');
-        document.getElementById('fab-next').style.display = 'none'; // Default hidden
-        window.scrollTo(0,0);
-        
-        // Tab Bar Highlight
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        if(id === 'v-leader') document.querySelectorAll('.tab-btn')[1].classList.add('active');
-        else document.querySelectorAll('.tab-btn')[0].classList.add('active');
-    }
-
-    function goHome() {
-        // Reset navigation state
-        State.currentTerm = null;
-        State.currentSubject = null;
-        State.selectedLessons = [];
-        State.selectedChapters = [];
-        State.isMistakeMode = false;
-        
-        switchView('v-home');
-        updateScoreBadge();
-    }
-
-    /** 
-     * ===============================================
-     * NAVIGATION LOGIC (THE 4 LEVELS)
-     * ===============================================
-     */
-    
-    // LEVEL 1: NEW SESSION -> TERMS
-    function startNewSession() {
-        switchView('v-terms');
-        const container = document.getElementById('container-terms');
-        container.innerHTML = '';
-
-        Object.keys(State.tree).forEach(termName => {
-            const card = document.createElement('div');
-            card.className = 'nav-block';
-            card.onclick = () => { State.currentTerm = termName; renderSubjectsView(); };
-            card.innerHTML = `
-                <div class="nav-block-content">
-                    <div class="block-icon">📅</div>
-                    <div style="font-weight:700">${termName}</div>
-                </div>
-                <div style="color:var(--text-secondary)">⬅️</div>
-            `;
-            container.appendChild(card);
-        });
-    }
-
-    // LEVEL 2: SUBJECTS
-    function renderSubjectsView() {
-        switchView('v-subjects');
-        const container = document.getElementById('container-subjects');
-        container.innerHTML = '';
-        const subjects = State.tree[State.currentTerm];
-
-        Object.keys(subjects).forEach(subName => {
-            const card = document.createElement('div');
-            card.className = 'nav-block';
-            card.onclick = () => { State.currentSubject = subName; State.selectedLessons = []; renderLessonsView(); };
-            card.innerHTML = `
-                <div class="nav-block-content">
-                    <div class="block-icon">📘</div>
-                    <div style="font-weight:700">${subName}</div>
-                </div>
-                <div style="color:var(--text-secondary)">⬅️</div>
-            `;
-            container.appendChild(card);
-        });
-    }
-
-    function backToSubjects() { renderSubjectsView(); }
-
-    // LEVEL 3: LESSONS (CHECKBOX LIST)
-    function renderLessonsView() {
-        switchView('v-lessons');
-        const container = document.getElementById('container-lessons');
-        container.innerHTML = '';
-        
-        const term = State.currentTerm;
-        const subj = State.currentSubject;
-        // Access Object where Keys are Lesson Names
-        const lessonsMap = State.tree[term][subj];
-        const lessonNames = Object.keys(lessonsMap);
-
-        if(lessonNames.length === 0) { container.innerHTML = "<p>فارغ</p>"; return; }
-
-        lessonNames.forEach(lsnName => {
-            const isSelected = State.selectedLessons.includes(lsnName);
-            const div = document.createElement('div');
-            div.className = `check-item ${isSelected ? 'selected' : ''}`;
-            // Handle row click
-            div.onclick = (e) => { 
-                // toggle logic logic is simpler if we just toggle
-                toggleLessonSelect(lsnName); 
-            };
-
-            div.innerHTML = `
-                <div class="custom-checkbox"></div>
-                <div>
-                    <div style="font-weight:600">${lsnName}</div>
-                    <div style="font-size:0.85em;color:var(--text-secondary)">${lessonsMap[lsnName].length} مواضيع فرعية</div>
-                </div>
-            `;
-            container.appendChild(div);
-        });
-        
-        updateLessonsFab();
-    }
-
-    function toggleLessonSelect(lName) {
-        if(State.selectedLessons.includes(lName)) {
-            State.selectedLessons = State.selectedLessons.filter(x => x !== lName);
-        } else {
-            State.selectedLessons.push(lName);
-        }
-        renderLessonsView(); // Re-render for visual update (easier than manipulating DOM directly)
-    }
-
-    function toggleAllVisibleLessons() {
-        const term = State.currentTerm;
-        const subj = State.currentSubject;
-        const allLessonNames = Object.keys(State.tree[term][subj]);
-        
-        // Logic: If all are selected, deselect all. Otherwise, select all.
-        const allSelected = allLessonNames.every(l => State.selectedLessons.includes(l));
-        
-        if(allSelected) {
-            State.selectedLessons = [];
-        } else {
-            State.selectedLessons = [...allLessonNames];
-        }
-        renderLessonsView();
-    }
-
-    function updateLessonsFab() {
-        const fab = document.getElementById('fab-next');
-        const count = State.selectedLessons.length;
-        if(count > 0) {
-            fab.style.display = 'block';
-            fab.innerText = `التالي (${count}) ⬅️`;
-            fab.onclick = () => renderChaptersView();
-        } else {
-            fab.style.display = 'none';
-        }
-    }
-
-    // LEVEL 4: CHAPTERS (NESTED SELECTION)
-    function renderChaptersView() {
-        switchView('v-chapters');
-        const container = document.getElementById('container-chapters');
-        container.innerHTML = '';
-
-        const term = State.currentTerm;
-        const subj = State.currentSubject;
-        
-        // Iterate only Selected Lessons
-        State.selectedLessons.forEach(lName => {
-            // Header for Group
-            const header = document.createElement('div');
-            header.className = 'group-header';
-            header.innerText = `📂 درس: ${lName}`;
-            container.appendChild(header);
-
-            // Get Chapters List (Array of strings)
-            const chaptersList = State.tree[term][subj][lName];
-            
-            // Render Items
-            chaptersList.forEach(cName => {
-                // Construct ID
-                const uniqueKey = `${term}|${subj}|${lName}|${cName}`;
-                
-                // IMPORTANT: Default Logic
-                // If this is the FIRST TIME rendering chapters for this session (and user picked lessons), 
-                // we probably want them ALL selected by default?
-                // For V7 implementation: To implement "Select All by Default", we can verify:
-                // Is this uniqueKey inside State.selectedChapters? 
-                // If State.selectedChapters is EMPTY at start, fill it? No, preserving user choice is better.
-                // Simple Approach: Default unselected, but allow "Select All"
-                
-                // OPTIMIZED UX: Users usually want Everything in the lesson unless excluded.
-                // Let's modify behavior: The moment we transition from Lessons -> Chapters,
-                // Any chapter belonging to selected lessons that is NOT EXPLICITLY UNSELECTED should be added?
-                // Let's stick to explicit Checkbox management for robustness.
-                
-                // Check if selected
-                const isSelected = State.selectedChapters.includes(uniqueKey);
-                
-                const div = document.createElement('div');
-                div.className = `check-item ${isSelected?'selected':''}`;
-                div.onclick = () => toggleChapterSelect(uniqueKey);
-                
-                div.innerHTML = `
-                   <div class="custom-checkbox"></div>
-                   <div style="font-weight:500">${cName}</div>
-                `;
-                container.appendChild(div);
-            });
-            
-            // "Select All In This Lesson" shortcut
-            const bulkBtn = document.createElement('div');
-            bulkBtn.style = "padding:5px 10px; font-size:0.8rem; color:var(--primary-color); cursor:pointer; margin-bottom:15px";
-            bulkBtn.innerText = "⚡ تحديد/إلغاء كل مواضيع هذا الدرس";
-            bulkBtn.onclick = () => bulkToggleChapters(lName, chaptersList);
-            container.appendChild(bulkBtn);
-        });
-        
-        updateChaptersFab();
-    }
-    
-    function bulkToggleChapters(lessonName, chaptersList) {
-        const term = State.currentTerm;
-        const subj = State.currentSubject;
-        
-        // Generate Keys
-        const keys = chaptersList.map(c => `${term}|${subj}|${lessonName}|${c}`);
-        
-        // Check if all active
-        const allActive = keys.every(k => State.selectedChapters.includes(k));
-        
-        if(allActive) {
-            State.selectedChapters = State.selectedChapters.filter(k => !keys.includes(k));
-        } else {
-            // Add missing
-            keys.forEach(k => {
-                if(!State.selectedChapters.includes(k)) State.selectedChapters.push(k);
-            });
-        }
-        renderChaptersView();
-    }
-
-    function toggleChapterSelect(uKey) {
-        if(State.selectedChapters.includes(uKey)) {
-            State.selectedChapters = State.selectedChapters.filter(k => k !== uKey);
-        } else {
-            State.selectedChapters.push(uKey);
-        }
-        renderChaptersView();
-    }
-
-    function updateChaptersFab() {
-        const fab = document.getElementById('fab-next');
-        const count = State.selectedChapters.length;
-        if(count > 0) {
-            fab.style.display = 'block';
-            fab.innerText = `إنهاء: تكوين (${count}) ✅`;
-            fab.onclick = goToSetup; // Next Step
-        } else {
-            fab.style.display = 'none';
-        }
-    }
-
-    /** 
-     * ===============================================
-     * QUIZ CONFIGURATION 
-     * ===============================================
-     */
-    function backToChapters() {
-        if(State.isMistakeMode) goHome();
-        else renderChaptersView();
-    }
-    
-    function backFromSetup() {
-        if(State.isMistakeMode) goHome();
-        else renderChaptersView();
-    }
-
-    function startMistakesMode() {
-        // Find wrongs
-        const wrongs = State.allQuestions.filter(q => State.userProgress[q.id] === 'wrong');
-        
-        if(wrongs.length === 0) { alert("أحسنت! لا يوجد لديك أخطاء."); return; }
-        
-        State.isMistakeMode = true;
-        
-        // Send directly to Setup, bypassing selections
-        // But store these qs in a temp hold
-        State.activeQueue = wrongs; 
-        
-        goToSetup();
-        document.getElementById('txt-selection-summary').innerText = "وضع مراجعة الأخطاء الشامل";
-        // Override Mode chip to Mistakes only
-        setMode('mistake', document.querySelectorAll('#grp-mode .choice-chip')[1]);
-    }
-
-    function goToSetup() {
-        switchView('v-setup');
-        
-        if(!State.isMistakeMode) {
-             document.getElementById('txt-selection-summary').innerText = `${State.selectedChapters.length} فصل/موضوع محدد`;
-        }
-        document.getElementById('msg-error').style.display = 'none';
-    }
-
-    // Setters
-    window.setMode = (m, el) => {
-        State.settings.mode = m;
-        document.querySelectorAll('#grp-mode .choice-chip').forEach(c => c.classList.remove('active'));
-        el.classList.add('active');
-    };
-    window.setQty = (q, el) => {
-        State.settings.qty = q;
-        document.querySelectorAll('#grp-qty .choice-chip').forEach(c => c.classList.remove('active'));
-        el.classList.add('active');
-    };
-
-    /** 
-     * ===============================================
-     * QUIZ ENGINE 
-     * ===============================================
-     */
-    function startQuizEngine() {
-        let pool = [];
-
-        if(State.isMistakeMode) {
-            pool = State.activeQueue; // These are all wrongs
-        } else {
-            // Filter global questions list by selected chapter keys
-            pool = State.allQuestions.filter(q => State.selectedChapters.includes(q._hierarchyKey));
-        }
-
-        // Apply filters (Mode)
-        const m = State.settings.mode;
-        if(m === 'new') pool = pool.filter(q => State.userProgress[q.id] !== 'correct');
-        else if(m === 'mistake') pool = pool.filter(q => State.userProgress[q.id] === 'wrong');
-        
-        if(pool.length === 0) {
-            document.getElementById('msg-error').style.display='block';
-            return;
-        }
-
-        // Randomize
-        pool.sort(() => Math.random() - 0.5);
-        // Cut to Qty
-        State.activeQueue = pool.slice(0, State.settings.qty);
-        State.activeIdx = 0;
-        
-        State.isMistakeMode = false; // Reset flag
-        renderQuizCard();
-    }
-
-    function renderQuizCard() {
-        switchView('v-quiz');
-        const Q = State.activeQueue[State.activeIdx];
-        
-        // Header Info
-        document.getElementById('txt-q-progress').innerText = `السؤال: ${State.activeIdx+1} / ${State.activeQueue.length}`;
-        document.getElementById('txt-q-id').innerText = `ID: ${Q.id}`;
-
-        const box = document.getElementById('quiz-area');
-        let html = '';
-
-        if(Q.image) html += `<img src="${Q.image}" class="quiz-image">`;
-        html += `<div class="question-txt">${Q.question}</div>`;
-        html += `<div id="opts-wrap"></div>`; // Options go here
-        
-        // Explanation Box (Hidden)
-        html += `<div id="expl" class="explanation-box"></div>`;
-        
-        // Next Button (Hidden)
-        html += `<button id="btn-next" onclick="nextQuestion()" class="btn-block" style="display:none; margin-top:20px; background:var(--text-primary)">التالي ⬅️</button>`;
-
-        box.innerHTML = html;
-
-        if(Q.type === 'matching') {
-            // Handle Unsupported Type gracefully
-             box.innerHTML += "<p style='text-align:center; color:red'>سؤال توصيل - غير مدعوم في الهاتف، تم التخطي.</p>";
-             document.getElementById('btn-next').style.display='block';
-             return;
-        }
-
-        // Generate Option Cards
-        const optCont = document.getElementById('opts-wrap');
-        Q.options.forEach((txt, i) => {
-             const div = document.createElement('div');
-             div.className = 'option-card';
-             div.innerText = txt;
-             div.onclick = () => handleAnswer(i, Q, div);
-             optCont.appendChild(div);
-        });
-        
+        document.getElementById('fab-action').classList.remove('visible');
         window.scrollTo(0,0);
     }
 
-    function handleAnswer(selectedIdx, Q, cardEl) {
-        if(cardEl.parentElement.classList.contains('locked')) return;
-        cardEl.parentElement.classList.add('locked'); // Lock answers
-
-        const isCorrect = (selectedIdx === Q.correct_option_id);
-        const status = isCorrect ? 'correct' : 'wrong';
-
-        // Styling
-        if(isCorrect) {
-            cardEl.classList.add('correct');
-        } else {
-            cardEl.classList.add('wrong');
-            // Highlight right one
-            cardEl.parentElement.children[Q.correct_option_id].classList.add('correct');
-        }
-
-        // Show Explanation
-        if(Q.explanation) {
-             const exp = document.getElementById('expl');
-             exp.innerHTML = `<strong>💡 توضيح:</strong><br>${Q.explanation}`;
-             exp.style.display = 'block';
-        }
-
-        // Show Next
-        document.getElementById('btn-next').style.display = 'block';
-
-        // SYNC DATA
-        State.userProgress[Q.id] = status;
-        
-        // Save to Firebase
-        if(DB && UserID !== 'guest_v7') {
-             // 1. Update Progress Map
-             DB.ref(`users/${UserID}/progress/${Q.id}`).set(status);
-             // 2. If Correct, atomic Increment score
-             if(isCorrect) {
-                 DB.ref(`users/${UserID}/score`).transaction(count => (count||0) + 1);
-             }
-             // 3. Save Name (Optional, good for leaderboard)
-             if(TG.initDataUnsafe?.user?.first_name) {
-                 DB.ref(`users/${UserID}/name`).set(TG.initDataUnsafe.user.first_name);
-             }
-        }
-        
-        updateScoreBadge();
+    function goBack(to) {
+        if(to === 'source') { showView('v-source'); }
+        if(to === 'subject') { renderSubjects(); }
+        if(to === 'lesson') { renderLessons(); }
     }
 
-    function nextQuestion() {
-        if(State.activeIdx < State.activeQueue.length - 1) {
-            State.activeIdx++;
-            renderQuizCard();
+    /* RENDERERS */
+    
+    // 1. Source
+    function renderSources() {
+        const div = document.getElementById('list-source');
+        div.innerHTML = '';
+        Object.keys(App.tree).forEach(k => {
+            const count = getCount(App.tree[k]);
+            div.innerHTML += cardHTML(k, count, `navToSubject('${k}')`);
+        });
+    }
+
+    window.navToSubject = (key) => {
+        App.nav.source = key;
+        renderSubjects();
+    };
+
+    // 2. Subject
+    function renderSubjects() {
+        const div = document.getElementById('list-subject');
+        div.innerHTML = '';
+        const node = App.tree[App.nav.source];
+        
+        Object.keys(node).forEach(k => {
+            const count = getCount(node[k]);
+            div.innerHTML += cardHTML(k, count, `navToLesson('${k}')`);
+        });
+        showView('v-subject');
+    }
+
+    window.navToLesson = (key) => {
+        App.nav.subject = key;
+        // Reset Lower Selection on new path for safety
+        App.selection.lessons.clear(); 
+        renderLessons();
+    };
+
+    // 3. Lessons
+    function renderLessons() {
+        const div = document.getElementById('list-lesson');
+        div.innerHTML = '';
+        document.getElementById('bread-subj').innerText = App.nav.subject;
+
+        const node = App.tree[App.nav.source][App.nav.subject];
+        const allKeys = Object.keys(node);
+
+        allKeys.forEach(k => {
+            const fullKey = `${App.nav.source}|${App.nav.subject}|${k}`;
+            const count = getCount(node[k]);
+            const isSel = App.selection.lessons.has(fullKey);
+
+            div.innerHTML += checkHTML('lesson', fullKey, k, count, isSel);
+        });
+
+        updateSelectAll('lesson-all-btn', allKeys.length > 0 && allKeys.every(k => App.selection.lessons.has(`${App.nav.source}|${App.nav.subject}|${k}`)));
+        updateLessonFab();
+        showView('v-lesson');
+    }
+
+    window.toggleCheck = (type, key, el) => {
+        const set = type === 'lesson' ? App.selection.lessons : App.selection.chapters;
+        if(set.has(key)) set.delete(key); else set.add(key);
+        
+        // Re-render to update UI consistency
+        if(type === 'lesson') renderLessons();
+        if(type === 'chapter') renderChapters(); // efficient enough for this list size
+    };
+
+    // 4. Chapters
+    function renderChapters() {
+        const div = document.getElementById('list-chapter');
+        div.innerHTML = '';
+        let totalChaps = 0;
+        let selectedChaps = 0;
+
+        const src = App.nav.source; const sub = App.nav.subject;
+        
+        App.selection.lessons.forEach(lFull => {
+            const lName = lFull.split('|')[2];
+            const chObj = App.tree[src][sub][lName];
+
+            div.innerHTML += `<div style="margin:20px 0 10px; color:var(--primary); font-weight:bold; border-bottom:1px solid #ccc">📂 ${lName}</div>`;
+            
+            Object.keys(chObj).forEach(cName => {
+                const fullKey = `${src}|${sub}|${lName}|${cName}`;
+                
+                // AUTO SELECT Logic: If newly seen, assume selected? 
+                // For simplicity: Default checked if we just arrived from lessons
+                // Here we simply check the Set.
+                if(!App.selection.chapters.has(fullKey)) App.selection.chapters.add(fullKey); // Force auto-select
+
+                const qArr = chObj[cName];
+                const isSel = App.selection.chapters.has(fullKey);
+                
+                div.innerHTML += checkHTML('chapter', fullKey, cName, qArr.length, isSel);
+                totalChaps++;
+                if(isSel) selectedChaps++;
+            });
+        });
+
+        updateSelectAll('chap-all-btn', totalChaps > 0 && selectedChaps === totalChaps);
+        updateChapterFab();
+        showView('v-chapter');
+    }
+
+    // Toggle All Logic
+    window.toggleAllLessons = () => {
+        const node = App.tree[App.nav.source][App.nav.subject];
+        const keys = Object.keys(node).map(k => `${App.nav.source}|${App.nav.subject}|${k}`);
+        
+        const allSel = keys.every(k => App.selection.lessons.has(k));
+        if(allSel) keys.forEach(k => App.selection.lessons.delete(k));
+        else keys.forEach(k => App.selection.lessons.add(k));
+        
+        renderLessons();
+    };
+
+    window.toggleAllChapters = () => {
+        // We toggle all visible chapters in the current selected lessons
+        const src = App.nav.source; const sub = App.nav.subject;
+        let allKeys = [];
+        
+        App.selection.lessons.forEach(lFull => {
+            const l = lFull.split('|')[2];
+            Object.keys(App.tree[src][sub][l]).forEach(c => allKeys.push(`${src}|${sub}|${l}|${c}`));
+        });
+
+        const allSel = allKeys.every(k => App.selection.chapters.has(k));
+        if(allSel) allKeys.forEach(k => App.selection.chapters.delete(k));
+        else allKeys.forEach(k => App.selection.chapters.add(k));
+        
+        renderChapters();
+    };
+
+    function updateSelectAll(id, active) {
+        const btn = document.getElementById(id);
+        if(active) btn.classList.add('active'); else btn.classList.remove('active');
+    }
+
+    /* FAB UPDATERS */
+    function updateLessonFab() {
+        const btn = document.getElementById('fab-action');
+        const count = App.selection.lessons.size;
+        if(count > 0) {
+            btn.innerHTML = `التالي: اختيار الفصول ⬅️`;
+            btn.onclick = () => renderChapters();
+            btn.classList.add('visible');
         } else {
-            alert("تم الانتهاء من الاختبار بنجاح 🎉");
-            goHome();
+            btn.classList.remove('visible');
         }
+    }
+
+    function updateChapterFab() {
+        const btn = document.getElementById('fab-action');
+        
+        // Count questions
+        let qCount = 0;
+        const src = App.nav.source; const sub = App.nav.subject;
+        App.selection.chapters.forEach(key => {
+            const parts = key.split('|'); // s|su|l|c
+            qCount += App.tree[src][sub][parts[2]][parts[3]].length;
+        });
+
+        if(qCount > 0) {
+            btn.innerHTML = `بدء الاختبار (${qCount} سؤال) 🚀`;
+            btn.onclick = () => startQuiz(qCount);
+            btn.classList.add('visible');
+        } else {
+            btn.classList.remove('visible');
+        }
+    }
+
+    /* QUIZ */
+    function startQuiz(total) {
+        App.quiz.queue = [];
+        const src = App.nav.source; const sub = App.nav.subject;
+        
+        App.selection.chapters.forEach(key => {
+            const parts = key.split('|');
+            const arr = App.tree[src][sub][parts[2]][parts[3]];
+            App.quiz.queue.push(...arr);
+        });
+
+        App.quiz.queue.sort(() => Math.random() - 0.5);
+        App.quiz.idx = 0;
+        
+        renderQuestion();
+    }
+
+    function renderQuestion() {
+        showView('v-quiz');
+        const q = App.quiz.queue[App.quiz.idx];
+        const total = App.quiz.queue.length;
+
+        document.getElementById('q-counter').innerText = `${App.quiz.idx + 1} / ${total}`;
+        document.getElementById('q-id').innerText = q.id;
+        document.getElementById('q-ctx').innerText = `${q._ctx.l} > ${q._ctx.c}`;
+
+        const box = document.getElementById('q-content');
+        box.innerHTML = `<div class="q-txt">${q.question}</div><div id="opts"></div><div class="expl-box" id="expl"></div>`;
+        
+        const opts = document.getElementById('opts');
+        q.options.forEach((txt, i) => {
+             const btn = document.createElement('div');
+             btn.className = 'opt-btn'; btn.innerText = txt;
+             btn.onclick = () => answer(i, q, btn);
+             opts.appendChild(btn);
+        });
+
+        const fab = document.getElementById('fab-action');
+        fab.classList.remove('visible');
+        fab.innerHTML = (App.quiz.idx < total-1) ? "التالي ⬅️" : "إنهاء 🏁";
+        fab.onclick = () => { App.quiz.idx++; renderQuestion(); };
+    }
+
+    function answer(idx, q, el) {
+        if(el.parentElement.classList.contains('locked')) return;
+        el.parentElement.classList.add('locked');
+
+        const correct = idx === q.correct_option_id;
+        if(correct) {
+            el.classList.add('correct');
+        } else {
+            el.classList.add('wrong');
+            el.parentElement.children[q.correct_option_id].classList.add('correct');
+        }
+
+        const expl = document.getElementById('expl');
+        if(q.explanation) {
+            expl.style.display = 'block';
+            expl.innerHTML = `<b>توضيح:</b> ${q.explanation}`;
+        }
+        document.getElementById('fab-action').classList.add('visible');
+    }
+
+    window.exitQuiz = () => { if(confirm("الخروج؟")) location.reload(); };
+
+    /* HTML GENERATORS */
+    function cardHTML(title, count, act) {
+        return `<div class="nav-card" onclick="${act}">
+            <div style="display:flex;align-items:center"><div class="card-icon">📂</div><b style="margin-right:15px">${title}</b></div>
+            <span class="count-badge">${count}</span></div>`;
+    }
+
+    function checkHTML(type, key, title, count, checked) {
+        return `<div class="check-row ${checked?'selected':''}" onclick="toggleCheck('${type}', '${key}', this)">
+            <div class="chk-visual"></div>
+            <div style="flex:1; margin-right:15px"><b>${title}</b><div style="font-size:0.8em;color:var(--text-sub)">${count} أسئلة</div></div>
+        </div>`;
+    }
+
+    /* SETTINGS */
+    function loadSettings() {
+        const s = localStorage.getItem('MedQuizSet');
+        if(s) App.settings = JSON.parse(s);
+        applySet();
     }
     
-    function confirmEndQuiz() {
-        if(confirm("هل تريد الخروج؟ لن يتم حفظ نتيجة هذا السؤال الحالي.")) goHome();
+    function applySet() {
+        document.documentElement.setAttribute('data-theme', App.settings.theme);
+        document.documentElement.style.setProperty('--font-size', App.settings.font+'px');
+        
+        ['light','dark','sepia'].forEach(t => toggleCls(`btn-theme-${t}`, t === App.settings.theme));
+        [14,16,18].forEach(s => toggleCls(`btn-font-${s}`, s === App.settings.font));
+    }
+    
+    function toggleCls(id, active) {
+        const e = document.getElementById(id);
+        if(active) e.classList.add('active'); else e.classList.remove('active');
     }
 
-    function updateScoreBadge() {
-        const correctCnt = Object.values(State.userProgress).filter(x => x==='correct').length;
-        document.getElementById('lbl-score').innerText = correctCnt;
-    }
-
-    /** 
-     * ===============================================
-     * LEADERBOARD 
-     * ===============================================
-     */
-    function openLeaderboard() {
-        switchView('v-leader');
-        const list = document.getElementById('container-leaderboard');
-        list.innerHTML = `<div style="text-align:center; padding:30px">جاري جلب القائمة...</div>`;
-
-        if(!DB) { list.innerHTML="<p align='center'>لا يوجد اتصال</p>"; return; }
-
-        DB.ref('users').orderByChild('score').limitToLast(30).once('value')
-        .then(snap => {
-            let data = [];
-            snap.forEach(row => {
-                 data.push({
-                     name: row.val().name || 'مستخدم',
-                     score: row.val().score || 0,
-                     isMe: row.key === UserID
-                 });
-            });
-            // Reverse (Desc)
-            data.sort((a,b) => b.score - a.score);
-
-            if(data.length===0) { list.innerHTML = "<p align='center' style='padding:20px'>كن الأول في القائمة!</p>"; return; }
-
-            let html = "";
-            data.forEach((u, i) => {
-                 const badge = i===0?'🥇':i===1?'🥈':i===2?'🥉': `#${i+1}`;
-                 html += `
-                    <div class="rank-item ${u.isMe?'rank-hl':''}">
-                        <div><span style="display:inline-block;width:30px">${badge}</span> ${u.name} ${u.isMe?'(أنت)':''}</div>
-                        <div style="font-weight:700">${u.score}</div>
-                    </div>
-                 `;
-            });
-            list.innerHTML = html;
-        })
-        .catch(err => {
-            console.error(err);
-            list.innerHTML = `<p style='text-align:center; color:red; padding:20px'>يجب إعداد قواعد الأمان في فايربيس (Rules)</p>`;
-        });
+    window.openSettings = () => document.getElementById('settings-modal').style.display='flex';
+    window.closeSettings = () => document.getElementById('settings-modal').style.display='none';
+    
+    window.setTheme = (t) => { App.settings.theme = t; saveSet(); };
+    window.setFont = (f) => { App.settings.font = f; saveSet(); };
+    
+    function saveSet() {
+        localStorage.setItem('MedQuizSet', JSON.stringify(App.settings));
+        applySet();
     }
 
 </script>
