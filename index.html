@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Exam Bot Elite V4</title>
+    <title>Exam Bot Elite V5 (Deep Hierarchy)</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -81,8 +81,8 @@
         .row-info div:last-child { font-size: 0.8rem; color: var(--text-light); }
 
         /* --- Breadcrumb --- */
-        .breadcrumb { display: flex; align-items: center; font-size: 0.9rem; margin-bottom: 20px; color: var(--text-light); }
-        .bc-btn { background: none; border: none; color: var(--primary); font-weight: bold; cursor: pointer; padding: 0; margin-left: 8px; }
+        .breadcrumb { display: flex; align-items: center; font-size: 0.9rem; margin-bottom: 20px; color: var(--text-light); white-space: nowrap; overflow-x: auto; padding-bottom: 5px; }
+        .bc-btn { background: none; border: none; color: var(--primary); font-weight: bold; cursor: pointer; padding: 0; margin-left: 8px; flex-shrink: 0;}
 
         /* --- Quiz Setup Chips --- */
         .chips-container { display: flex; flex-wrap: wrap; gap: 8px; margin: 15px 0 25px 0; }
@@ -150,7 +150,7 @@
 
     <!-- Header -->
     <header>
-        <div class="app-logo">ExaM Bot</div>
+        <div class="app-logo">ExaM Bot V5</div>
         <div class="stats-badge">
             <span style="color:var(--success)">✅</span> <span id="userScore">--</span>
         </div>
@@ -163,7 +163,7 @@
                 <div class="nav-icon">📚</div>
                 <div>
                     <div style="font-weight:700">تصفح المنهج</div>
-                    <div style="font-size:0.85rem;color:var(--text-light)">اختر المواد والدروس وابدأ الاختبار</div>
+                    <div style="font-size:0.85rem;color:var(--text-light)">الترم ⬅️ المادة ⬅️ الدرس</div>
                 </div>
             </div>
             <div>⬅️</div>
@@ -185,7 +185,7 @@
         </div>
     </div>
 
-    <!-- 2. BROWSER (The Hierarchy Navigator) -->
+    <!-- 2. BROWSER (The Deep Hierarchy Navigator) -->
     <div id="v-browser" class="view">
         <div class="breadcrumb">
             <span onclick="goHome()" style="cursor:pointer">الرئيسية</span>
@@ -194,10 +194,10 @@
         
         <h2 id="browser-title" style="margin-top:0">اختر:</h2>
 
-        <!-- Select All Control (Visible only at lesson level) -->
+        <!-- Select All Control (Visible only at Leaf/Chapter level) -->
         <div id="selectAllContainer" style="display:none; margin-bottom:15px; background:var(--card-color); padding:10px; border-radius:10px; align-items:center; gap:10px; border:1px solid rgba(0,0,0,0.05)">
             <input type="checkbox" id="chkAll" class="chk-input" onchange="toggleSelectAll(this)">
-            <label for="chkAll" style="font-weight:bold; font-size:0.9rem; cursor:pointer">تحديد / إلغاء الكل</label>
+            <label for="chkAll" style="font-weight:bold; font-size:0.9rem; cursor:pointer">تحديد الكل (كل المواضيع الفرعية)</label>
         </div>
 
         <div id="browser-content"></div>
@@ -236,7 +236,7 @@
         <button class="btn-action" onclick="launchQuiz()">ابدأ الآن 🚀</button>
     </div>
 
-    <!-- 4. QUIZ INTERFACE -->
+    <!-- 4. QUIZ UI -->
     <div id="v-quiz" class="view">
         <div style="display:flex; justify-content:space-between; margin-bottom:15px; color:var(--text-light); font-size:0.9rem">
             <span id="q-progress"></span>
@@ -293,14 +293,16 @@
 
     const App = {
         data: [],           // All questions flattened
-        hierarchy: {},      // Term -> Subject -> Lesson -> Array of QIDs
+        // Deep Hierarchy: Term -> Subject -> Lesson -> Chapter -> Array of QIDs
+        hierarchy: {},      
         userProgress: {},   // QID -> 'correct'/'wrong'
         
         // Navigation State
-        navStack: [],       // Array of Folder Names for Breadcrumb
+        navStack: [],       // [Term, Subject, Lesson] for Breadcrumb & Pointer Logic
         currentPointer: null, // Points to current object in hierarchy
         
-        // Selection State (Array of unique Lesson IDs "Term|Subject|Lesson")
+        // Selection State (Array of unique Keys "Term|Subject|Lesson|Chapter")
+        // NOTE: We now select CHAPTERS/Subtopics, which are the lowest level
         selectedIds: [], 
 
         // Quiz Config
@@ -330,7 +332,6 @@
         }
 
         try {
-            // 1. Load Files
             const list = await fetch('questions_list.json?t=' + Date.now()).then(r => r.json());
             const jobs = list.map(f => fetch('Questions/'+f).then(r => r.json()));
             const files = await Promise.all(jobs);
@@ -340,49 +341,53 @@
 
             files.forEach(f => {
                 const meta = f.meta || {};
-                const term = meta.source || "الترم الأول"; 
+                const term = meta.source || meta.term || "المنهج";
                 const subject = meta.subject || "عام";
                 const lesson = meta.lesson || "غير مصنف";
 
-                // Build Hierarchy: Term -> Subject -> Lesson
+                // Build Deep Hierarchy: Term -> Subject -> Lesson -> Chapter
                 if(!tree[term]) tree[term] = {};
                 if(!tree[term][subject]) tree[term][subject] = {};
-                if(!tree[term][subject][lesson]) tree[term][subject][lesson] = [];
+                if(!tree[term][subject][lesson]) tree[term][subject][lesson] = {};
 
                 f.questions.forEach(q => {
+                    const chapter = q.chapter || "عام";
+                    
+                    const uniqueKey = `${term}|${subject}|${lesson}|${chapter}`;
+                    
                     const enhancedQ = {
                         ...q,
-                        _key: `${term}|${subject}|${lesson}` // Unique grouping key
+                        _key: uniqueKey, // Grouping key (Chapter level)
+                        _meta: { term, subject, lesson, chapter }
                     };
                     allQ.push(enhancedQ);
-                    tree[term][subject][lesson].push(enhancedQ.id);
+                    
+                    if(!tree[term][subject][lesson][chapter]) tree[term][subject][lesson][chapter] = [];
+                    tree[term][subject][lesson][chapter].push(enhancedQ.id);
                 });
             });
 
             App.data = allQ;
             App.hierarchy = tree;
 
-            // 2. Load Progress
             if(DB && UserID !== 'guest') {
                 const snap = await DB.ref(`users/${UserID}/progress`).once('value');
                 App.userProgress = snap.val() || {};
             }
             updateScoreHeader();
-            
             document.getElementById('loader').style.display = 'none';
 
         } catch (e) {
             console.error(e);
-            alert("خطأ في التحميل. يرجى مراجعة ملف questions_list.json");
+            alert("خطأ في التحميل. يرجى مراجعة ملف questions_list.json وهيكلة البيانات.");
         }
     }
 
-    /** ========== NAVIGATION ENGINE (THE HIERARCHY) ========== */
+    /** ========== DEEP HIERARCHY NAVIGATION ========== */
     
     function setView(id) {
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
         document.getElementById(id).classList.add('active');
-        // Hide FAB by default unless in Browser
         document.getElementById('fab').style.display = 'none';
     }
 
@@ -394,52 +399,45 @@
 
     function startBrowsing() {
         App.navStack = [];
-        App.selectedIds = []; // Clear selection on new start
-        renderBrowser(App.hierarchy, "المنهج");
+        App.selectedIds = []; 
+        renderBrowser(App.hierarchy, "الترم");
     }
 
     function renderBrowser(node, title) {
         setView('v-browser');
         App.currentPointer = node;
-
-        // UI Updates
-        document.getElementById('browser-title').innerText = title || "اختر:";
+        document.getElementById('browser-title').innerText = "اختر " + title + ":";
         updateBreadcrumb();
         
         const container = document.getElementById('browser-content');
         container.innerHTML = '';
-        document.getElementById('selectAllContainer').style.display = 'none'; // Default hidden
+        document.getElementById('selectAllContainer').style.display = 'none';
 
-        // Logic to detect if we are at Leaf level (Array of IDs) or Folder level (Object)
-        // Check first key
         const keys = Object.keys(node);
         if(keys.length === 0) { container.innerHTML = "<p>فارغ</p>"; return; }
 
-        const isLeaf = Array.isArray(node[keys[0]]); // In our struct, Subject[Lesson] = Array
+        // CHECK LEVEL: Are we at Leaf (Chapter) level?
+        // Logic: if value is Array, then it's [QIDs], meaning this node contains keys like 'Acromegaly'->[...]
+        const isLeafLevel = Array.isArray(node[keys[0]]); 
 
-        if(isLeaf) {
-            // == LEAF VIEW (Lessons Selection) ==
+        if(isLeafLevel) {
+            // === CHAPTER SELECTOR VIEW ===
             document.getElementById('selectAllContainer').style.display = 'flex';
+            document.getElementById('browser-title').innerText = "حدد المواضيع:";
             
-            keys.forEach(k => {
-                // Key Logic for selection. We use "Term|Subject|Lesson" structure based on traversal
-                // But simplified: Since we navigated here, we can construct the ID, or use loop index?
-                // Better: The leaf node IS the questions. 
-                // Wait, previously I pushed QIDs to tree. 
-                
-                // Let's reconstruct the Composite ID based on stack: Term|Subject|k
+            keys.forEach(k => { // k = Chapter Name
+                // Reconstruct Full ID
                 const term = App.navStack[0];
                 const subj = App.navStack[1];
-                const uniqueKey = `${term}|${subj}|${k}`;
+                const lsn = App.navStack[2];
+                const uniqueKey = `${term}|${subj}|${lsn}|${k}`;
                 
                 const qCount = node[k].length;
                 const isSelected = App.selectedIds.includes(uniqueKey);
 
                 const row = document.createElement('div');
                 row.className = `select-row ${isSelected ? 'active' : ''}`;
-                row.onclick = (e) => { 
-                    if(e.target.type !== 'checkbox') row.querySelector('input').click(); 
-                };
+                row.onclick = (e) => { if(e.target.type!=='checkbox') row.querySelector('input').click(); };
                 
                 row.innerHTML = `
                     <input type="checkbox" class="chk-input" ${isSelected?'checked':''} 
@@ -453,47 +451,63 @@
             });
             syncSelectAllUI();
         } else {
-            // == FOLDER VIEW (Terms / Subjects) ==
+            // === FOLDER VIEW (Term / Subject / Lesson) ===
+            // Identify level name for UX
+            let nextTitle = "الخيار";
+            if(App.navStack.length === 0) nextTitle = "المادة";      // After choosing Term
+            else if(App.navStack.length === 1) nextTitle = "الدرس";  // After choosing Subject
+            else if(App.navStack.length === 2) nextTitle = "الفصل";  // After choosing Lesson
+
             keys.forEach(k => {
-                // Count items inside (deep)
                 const card = document.createElement('div');
                 card.className = 'nav-card';
                 card.innerHTML = `
                     <div style="font-weight:600">📂 ${k}</div>
                     <div style="color:var(--text-light)">⬅️</div>
                 `;
-                card.onclick = () => enterFolder(k);
+                card.onclick = () => enterFolder(k, nextTitle);
                 container.appendChild(card);
             });
         }
         updateFab();
     }
 
-    function enterFolder(key) {
+    function enterFolder(key, titleLabel) {
         App.navStack.push(key);
-        renderBrowser(App.currentPointer[key], key);
+        // Safety: check if key exists
+        if(App.currentPointer[key]) {
+             renderBrowser(App.currentPointer[key], titleLabel);
+        } else {
+            alert("Error in structure");
+        }
     }
 
     function stepBack() {
         if(App.navStack.length === 0) { goHome(); return; }
         App.navStack.pop();
         
-        // Re-traverse
         let ptr = App.hierarchy;
         App.navStack.forEach(k => ptr = ptr[k]);
         
-        renderBrowser(ptr, App.navStack.length > 0 ? App.navStack[App.navStack.length-1] : "المنهج");
+        let label = "العنصر";
+        // Logic to reverse-guess label (Cosmetic only)
+        if(App.navStack.length===0) label="الترم";
+        else if(App.navStack.length===1) label="المادة";
+        else if(App.navStack.length===2) label="الدرس";
+
+        renderBrowser(ptr, label);
     }
 
     function updateBreadcrumb() {
         const span = document.getElementById('bc-path');
+        const backBtn = document.querySelector('.bc-btn');
         if(App.navStack.length > 0) {
-            document.querySelector('.bc-btn').onclick = stepBack;
-            document.querySelector('.bc-btn').innerText = "⬅️ رجوع";
+            backBtn.onclick = stepBack;
+            backBtn.style.display = "block";
+            backBtn.innerText = "⬅️ رجوع";
             span.innerHTML = " / " + App.navStack.join(" / ");
         } else {
-             document.querySelector('.bc-btn').onclick = null;
-             document.querySelector('.bc-btn').innerText = "";
+             backBtn.style.display = "none";
              span.innerHTML = "";
         }
     }
@@ -513,27 +527,31 @@
     }
 
     window.toggleSelectAll = function(el) {
+        if(App.navStack.length < 3) return; // Must be at Leaf view (Chapter)
+        
         const term = App.navStack[0];
         const subj = App.navStack[1];
-        
-        // Get all keys in current view
-        const currentKeys = Object.keys(App.currentPointer).map(k => `${term}|${subj}|${k}`);
-        
+        const lsn = App.navStack[2];
+
+        // All keys in CURRENT view
+        const currentChapters = Object.keys(App.currentPointer); // e.g. ["Acromegaly", "Other"]
+        const fullIds = currentChapters.map(c => `${term}|${subj}|${lsn}|${c}`);
+
         if(el.checked) {
-            // Add all
-            currentKeys.forEach(k => {
-                if(!App.selectedIds.includes(k)) App.selectedIds.push(k);
+            // Select All Visible
+            fullIds.forEach(id => {
+                if(!App.selectedIds.includes(id)) App.selectedIds.push(id);
             });
-            // Visual Update
+            // Visual
             document.querySelectorAll('.select-row').forEach(r => {
                 r.classList.add('active');
                 r.querySelector('input').checked = true;
             });
         } else {
-            // Remove all CURRENT only
-            App.selectedIds = App.selectedIds.filter(id => !currentKeys.includes(id));
+            // Deselect All Visible
+            App.selectedIds = App.selectedIds.filter(id => !fullIds.includes(id));
             // Visual
-             document.querySelectorAll('.select-row').forEach(r => {
+            document.querySelectorAll('.select-row').forEach(r => {
                 r.classList.remove('active');
                 r.querySelector('input').checked = false;
             });
@@ -542,12 +560,11 @@
     }
 
     function syncSelectAllUI() {
-        // Construct keys for current view
-        if(App.navStack.length < 2) return;
-        const term = App.navStack[0]; const subj = App.navStack[1];
-        const viewKeys = Object.keys(App.currentPointer).map(k => `${term}|${subj}|${k}`);
+        if(App.navStack.length < 3) return;
+        const term = App.navStack[0]; const subj = App.navStack[1]; const lsn = App.navStack[2];
+        const visibleIds = Object.keys(App.currentPointer).map(k => `${term}|${subj}|${lsn}|${k}`);
         
-        const allSelected = viewKeys.length > 0 && viewKeys.every(k => App.selectedIds.includes(k));
+        const allSelected = visibleIds.length > 0 && visibleIds.every(id => App.selectedIds.includes(id));
         document.getElementById('chkAll').checked = allSelected;
     }
 
@@ -562,17 +579,16 @@
     
     function goToSetup() {
         setView('v-setup');
-        document.getElementById('setup-count').innerText = `${App.selectedIds.length} درس محدد`;
+        document.getElementById('setup-count').innerText = `${App.selectedIds.length} فصول مختارة`;
         document.getElementById('empty-msg').style.display = 'none';
     }
 
     function backToBrowser() {
-        // Check if came from Mistakes mode?
         if(App.mistakeModeActive) { goHome(); return; }
         
+        // Return to last browser state
         setView('v-browser'); 
-        // Force update FAB display
-        updateFab(); 
+        updateFab();
     }
 
     // Config Setters
@@ -594,7 +610,6 @@
         App.mistakeModeActive = true;
         goToSetup();
         document.getElementById('setup-count').innerText = "مراجعة جميع الأخطاء";
-        // Force Chip Visual
         window.setMode('mistake', document.querySelectorAll('#modeChips .chip')[1]);
     }
 
@@ -602,17 +617,18 @@
         let pool = [];
 
         if(App.mistakeModeActive) {
-            // Source: Entire Database (Filtered by mistake later)
-            pool = App.data; 
+            pool = App.data; // Filter later by mode
         } else {
-            // Source: Selected Keys
+            // Use _key logic.
+            // _key = Term|Subject|Lesson|Chapter
             pool = App.data.filter(q => App.selectedIds.includes(q._key));
         }
 
         // Apply Mode
-        if(App.setup.mode === 'new') pool = pool.filter(q => App.userProgress[q.id] !== 'correct');
-        else if(App.setup.mode === 'mistake') pool = pool.filter(q => App.userProgress[q.id] === 'wrong');
-        
+        const m = App.setup.mode;
+        if(m === 'new') pool = pool.filter(q => App.userProgress[q.id] !== 'correct');
+        else if(m === 'mistake') pool = pool.filter(q => App.userProgress[q.id] === 'wrong');
+
         if(pool.length === 0) {
             document.getElementById('empty-msg').style.display = 'block';
             return;
@@ -622,9 +638,7 @@
         App.queue = pool.slice(0, App.setup.qty);
         App.qIndex = 0;
         
-        // Reset special flag
         App.mistakeModeActive = false;
-        
         renderQuiz();
     }
 
@@ -640,13 +654,13 @@
         if(Q.image) html += `<img src="${Q.image}" style="width:100%; border-radius:12px; margin-bottom:15px">`;
         html += `<div class="q-text">${Q.question}</div>`;
         html += `<div id="opt-container"></div>`;
-        html += `<div id="expl-box" style="display:none; background:#ecfdf5; padding:15px; border-radius:12px; margin-top:15px; line-height:1.5"></div>`;
+        html += `<div id="expl-box" style="display:none; background:#ecfdf5; padding:15px; border-radius:12px; margin-top:15px; line-height:1.5; color:#064e3b"></div>`;
         html += `<button id="nxt-btn" onclick="nextQ()" class="btn-action" style="margin-top:20px; display:none">السؤال التالي</button>`;
         
         c.innerHTML = html;
 
         if(Q.type === 'matching') {
-            c.innerHTML += `<p style='color:red;text-align:center'>سؤال توصيل - يتم التخطي</p>`;
+            c.innerHTML += `<p style='color:red;text-align:center'>سؤال توصيل - تخطي</p>`;
             document.getElementById('nxt-btn').style.display='block';
             return;
         }
@@ -684,7 +698,6 @@
         if(DB && UserID !== 'guest') {
              DB.ref(`users/${UserID}/progress/${Q.id}`).set(stat);
              if(isCorrect) DB.ref(`users/${UserID}/totalScore`).transaction(v => (v||0)+1);
-             // Lazily save Name
              if(TG.initDataUnsafe?.user?.first_name) {
                  DB.ref(`users/${UserID}/name`).set(TG.initDataUnsafe.user.first_name);
              }
@@ -698,7 +711,7 @@
             App.qIndex++;
             renderQuiz();
         } else {
-            alert("تم إنهاء الاختبار 🎉");
+            alert("✨ انتهى الاختبار!");
             goHome();
             updateScoreHeader();
         }
@@ -713,8 +726,6 @@
         document.getElementById('userScore').innerText = s;
     }
 
-    /* ========== LEADERBOARD & UI HELPER ========== */
-    
     window.openLeaderboard = function() {
         setView('v-leader');
         updateBottomNav(1);
