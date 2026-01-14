@@ -1,503 +1,703 @@
 <!DOCTYPE html>
-<html lang="en" dir="auto">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Medical Quiz App</title>
+    <title>Exam Bot</title>
+    
+    <!-- Telegram Web App -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <!-- Firebase SDKs (v9 Compat for simplicity via CDN) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
     <style>
         :root {
-            --tg-theme-bg-color: #ffffff;
-            --tg-theme-text-color: #222222;
-            --tg-theme-hint-color: #888888;
-            --tg-theme-link-color: #2481cc;
-            --tg-theme-button-color: #2481cc;
-            --tg-theme-button-text-color: #ffffff;
-            
-            /* Custom Colors */
-            --correct: #2e7d32;
-            --correct-bg: #e8f5e9;
-            --wrong: #c62828;
-            --wrong-bg: #ffebee;
-            --surface: rgba(128, 128, 128, 0.08);
+            --bg-color: #f5f5f5;
+            --card-bg: #ffffff;
+            --text-primary: #333333;
+            --text-secondary: #666666;
+            --primary: #2196F3;
+            --correct: #4CAF50;
+            --wrong: #f44336;
+            --radius: 12px;
+            --shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        /* Dark Mode Integration */
+        body.dark-mode {
+            --bg-color: #1e1e1e;
+            --card-bg: #2d2d2d;
+            --text-primary: #ffffff;
+            --text-secondary: #aaaaaa;
         }
 
         body {
-            background-color: var(--tg-theme-bg-color);
-            color: var(--tg-theme-text-color);
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
             margin: 0;
-            padding: 0;
+            padding-bottom: 70px; /* Space for Bottom Nav */
             user-select: none;
-            overflow-x: hidden;
-            touch-action: manipulation;
-        }
-
-        /* Loading Screen */
-        #loader {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--tg-theme-bg-color);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-        }
-        .spinner {
-            width: 40px; height: 40px;
-            border: 4px solid var(--surface);
-            border-top-color: var(--tg-theme-button-color);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-
-        /* Main Container */
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 16px;
-            padding-bottom: 80px; /* Space for FAB */
-            display: none; /* Hidden until loaded */
+            -webkit-tap-highlight-color: transparent;
+            transition: background 0.3s;
         }
 
         /* Header */
-        .header {
+        header {
+            background: var(--card-bg);
+            padding: 15px;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            padding: 10px;
-            background: var(--surface);
-            border-radius: 12px;
         }
-        .user-name { font-weight: bold; font-size: 0.9em; }
-        .score-badge { 
-            background: var(--tg-theme-button-color); 
-            color: var(--tg-theme-button-text-color);
-            padding: 4px 10px; border-radius: 20px; font-weight: bold;
+
+        .h-title { font-weight: bold; font-size: 1.1em; }
+        .h-stats { font-size: 0.9em; color: var(--text-secondary); }
+
+        /* Navigation List (Menu) */
+        .menu-list { padding: 10px; }
+        
+        .menu-item {
+            background: var(--card-bg);
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.1s;
         }
+        .menu-item:active { transform: scale(0.98); }
+        .menu-count { background: #eee; padding: 4px 8px; border-radius: 8px; font-size: 0.8em; color: #555; }
+        .menu-icon { margin-left: 10px; font-size: 1.2em; }
+
+        /* Breadcrumb Navigation */
+        .breadcrumb {
+            padding: 10px 15px;
+            font-size: 0.9em;
+            color: var(--primary);
+            background: rgba(33, 150, 243, 0.1);
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+
+        /* Filter Chips (Quiz Setup) */
+        .chips-container { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px; }
+        .chip {
+            padding: 8px 16px;
+            background: var(--card-bg);
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            font-size: 0.9em;
+            cursor: pointer;
+        }
+        .chip.active { background: var(--primary); color: white; border-color: var(--primary); }
 
         /* Question Card */
-        .q-card {
-            animation: fadeIn 0.3s ease;
-        }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .q-container { padding: 15px; max-width: 800px; margin: 0 auto; display: none; }
+        .q-img { width: 100%; max-height: 250px; object-fit: contain; margin-bottom: 15px; border-radius: 8px; display: none; }
+        .q-text { font-size: 1.2em; font-weight: 600; line-height: 1.5; margin-bottom: 20px; }
 
-        .q-meta { font-size: 0.8em; color: var(--tg-theme-hint-color); margin-bottom: 8px; text-transform: uppercase; }
-        .q-text { font-size: 1.2em; font-weight: 600; line-height: 1.5; margin-bottom: 24px; }
-        
-        /* Options (MCQ) */
-        .options-list { display: flex; flex-direction: column; gap: 12px; }
-        .option-btn {
-            background: var(--surface);
+        .options-grid { display: flex; flex-direction: column; gap: 10px; }
+        .opt-btn {
+            padding: 15px;
+            background: var(--card-bg);
             border: 2px solid transparent;
-            padding: 16px;
-            border-radius: 12px;
-            color: var(--tg-theme-text-color);
-            text-align: start;
-            font-size: 1em;
+            border-radius: var(--radius);
+            color: var(--text-primary);
+            text-align: right;
             cursor: pointer;
+            box-shadow: var(--shadow);
             transition: all 0.2s;
             position: relative;
         }
-        .option-btn:active { transform: scale(0.98); }
         
-        /* Matching Style */
-        .matching-area {
-            display: flex; gap: 10px; justify-content: space-between;
-            position: relative;
-            user-select: none;
+        .opt-btn.correct { background: #E8F5E9; border-color: var(--correct); color: #2E7D32; }
+        .opt-btn.wrong { background: #FFEBEE; border-color: var(--wrong); color: #C62828; }
+        
+        /* Matching Style overrides (Simulated) */
+        .matching-area { display: flex; gap:10px; }
+        
+        /* Explanation Box */
+        .explanation {
+            margin-top: 20px;
+            padding: 15px;
+            background: #FFF8E1;
+            border-right: 4px solid #FFC107;
+            border-radius: 4px;
+            color: #5d4037;
+            display: none;
+            animation: slideUp 0.3s ease;
         }
-        .match-col { flex: 1; display: flex; flex-direction: column; gap: 15px; z-index: 2; }
-        .match-item {
-            background: var(--surface); border: 2px solid #ccc;
-            padding: 12px; border-radius: 8px; text-align: center; font-size: 0.9em;
-            cursor: pointer; transition: 0.2s; min-height: 50px; display: flex; align-items: center; justify-content: center;
+
+        /* Bottom Nav */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            background: var(--card-bg);
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-around;
+            padding: 10px;
+            z-index: 200;
         }
-        .match-item.selected { border-color: var(--tg-theme-button-color); background: rgba(36, 129, 204, 0.1); }
-        .match-item.matched { border-color: var(--tg-theme-hint-color); opacity: 0.6; pointer-events: none; }
-        .match-canvas { position: absolute; top:0; left:0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+        .nav-btn {
+            border: none; background: none;
+            color: var(--text-secondary);
+            font-size: 0.8em;
+            display: flex; flex-direction: column; align-items: center;
+            cursor: pointer;
+        }
+        .nav-btn.active { color: var(--primary); font-weight: bold; }
+        .nav-icon { font-size: 1.4em; margin-bottom: 4px; }
 
         /* States */
-        .correct { background-color: var(--correct-bg) !important; border-color: var(--correct) !important; color: #1b5e20 !important; }
-        .wrong { background-color: var(--wrong-bg) !important; border-color: var(--wrong) !important; color: #b71c1c !important; }
-
-        /* Explanation */
-        .explanation {
-            margin-top: 24px;
-            padding: 16px;
-            border-radius: 12px;
-            background: #fff3e0;
-            color: #e65100;
-            font-size: 0.95em;
-            line-height: 1.5;
-            display: none;
+        .hidden { display: none !important; }
+        .loading-screen { 
+            position: fixed; inset: 0; background: var(--bg-color); z-index: 1000;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; 
         }
-        [data-theme="dark"] .explanation { background: #3e2723; color: #ffcc80; }
-
-        /* FAB Button */
-        .fab {
-            position: fixed; bottom: 20px; right: 20px;
-            background: var(--tg-theme-button-color);
-            color: var(--tg-theme-button-text-color);
-            border: none; padding: 16px 24px;
-            border-radius: 50px;
-            font-size: 1.1em; font-weight: bold;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            cursor: pointer;
-            z-index: 100;
-            display: none;
-            transition: transform 0.2s;
-        }
-        .fab:active { transform: scale(0.95); }
-
     </style>
 </head>
 <body>
 
-    <!-- Loading -->
-    <div id="loader">
-        <div class="spinner"></div>
-        <p style="margin-top: 15px; color: var(--tg-theme-hint-color)">Loading Question Bank...</p>
+    <!-- 1. Loading Screen -->
+    <div id="loader" class="loading-screen">
+        <h3>جاري المزامنة...</h3>
+        <p id="loaderMsg" style="font-size: 0.8em; color: #666">الاتصال بقاعدة البيانات</p>
     </div>
 
-    <!-- Main App -->
-    <div class="container" id="app">
-        <header class="header">
-            <div class="user-name" id="userName">Student</div>
-            <div class="score-badge" id="scoreDisplay">0/0</div>
+    <!-- 2. Main Interface (Hidden initially) -->
+    <div id="mainApp" class="hidden">
+        
+        <header>
+            <div>
+                <div class="h-title" id="pageTitle">بنك الأسئلة</div>
+                <div class="h-stats" id="userSyncStat">آخر مزامنة: الآن</div>
+            </div>
+            <div id="topStats" style="font-size:0.8em; text-align: left;">
+                ✅ <span id="totalCorrect">0</span> | ❌ <span id="totalMistakes">0</span>
+            </div>
         </header>
 
-        <div id="quizContent"></div>
+        <!-- A. Navigation Screen (Hierarchy) -->
+        <div id="navScreen">
+            <div id="breadcrumbBar" class="breadcrumb hidden" onclick="navigateBack()">الرئيسية</div>
+            <div id="menuContainer" class="menu-list">
+                <!-- Content injected via JS -->
+            </div>
+        </div>
 
-        <button class="fab" id="nextBtn" onclick="nextQuestion()">Next ➔</button>
+        <!-- B. Quiz Setup Screen -->
+        <div id="setupScreen" class="hidden">
+            <div style="padding: 20px;">
+                <h3>إعدادات الاختبار</h3>
+                <p class="h-stats" id="setupSubtitle">الفصل: مقدمة</p>
+                
+                <h4>وضع الاختبار:</h4>
+                <div class="chips-container" id="modeChips">
+                    <div class="chip active" onclick="setMode('new', this)">أسئلة جديدة</div>
+                    <div class="chip" onclick="setMode('mistake', this)">مراجعة الأخطاء</div>
+                    <div class="chip" onclick="setMode('mixed', this)">مختلط (عشوائي)</div>
+                </div>
+
+                <h4>عدد الأسئلة:</h4>
+                <div class="chips-container" id="qtyChips">
+                    <div class="chip active" onclick="setQty(5, this)">5</div>
+                    <div class="chip" onclick="setQty(10, this)">10</div>
+                    <div class="chip" onclick="setQty(20, this)">20</div>
+                    <div class="chip" onclick="setQty(50, this)">50</div>
+                    <div class="chip" onclick="setQty(9999, this)">الكل</div>
+                </div>
+
+                <div style="margin-top: 30px; text-align: center; color: red; font-size: 0.9em; display: none" id="noQuestionsMsg">
+                    لا توجد أسئلة تطابق المعايير المختارة (مثلاً لا يوجد لديك أخطاء مسجلة).
+                </div>
+
+                <button onclick="startQuizEngine()" class="opt-btn" style="width: 100%; background: var(--primary); color: white; text-align: center; margin-top: 20px; font-weight: bold;">
+                    ابدأ الاختبار 🚀
+                </button>
+            </div>
+        </div>
+
+        <!-- C. Active Quiz Screen -->
+        <div id="quizScreen" class="q-container">
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                <span id="quizCounter">1 / 10</span>
+                <span onclick="exitQuiz()" style="color:red; cursor:pointer;">خروج</span>
+            </div>
+            
+            <div id="quizCard">
+                <!-- Image area -->
+                <img id="qImage" class="q-img" alt="Question Image" />
+                <!-- Text -->
+                <div id="qText" class="q-text"></div>
+                <!-- Options -->
+                <div id="qOptions" class="options-grid"></div>
+                <!-- Explanation -->
+                <div id="qExplanation" class="explanation"></div>
+                
+                <button id="nextQBtn" onclick="nextQuestion()" class="opt-btn hidden" style="width:100%; background:var(--primary); color:white; text-align:center; margin-top:15px">التالي ⬅️</button>
+            </div>
+        </div>
+        
+        <!-- Bottom Nav -->
+        <div class="bottom-nav" id="bottomNav">
+            <button class="nav-btn active" onclick="goToHome()">
+                <span class="nav-icon">🏠</span>
+                الرئيسية
+            </button>
+            <button class="nav-btn" onclick="goToStats()">
+                <span class="nav-icon">📊</span>
+                إحصائياتي
+            </button>
+        </div>
+
     </div>
 
 <script>
-    // --- APP CONFIGURATION ---
+    /**
+     * ==========================================
+     * CONFIGURATION (تعديل: ضع بيانات فايربيس هنا)
+     * ==========================================
+     */
+    const firebaseConfig = {
+        apiKey: "AIzaVyDxxxxxxxxxxxxxxxxxxxxxxxxx",
+        authDomain: "your-project.firebaseapp.com",
+        databaseURL: "https://your-project-default-rtdb.firebaseio.com",
+        projectId: "your-project",
+        storageBucket: "your-project.appspot.com",
+        messagingSenderId: "123456789",
+        appId: "1:123456789:web:abcdef"
+    };
+
+    /** INITIALIZATION */
+    // Initialize Firebase
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.database();
+    
+    // Telegram App
     const tg = window.Telegram.WebApp;
     tg.ready();
     tg.expand();
-
-    // Color Theme integration
-    const updateTheme = () => {
-        document.documentElement.style.setProperty('--tg-theme-bg-color', tg.themeParams.bg_color || '#ffffff');
-        document.documentElement.style.setProperty('--tg-theme-text-color', tg.themeParams.text_color || '#222222');
-        document.documentElement.style.setProperty('--tg-theme-button-color', tg.themeParams.button_color || '#2481cc');
-        document.documentElement.style.setProperty('--tg-theme-button-text-color', tg.themeParams.button_text_color || '#ffffff');
-    };
-    updateTheme();
-    tg.onEvent('themeChanged', updateTheme);
-
-    // --- STATE MANAGEMENT ---
-    let gameState = {
-        questions: [],
-        currentIdx: 0,
-        score: 0,
-        matches: {},
-        lines: []
-    };
-
-    // --- DATA LOADING & PARSING ---
     
-    // Parser for the Specific JSON structure provided (Term 7 format)
-    function parseSourceData(json) {
-        if (!json.questions) return [];
-        
-        return json.questions.map(q => {
-            // Check if it's explicitly a matching question or implied MCQ
-            // Based on the provided file, they are mostly MCQs, but logic supports Matching
-            let type = "mcq";
-            if (q.left_column && q.right_column) type = "matching";
-            else if (q.options) type = "mcq";
+    // Set Theme
+    if (tg.colorScheme === 'dark') document.body.classList.add('dark-mode');
 
-            return {
-                id: q.id,
-                text: q.question,
-                type: type,
-                // Handle MCQ data
-                options: q.options || [],
-                correctIndex: q.correct_option_id !== undefined ? q.correct_option_id : -1,
-                // Handle Matching data (future proofing)
-                leftCol: q.left_column || [],
-                rightCol: q.right_column || [],
-                correctMatches: q.correct_matches || {}, // Map Key -> Value
-                // Common
-                explanation: q.explanation,
-                meta: `${json.meta?.subject || ''} - ${json.meta?.lesson || ''}`
-            };
-        });
-    }
+    // Current User (From Telegram or Guest)
+    const userId = tg.initDataUnsafe?.user?.id || 'guest_user';
+    console.log("Current User:", userId);
 
-    async function loadAllData() {
+    /** STATE MANAGEMENT */
+    let appData = {
+        rawQuestions: [],
+        hierarchy: {}, // Tree structure
+        userProgress: {}, // Synced from DB
+        currentPath: [], // Navigation stack [Term, Subject, Lesson]
+        quizQueue: [],
+        currentQIndex: 0,
+        settings: { mode: 'new', qty: 5 },
+        selectedNodeName: null // Used for quiz filtering
+    };
+
+    /** --- 1. DATA SYNC & LOADING --- */
+
+    async function initApp() {
         try {
-            // 1. Get List of files
-            const response = await fetch('questions_list.json?nocache=' + Date.now());
-            if (!response.ok) throw new Error("Manifest not found");
-            const fileList = await response.json();
+            document.getElementById('loaderMsg').innerText = "تحميل الأسئلة...";
+            // 1. Fetch JSON Lists
+            const listReq = await fetch('questions_list.json?t=' + Date.now());
+            const fileList = await listReq.json();
+            
+            // 2. Load Content
+            const promises = fileList.map(f => fetch('Questions/' + f).then(r => r.json()));
+            const filesData = await Promise.all(promises);
+            
+            // 3. Process & Build Hierarchy
+            filesData.forEach(file => {
+                const meta = file.meta || {}; // Expects {term, subject, lesson} in json
+                // Default meta if missing
+                const term = meta.source || "General"; 
+                const lesson = meta.lesson || "Misc";
+                const subject = meta.subject || "All";
 
-            // 2. Fetch all files
-            const fetchPromises = fileList.map(fileName => 
-                fetch(`Questions/${fileName}`).then(res => res.json())
-            );
-            
-            const rawFiles = await Promise.all(fetchPromises);
-            
-            // 3. Merge & Parse
-            let allQuestions = [];
-            rawFiles.forEach(file => {
-                const parsed = parseSourceData(file);
-                allQuestions = [...allQuestions, ...parsed];
+                file.questions.forEach(q => {
+                    const enhancedQ = {
+                        ...q,
+                        meta: { term, subject, lesson, chapter: q.chapter || "Uncategorized" }
+                    };
+                    appData.rawQuestions.push(enhancedQ);
+                });
             });
 
-            // 4. Shuffle (Optional)
-            gameState.questions = allQuestions.sort(() => Math.random() - 0.5);
+            // 4. Build Tree
+            buildHierarchy();
 
-            // 5. Initialize UI
-            document.getElementById('loader').style.display = 'none';
-            document.getElementById('app').style.display = 'block';
-            
-            const user = tg.initDataUnsafe?.user;
-            if(user) document.getElementById('userName').innerText = user.first_name;
+            document.getElementById('loaderMsg').innerText = "مزامنة التقدم...";
+            // 5. Sync User Data from Firebase
+            await syncUserFromFirebase();
 
-            // Load progress from localStorage
-            loadProgress();
-
-            renderQuestion();
+            // Ready
+            document.getElementById('loader').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+            renderMenu();
+            updateTopStats();
 
         } catch (e) {
-            document.getElementById('loader').innerHTML = `<p style="color:red">Error: ${e.message}<br>Check questions_list.json</p>`;
+            alert("خطأ في التحميل: " + e.message);
         }
     }
 
-    // --- QUIZ ENGINE ---
+    function buildHierarchy() {
+        // Levels: Term -> Subject -> Lesson -> Chapter
+        appData.hierarchy = {};
 
-    function renderQuestion() {
-        const q = gameState.questions[gameState.currentIdx];
-        const container = document.getElementById('quizContent');
-        const nextBtn = document.getElementById('nextBtn');
-        nextBtn.style.display = 'none';
+        appData.rawQuestions.forEach(q => {
+            const m = q.meta;
+            if (!appData.hierarchy[m.term]) appData.hierarchy[m.term] = {};
+            if (!appData.hierarchy[m.term][m.subject]) appData.hierarchy[m.term][m.subject] = {};
+            if (!appData.hierarchy[m.term][m.subject][m.lesson]) appData.hierarchy[m.term][m.subject][m.lesson] = {};
+            if (!appData.hierarchy[m.term][m.subject][m.lesson][m.chapter]) appData.hierarchy[m.term][m.subject][m.lesson][m.chapter] = 0; // count
 
-        if (!q) {
-            // End of Quiz
-            container.innerHTML = `
-                <div style="text-align:center; padding: 40px;">
-                    <h1>🎉 Completed!</h1>
-                    <p>Final Score: ${gameState.score} / ${gameState.questions.length}</p>
-                    <button class="fab" style="position:static; display:inline-block" onclick="resetQuiz()">Restart</button>
+            appData.hierarchy[m.term][m.subject][m.lesson][m.chapter]++;
+        });
+    }
+
+    async function syncUserFromFirebase() {
+        if(userId === 'guest_user') return;
+        const snapshot = await db.ref('users/' + userId).once('value');
+        const data = snapshot.val();
+        if (data) {
+            appData.userProgress = data.progress || {}; // Key: Question ID, Value: 'correct' | 'wrong'
+        }
+    }
+
+    /** --- 2. NAVIGATION LOGIC --- */
+
+    function renderMenu() {
+        const container = document.getElementById('menuContainer');
+        container.innerHTML = '';
+        
+        // Determine what level to show based on currentPath
+        let currentPointer = appData.hierarchy;
+        let levelName = "الترم";
+        
+        // Traverse down
+        appData.currentPath.forEach(key => {
+            currentPointer = currentPointer[key];
+        });
+
+        const depth = appData.currentPath.length; // 0=Terms, 1=Subject, 2=Lessons, 3=Chapters
+        
+        // Breadcrumb
+        const bread = document.getElementById('breadcrumbBar');
+        if (depth > 0) {
+            bread.classList.remove('hidden');
+            bread.innerText = `🔙 رجوع | ${appData.currentPath.join(' > ')}`;
+        } else {
+            bread.classList.add('hidden');
+        }
+
+        // Check if we are at Chapter Level (The Leaves)
+        // If currentPointer contains Numbers, it means keys are chapters
+        const isChapterLevel = depth === 3; 
+
+        // Generate Buttons
+        const keys = Object.keys(currentPointer);
+
+        if (depth === 2) {
+            // At Lesson level, user selects a specific Lesson -> show Chapters
+            // Also option to test WHOLE Lesson (All Chapters)
+             /* Logic handled next step */
+        }
+
+        if (isChapterLevel) {
+            // Display "Test All Chapters" Option
+            const allBtn = document.createElement('div');
+            allBtn.className = 'menu-item';
+            allBtn.style.background = '#E3F2FD';
+            allBtn.innerHTML = `<div><span style="font-weight:bold">مراجعة الدرس كاملاً</span> <br><small>كل الفصول</small></div> <span class="menu-count">شامل</span>`;
+            allBtn.onclick = () => openSetup('all_chapters');
+            container.appendChild(allBtn);
+        }
+
+        keys.forEach(key => {
+            // Count logic
+            let count = 0;
+            if (isChapterLevel) {
+                count = currentPointer[key]; // direct count
+            } else {
+                // Recursive count for nodes
+                count = getRecursiveCount(currentPointer[key]);
+            }
+
+            const el = document.createElement('div');
+            el.className = 'menu-item';
+            
+            // Icon
+            let icon = '📂';
+            if (depth === 0) icon = '📅';
+            if (depth === 1) icon = '📘';
+            if (depth === 2) icon = '📝';
+            if (depth === 3) icon = '🔖';
+
+            el.innerHTML = `
+                <div style="display:flex; align-items:center">
+                    <span class="menu-icon">${icon}</span>
+                    <span style="margin-right:10px; font-weight:500">${key}</span>
                 </div>
+                <span class="menu-count">${count}</span>
             `;
+
+            el.onclick = () => {
+                if (isChapterLevel) {
+                    openSetup(key); // Selected specific chapter
+                } else {
+                    appData.currentPath.push(key);
+                    renderMenu();
+                }
+            };
+            container.appendChild(el);
+        });
+    }
+
+    function getRecursiveCount(node) {
+        if (typeof node === 'number') return node;
+        let sum = 0;
+        for (let k in node) sum += getRecursiveCount(node[k]);
+        return sum;
+    }
+
+    function navigateBack() {
+        if (appData.currentPath.length > 0) {
+            appData.currentPath.pop();
+            renderMenu();
+        }
+    }
+
+    function goToHome() {
+        document.getElementById('navScreen').classList.remove('hidden');
+        document.getElementById('setupScreen').classList.add('hidden');
+        document.getElementById('quizScreen').classList.add('hidden');
+        document.querySelector('.bottom-nav').classList.remove('hidden');
+        
+        // Reset path
+        appData.currentPath = [];
+        renderMenu();
+    }
+    
+    function goToStats() {
+       alert("صفحة الإحصائيات (قيد التطوير) - ستعرض بالتفصيل الأسئلة التي تم حلها.");
+    }
+
+    /** --- 3. QUIZ SETUP & FILTERING --- */
+
+    function openSetup(selectionName) {
+        appData.selectedNodeName = selectionName;
+        document.getElementById('navScreen').classList.add('hidden');
+        document.getElementById('setupScreen').classList.remove('hidden');
+        
+        document.getElementById('setupSubtitle').innerText = 
+            `المسار: ${appData.currentPath[2]} > ${selectionName === 'all_chapters' ? 'الكل' : selectionName}`;
+        
+        document.getElementById('noQuestionsMsg').style.display = 'none';
+    }
+
+    function setMode(mode, el) {
+        appData.settings.mode = mode;
+        document.querySelectorAll('#modeChips .chip').forEach(c => c.classList.remove('active'));
+        el.classList.add('active');
+    }
+    
+    function setQty(qty, el) {
+        appData.settings.qty = qty;
+        document.querySelectorAll('#qtyChips .chip').forEach(c => c.classList.remove('active'));
+        el.classList.add('active');
+    }
+
+    function startQuizEngine() {
+        const mode = appData.settings.mode; // new, mistake, mixed
+        const currentMeta = {
+            term: appData.currentPath[0],
+            subject: appData.currentPath[1],
+            lesson: appData.currentPath[2],
+            chapter: appData.selectedNodeName
+        };
+
+        // 1. Filter Questions based on Path
+        let candidates = appData.rawQuestions.filter(q => {
+            const m = q.meta;
+            let match = m.term == currentMeta.term && m.subject == currentMeta.subject && m.lesson == currentMeta.lesson;
+            if (currentMeta.chapter !== 'all_chapters') {
+                match = match && (m.chapter == currentMeta.chapter);
+            }
+            return match;
+        });
+
+        // 2. Filter based on MODE
+        if (mode === 'new') {
+            // Keep if user hasn't answered correctly yet
+            candidates = candidates.filter(q => {
+                const status = appData.userProgress[q.id];
+                return status !== 'correct'; 
+            });
+        } else if (mode === 'mistake') {
+            // Keep only wrongs
+            candidates = candidates.filter(q => {
+                return appData.userProgress[q.id] === 'wrong';
+            });
+        }
+        // 'mixed' = no extra filtering needed initially, just shuffle
+
+        if (candidates.length === 0) {
+            document.getElementById('noQuestionsMsg').style.display = 'block';
             return;
         }
 
-        // Update Header
-        document.getElementById('scoreDisplay').innerText = `Q: ${gameState.currentIdx + 1}/${gameState.questions.length} | Score: ${gameState.score}`;
-
-        // Render Template
-        let html = `
-            <div class="q-card">
-                <div class="q-meta">${q.meta} • ${q.type.toUpperCase()}</div>
-                <div class="q-text" dir="auto">${q.text}</div>
-        `;
-
-        if (q.type === 'mcq') {
-            html += `<div class="options-list">`;
-            q.options.forEach((opt, idx) => {
-                html += `<button class="option-btn" onclick="checkMCQ(this, ${idx})" dir="auto">${opt}</button>`;
-            });
-            html += `</div>`;
-        } 
-        else if (q.type === 'matching') {
-            html += renderMatchingHTML(q);
-        }
-
-        // Add Explanation Box
-        html += `<div id="explanation" class="explanation"><strong>Explanation:</strong><br>${q.explanation || 'No details provided.'}</div>`;
-        html += `</div>`;
-
-        container.innerHTML = html;
-
-        if (q.type === 'matching') initMatchingLogic(q);
+        // 3. Shuffle & Slice Quantity
+        candidates.sort(() => Math.random() - 0.5);
+        appData.quizQueue = candidates.slice(0, appData.settings.qty);
+        
+        // Launch Quiz UI
+        appData.currentQIndex = 0;
+        document.getElementById('setupScreen').classList.add('hidden');
+        document.querySelector('.bottom-nav').classList.add('hidden'); // Immersive
+        document.getElementById('quizScreen').classList.remove('hidden');
+        document.getElementById('quizScreen').style.display = 'block';
+        
+        renderQuestionCard();
     }
 
-    // --- MCQ LOGIC ---
-    function checkMCQ(btn, selectedIdx) {
-        if (btn.parentElement.classList.contains('locked')) return;
+
+    /** --- 4. QUIZ RUNTIME & SYNC --- */
+
+    function renderQuestionCard() {
+        const q = appData.quizQueue[appData.currentQIndex];
+        const container = document.getElementById('quizCard');
         
-        const q = gameState.questions[gameState.currentIdx];
-        const allBtns = btn.parentElement.querySelectorAll('.option-btn');
-        btn.parentElement.classList.add('locked'); // Prevent multi-clicks
+        // Reset State
+        document.getElementById('nextQBtn').classList.add('hidden');
+        document.getElementById('qExplanation').style.display = 'none';
+        
+        // Update Counter
+        document.getElementById('quizCounter').innerText = `${appData.currentQIndex + 1} / ${appData.quizQueue.length}`;
 
-        let isCorrect = (selectedIdx === q.correctIndex);
-
-        // UI Updates
-        if (isCorrect) {
-            btn.classList.add('correct');
-            gameState.score++;
-            playSound('success');
+        // Image Handling
+        const img = document.getElementById('qImage');
+        if (q.image_url) { // Assumed JSON key for image
+            img.src = q.image_url;
+            img.style.display = 'block';
         } else {
-            btn.classList.add('wrong');
-            // Highlight correct one
-            if(q.correctIndex !== -1 && allBtns[q.correctIndex]) {
-                allBtns[q.correctIndex].classList.add('correct');
-            }
-            playSound('error');
+            img.style.display = 'none';
         }
 
-        revealAndSave();
-    }
+        // Text
+        document.getElementById('qText').innerHTML = q.question; // Support HTML text
 
-    // --- MATCHING LOGIC (With Canvas) ---
-    function renderMatchingHTML(q) {
-        // Shuffle right column for display, keep keys correct in logic
-        return `
-            <div class="matching-area" id="matchArea">
-                <canvas id="matchCanvas" class="match-canvas"></canvas>
-                <div class="match-col" id="leftCol">
-                    ${q.leftCol.map((txt, i) => `<div class="match-item" data-idx="${i}" data-side="left">${txt}</div>`).join('')}
-                </div>
-                <div class="match-col" id="rightCol">
-                    ${q.rightCol.map((txt, i) => `<div class="match-item" data-idx="${i}" data-side="right">${txt}</div>`).sort(() => Math.random() - 0.5).join('')}
-                </div>
-            </div>
-            <button onclick="submitMatching()" class="option-btn" style="margin-top:20px; background:var(--tg-theme-button-color); color:#fff; text-align:center">Submit Matches</button>
-        `;
-    }
-
-    let selectedLeft = null;
-    let connections = []; // {leftEl, rightEl}
-
-    function initMatchingLogic(q) {
-        connections = [];
-        const items = document.querySelectorAll('.match-item');
+        // Options (Handle MCQ)
+        const optDiv = document.getElementById('qOptions');
+        optDiv.innerHTML = '';
         
-        items.forEach(item => {
-            item.addEventListener('click', (e) => {
-                if (document.getElementById('nextBtn').style.display === 'block') return; // Ended
-                
-                const el = e.currentTarget;
-                if (el.classList.contains('matched')) return;
-
-                if (el.dataset.side === 'left') {
-                    // Select Left
-                    document.querySelectorAll('.match-item[data-side="left"]').forEach(i => i.classList.remove('selected'));
-                    el.classList.add('selected');
-                    selectedLeft = el;
-                } else {
-                    // Select Right (Try connect)
-                    if (selectedLeft) {
-                        // Create connection
-                        createConnection(selectedLeft, el);
-                        selectedLeft.classList.remove('selected');
-                        selectedLeft.classList.add('matched');
-                        el.classList.add('matched');
-                        selectedLeft = null;
-                    }
-                }
+        if (q.type === 'mcq' || !q.type) { // Default to mcq
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('div');
+                btn.className = 'opt-btn';
+                btn.innerText = opt;
+                btn.onclick = () => submitAnswer(idx, q);
+                optDiv.appendChild(btn);
             });
+        } else if (q.type === 'matching') {
+            optDiv.innerHTML = `<div style="text-align:center; padding:20px; color:#666">أسئلة التوصيل غير مدعومة في وضع الموبايل السريع حالياً، استخدم الوضع المكتبي. (تم التخطي)</div>`;
+            document.getElementById('nextQBtn').classList.remove('hidden');
+        }
+    }
+
+    function submitAnswer(selectedIdx, questionData) {
+        // 1. Visual Feedback
+        const btns = document.querySelectorAll('.opt-btn');
+        btns.forEach(b => b.style.pointerEvents = 'none'); // Lock
+        
+        const isCorrect = selectedIdx === questionData.correct_option_id; // Check field name from JSON
+        
+        if (isCorrect) {
+            btns[selectedIdx].classList.add('correct');
+        } else {
+            btns[selectedIdx].classList.add('wrong');
+            // Show correct
+            btns[questionData.correct_option_id]?.classList.add('correct');
+        }
+
+        // 2. Show Explanation
+        if (questionData.explanation) {
+            const expBox = document.getElementById('qExplanation');
+            expBox.innerHTML = `<strong>💡 الشرح:</strong><br>${questionData.explanation}`;
+            expBox.style.display = 'block';
+        }
+
+        // 3. SYNC TO FIREBASE
+        saveResultToCloud(questionData.id, isCorrect ? 'correct' : 'wrong');
+
+        // 4. Show Next
+        document.getElementById('nextQBtn').classList.remove('hidden');
+        document.getElementById('nextQBtn').scrollIntoView({behavior: 'smooth'});
+    }
+
+    function saveResultToCloud(qId, status) {
+        if (!qId || userId === 'guest_user') return;
+        
+        // Local update
+        appData.userProgress[qId] = status;
+        
+        // Cloud update
+        // We use .update to avoid overwriting other keys
+        db.ref('users/' + userId + '/progress').update({
+            [qId]: status
+        }).then(() => {
+             updateTopStats();
         });
-        
-        // Resize listener
-        window.addEventListener('resize', drawLines);
-        drawLines();
-    }
-
-    function createConnection(leftEl, rightEl) {
-        connections.push({ left: leftEl, right: rightEl });
-        drawLines();
-    }
-
-    function drawLines(color = '#2481cc') {
-        const canvas = document.getElementById('matchCanvas');
-        if (!canvas) return;
-        
-        const container = document.querySelector('.matching-area');
-        canvas.width = container.offsetWidth;
-        canvas.height = container.offsetHeight;
-        
-        const ctx = canvas.getContext('2d');
-        ctx.lineWidth = 3;
-        ctx.strokeStyle = color;
-
-        connections.forEach(conn => {
-            const r1 = conn.left.getBoundingClientRect();
-            const r2 = conn.right.getBoundingClientRect();
-            const contR = container.getBoundingClientRect();
-
-            ctx.beginPath();
-            ctx.moveTo(r1.right - contR.left, r1.top + r1.height/2 - contR.top);
-            ctx.lineTo(r2.left - contR.left, r2.top + r2.height/2 - contR.top);
-            ctx.stroke();
-        });
-    }
-
-    function submitMatching() {
-        // Currently simplied logic for "Matching" defined in JSON (Though user sample was only MCQ)
-        // If real matching JSON existed: 
-        // 1. Check against q.correctMatches 
-        // 2. Score points
-        // 3. revealAndSave()
-        
-        // Since matching logic needs proper JSON key-value pairs which we are simulating:
-        gameState.score++; // Assume correct for demo if all matched
-        playSound('success');
-        revealAndSave();
-    }
-
-
-    // --- HELPERS ---
-    function revealAndSave() {
-        const explanation = document.getElementById('explanation');
-        explanation.style.display = 'block';
-        explanation.scrollIntoView({ behavior: 'smooth' });
-        
-        document.getElementById('nextBtn').style.display = 'block';
-        saveProgress();
     }
 
     function nextQuestion() {
-        gameState.currentIdx++;
-        renderQuestion();
-        window.scrollTo(0,0);
-    }
-
-    function saveProgress() {
-        localStorage.setItem('quiz_progress', JSON.stringify({
-            idx: gameState.currentIdx + 1, // Store NEXT index
-            score: gameState.score,
-            date: Date.now()
-        }));
-    }
-
-    function loadProgress() {
-        const saved = localStorage.getItem('quiz_progress');
-        if (saved) {
-            const data = JSON.parse(saved);
-            // Expire after 24 hours
-            if (Date.now() - data.date < 86400000) {
-               gameState.currentIdx = data.idx || 0;
-               gameState.score = data.score || 0;
-            }
+        if (appData.currentQIndex < appData.quizQueue.length - 1) {
+            appData.currentQIndex++;
+            renderQuestionCard();
+            window.scrollTo(0,0);
+        } else {
+            // End of Quiz
+            alert("انتهى الاختبار! 🎉");
+            goToHome();
         }
     }
 
-    function resetQuiz() {
-        localStorage.removeItem('quiz_progress');
-        gameState.currentIdx = 0;
-        gameState.score = 0;
-        location.reload();
-    }
-
-    function playSound(type) {
-        if(tg.HapticFeedback) {
-             tg.HapticFeedback.notificationOccurred(type);
+    function exitQuiz() {
+        if(confirm("هل أنت متأكد من الخروج؟ سيتم حفظ ما أجبته فقط.")) {
+            goToHome();
         }
     }
 
-    // Start App
-    loadAllData();
+    function updateTopStats() {
+        // Calculate form appData.userProgress
+        let correct = 0, wrong = 0;
+        Object.values(appData.userProgress).forEach(status => {
+            if (status === 'correct') correct++;
+            if (status === 'wrong') wrong++;
+        });
+        document.getElementById('totalCorrect').innerText = correct;
+        document.getElementById('totalMistakes').innerText = wrong;
+    }
+
+    // Start App on Load
+    window.addEventListener('load', initApp);
 
 </script>
 </body>
