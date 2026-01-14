@@ -3,27 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام الاختبارات الطبية الذكي</title>
+    <title>نظام الاختبارات الطبية المتقدم</title>
     <style>
         :root {
-            --primary-color: #2c3e50;
-            --secondary-color: #3498db;
-            --accent-color: #e74c3c;
-            --success-color: #27ae60;
-            --light-bg: #f4f6f7;
-            --card-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --accent: #e74c3c;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --bg: #f8f9fa;
+            --card-bg: #ffffff;
+            --shadow: 0 4px 15px rgba(0,0,0,0.08);
         }
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--light-bg);
+            background-color: var(--bg);
             margin: 0;
             padding: 0;
-            color: #333;
+            color: #2c3e50;
+            user-select: none; /* لمنع تحديد النص عند استخدام الاختصارات */
         }
 
         .container {
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
             padding: 20px;
             min-height: 100vh;
@@ -31,613 +34,764 @@
             flex-direction: column;
         }
 
-        /* Header */
+        /* --- Header & Loader --- */
         header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             padding: 20px;
-            background: white;
-            border-radius: 15px;
-            box-shadow: var(--card-shadow);
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
         }
 
-        header h1 {
-            margin: 0;
-            color: var(--primary-color);
-            font-size: 1.8rem;
+        .file-upload-wrapper {
+            border: 2px dashed var(--secondary);
+            padding: 30px;
+            text-align: center;
+            border-radius: 12px;
+            background: #eef7fc;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-bottom: 20px;
         }
 
-        /* Home Screen Grid */
+        .file-upload-wrapper:hover {
+            background: #e3f2fd;
+        }
+
+        /* --- Main Grid Menu --- */
         .grid-menu {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            animation: fadeIn 0.5s ease;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            display: none; /* Hidden until loaded */
         }
 
         .menu-card {
-            background: white;
-            border-radius: 15px;
-            padding: 30px 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: var(--card-shadow);
-            border-bottom: 5px solid transparent;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .menu-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-        }
-
-        .icon {
-            font-size: 3rem;
-            margin-bottom: 15px;
-        }
-
-        .card-title {
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: var(--primary-color);
-        }
-
-        /* Specific Card Styles */
-        .card-start { border-color: var(--secondary-color); }
-        .card-mistakes { border-color: var(--accent-color); }
-        .card-search { border-color: #f39c12; }
-        .card-fav { border-color: #9b59b6; } /* Innovation 1 */
-        .card-random { border-color: #2c3e50; } /* Innovation 2 */
-
-        /* Selection Hierarchy Styles */
-        .selection-container {
-            background: white;
+            background: var(--card-bg);
             padding: 20px;
-            border-radius: 15px;
-            box-shadow: var(--card-shadow);
-            display: none; /* Hidden by default */
-        }
-
-        .selection-step {
-            margin-bottom: 20px;
+            border-radius: 12px;
             text-align: center;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            border-bottom: 4px solid transparent;
+            transition: 0.2s;
         }
 
-        .selection-step h3 {
-            color: var(--secondary-color);
+        .menu-card:hover { transform: translateY(-3px); }
+        .card-start { border-color: var(--secondary); }
+        .card-mistakes { border-color: var(--accent); }
+        .card-fav { border-color: var(--warning); }
+        .card-search { border-color: var(--primary); }
+
+        /* --- Selection Screen --- */
+        .selection-panel {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            display: none;
+        }
+
+        .step-title {
+            color: var(--secondary);
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
             margin-bottom: 15px;
+            font-size: 1.1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .options-grid {
-            display: flex;
-            flex-wrap: wrap;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
             gap: 10px;
-            justify-content: center;
+            margin-bottom: 20px;
         }
 
-        .option-btn {
-            background: white;
-            border: 2px solid var(--secondary-color);
-            color: var(--secondary-color);
-            padding: 10px 20px;
-            border-radius: 25px;
+        .select-btn {
+            background: #fff;
+            border: 1px solid #ddd;
+            padding: 12px;
+            border-radius: 8px;
             cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s;
+            transition: 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
         }
 
-        .option-btn:hover, .option-btn.active {
-            background: var(--secondary-color);
+        .select-btn:hover { background: #f1f1f1; }
+        
+        .select-btn.selected {
+            background: var(--secondary);
+            color: white;
+            border-color: var(--secondary);
+        }
+
+        .badge {
+            background: #eee;
+            color: #333;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+        }
+
+        .select-btn.selected .badge {
+            background: rgba(255,255,255,0.3);
             color: white;
         }
 
-        /* Quiz Interface */
-        .quiz-container {
-            display: none;
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: var(--card-shadow);
-        }
-
-        .question-meta {
+        .action-bar {
             display: flex;
             justify-content: space-between;
-            color: #7f8c8d;
-            font-size: 0.9rem;
-            margin-bottom: 15px;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 10px;
+            margin-top: 20px;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
         }
+
+        /* --- Quiz Screen --- */
+        .quiz-container {
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            display: none;
+            position: relative;
+        }
+
+        .q-header {
+            display: flex;
+            justify-content: space-between;
+            background: #f8f9fa;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.85rem;
+            color: #555;
+            border: 1px solid #eee;
+        }
+
+        .q-header span strong { color: var(--secondary); }
 
         .question-text {
-            font-size: 1.3rem;
+            font-size: 1.4rem;
             font-weight: 600;
             margin-bottom: 25px;
-            line-height: 1.5;
-        }
-
-        .options-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
+            line-height: 1.6;
+            direction: ltr;
+            text-align: left;
         }
 
         .quiz-option {
-            padding: 15px;
-            border: 1px solid #ddd;
+            padding: 15px 20px;
+            margin-bottom: 12px;
+            border: 2px solid #eee;
             border-radius: 10px;
             cursor: pointer;
-            transition: background 0.2s;
-            text-align: left; /* English questions usually read better LTR alignment even in RTL layout */
-            direction: ltr; 
+            transition: 0.2s;
+            direction: ltr;
+            text-align: left;
+            position: relative;
+            display: flex;
+            align-items: center;
         }
 
-        .quiz-option:hover {
-            background-color: #f8f9fa;
-        }
-
-        .quiz-option.correct {
-            background-color: #d4edda;
-            border-color: var(--success-color);
-            color: #155724;
-        }
-
-        .quiz-option.wrong {
-            background-color: #f8d7da;
-            border-color: var(--accent-color);
-            color: #721c24;
-        }
-
-        .explanation-box {
-            margin-top: 20px;
-            padding: 15px;
-            background-color: #e8f4fd;
-            border-left: 5px solid var(--secondary-color);
+        .quiz-option:hover { background: #f9f9f9; border-color: #ddd; }
+        
+        .quiz-option .key-hint {
+            position: absolute;
+            right: 15px;
+            background: #eee;
+            color: #777;
+            width: 25px;
+            height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             border-radius: 5px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .quiz-option.correct { background: #d4edda; border-color: var(--success); color: #155724; }
+        .quiz-option.wrong { background: #f8d7da; border-color: var(--accent); color: #721c24; }
+
+        .explanation {
+            background: #e8f4fd;
+            border-left: 5px solid var(--secondary);
+            padding: 15px;
+            margin-top: 20px;
             display: none;
             direction: ltr;
         }
 
-        .controls {
-            margin-top: 20px;
-            display: flex;
-            justify-content: space-between;
-        }
-
+        /* --- Utilities --- */
         .btn {
             padding: 10px 25px;
             border: none;
-            border-radius: 8px;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 1rem;
             font-weight: bold;
             color: white;
+            transition: 0.2s;
         }
-
-        .btn-primary { background-color: var(--secondary-color); }
-        .btn-danger { background-color: var(--accent-color); }
-        .btn-home { background-color: #95a5a6; }
-
-        .search-modal {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
+        .btn-primary { background: var(--secondary); }
+        .btn-success { background: var(--success); }
+        .btn-gray { background: #95a5a6; }
         
-        .search-content {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            width: 90%;
-            max-width: 400px;
-            text-align: center;
-        }
+        .hidden { display: none !important; }
 
-        .search-input {
-            width: 80%;
-            padding: 10px;
-            font-size: 1.2rem;
-            margin: 15px 0;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        /* Search Modal */
+        #search-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); display: none;
+            justify-content: center; align-items: center; z-index: 1000;
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <header>
-            <h1>🩺 بنك الأسئلة الطبي الشامل</h1>
-            <p style="color: #7f8c8d; margin-top: 5px;">Term 7: Endocrine & Surgery</p>
-        </header>
+<div class="container">
+    <header>
+        <h1>🩺 بنك الأسئلة الطبي الذكي</h1>
+        <p id="status-text" style="color: #7f8c8d;">يرجى تحميل مجلد الأسئلة للبدء</p>
+    </header>
 
-        <!-- Main Home Screen -->
-        <div id="home-screen" class="grid-menu">
-            <!-- Main Button -->
-            <div class="menu-card card-start" onclick="startSelectionFlow()">
-                <div class="icon">🚀</div>
-                <div class="card-title">بدء اختبار جديد</div>
-                <small>اختر الترم، المادة، والدرس</small>
-            </div>
+    <!-- 1. File Loader -->
+    <div id="loader-section" class="file-upload-wrapper" onclick="document.getElementById('folderInput').click()">
+        <span style="font-size: 3rem;">📂</span>
+        <h3>اضغط هنا لاختيار مجلد "Questions"</h3>
+        <p>سيتم قراءة جميع ملفات JSON ودمجها تلقائياً</p>
+        <input type="file" id="folderInput" webkitdirectory directory multiple style="display: none;">
+    </div>
 
-            <!-- Mistakes Button -->
-            <div class="menu-card card-mistakes" onclick="loadMode('mistakes')">
-                <div class="icon">⚠️</div>
-                <div class="card-title">سجل الأخطاء</div>
-                <small>راجع الأسئلة التي أخطأت فيها</small>
-            </div>
+    <!-- 2. Main Menu -->
+    <div id="main-menu" class="grid-menu">
+        <div class="menu-card card-start" onclick="startSelectionProcess()">
+            <div style="font-size: 2.5rem;">🚀</div>
+            <h3>بدء الاختبار</h3>
+            <p>تحديد متعدد للدروس والشباتر</p>
+        </div>
+        <div class="menu-card card-mistakes" onclick="startSpecialMode('mistakes')">
+            <div style="font-size: 2.5rem;">⚠️</div>
+            <h3>سجل الأخطاء</h3>
+            <p>مراجعة الإجابات الخاطئة</p>
+        </div>
+        <div class="menu-card card-fav" onclick="startSpecialMode('bookmarks')">
+            <div style="font-size: 2.5rem;">⭐</div>
+            <h3>المفضلة</h3>
+            <p>الأسئلة المحفوظة (Shortcut: S)</p>
+        </div>
+        <div class="menu-card card-search" onclick="document.getElementById('search-modal').style.display='flex'">
+            <div style="font-size: 2.5rem;">🔍</div>
+            <h3>بحث بالـ ID</h3>
+            <p>الوصول السريع للسؤال</p>
+        </div>
+    </div>
 
-            <!-- ID Search -->
-            <div class="menu-card card-search" onclick="openSearch()">
-                <div class="icon">🔍</div>
-                <div class="card-title">بحث برقم السؤال</div>
-                <small>الوصول السريع عبر ID</small>
+    <!-- 3. Selection Steps -->
+    <div id="selection-panel" class="selection-panel">
+        <div id="step-term" class="step-content">
+            <div class="step-title">1. اختر الترم (Term)</div>
+            <div class="options-grid" id="grid-term"></div>
+        </div>
+        
+        <div id="step-subject" class="step-content hidden">
+            <div class="step-title">
+                2. اختر المادة (Subject)
+                <button class="btn btn-gray" onclick="resetStep('term')">عودة</button>
             </div>
-
-            <!-- Innovation 1: Bookmarks -->
-            <div class="menu-card card-fav" onclick="loadMode('bookmarks')">
-                <div class="icon">⭐</div>
-                <div class="card-title">المفضلة</div>
-                <small>أسئلة قمت بحفظها للمراجعة</small>
-            </div>
-
-            <!-- Innovation 2: Random Challenge -->
-            <div class="menu-card card-random" onclick="loadMode('random')">
-                <div class="icon">🎲</div>
-                <div class="card-title">تحدي عشوائي</div>
-                <small>20 سؤال متنوع لقياس مستواك</small>
-            </div>
+            <div class="options-grid" id="grid-subject"></div>
         </div>
 
-        <!-- Selection Screen (Hierarchy) -->
-        <div id="selection-screen" class="selection-container">
-            <button class="btn btn-home" onclick="goHome()" style="margin-bottom: 15px;">🏠 الرئيسية</button>
-            
-            <div id="step-term" class="selection-step">
-                <h3>1. اختر الترم (Term)</h3>
-                <div class="options-grid" id="term-options"></div>
+        <div id="step-lesson" class="step-content hidden">
+            <div class="step-title">
+                3. اختر الدروس (يمكن تحديد أكثر من درس)
+                <div>
+                    <button class="btn btn-success" onclick="toggleAll('lesson')">تحديد الكل</button>
+                    <button class="btn btn-primary" onclick="confirmLessons()">التالي</button>
+                </div>
             </div>
-
-            <div id="step-subject" class="selection-step" style="display:none;">
-                <h3>2. اختر المادة (Subject)</h3>
-                <div class="options-grid" id="subject-options"></div>
-            </div>
-
-            <div id="step-lesson" class="selection-step" style="display:none;">
-                <h3>3. اختر الدرس (Lesson)</h3>
-                <div class="options-grid" id="lesson-options"></div>
-            </div>
+            <div class="options-grid" id="grid-lesson"></div>
         </div>
 
-        <!-- Quiz Screen -->
-        <div id="quiz-screen" class="quiz-container">
-            <div class="question-meta">
-                <span id="q-counter">سؤال 1 من 10</span>
-                <span id="q-id">ID: 0000</span>
-                <span id="q-category" style="direction: ltr;">Category</span>
-                <span id="fav-btn" style="cursor: pointer;" onclick="toggleBookmark()">☆ حفظ</span>
+        <div id="step-chapter" class="step-content hidden">
+            <div class="step-title">
+                4. اختر الشباتر (Chapters)
+                <div>
+                    <button class="btn btn-success" onclick="toggleAll('chapter')">تحديد الكل</button>
+                    <button class="btn btn-primary" onclick="confirmChapters()">التالي</button>
+                </div>
             </div>
+            <div class="options-grid" id="grid-chapter"></div>
+        </div>
 
-            <div class="question-text" id="question-text" style="direction: ltr;">
-                Loading...
-            </div>
-
-            <div class="options-list" id="options-container">
-                <!-- Options go here -->
-            </div>
-
-            <div class="explanation-box" id="explanation">
-                <strong>Explanation:</strong> <span id="explanation-text"></span>
-            </div>
-
-            <div class="controls">
-                <button class="btn btn-home" onclick="goHome()">إنهاء</button>
-                <button class="btn btn-primary" id="next-btn" onclick="nextQuestion()" style="display:none;">السؤال التالي ⬅️</button>
+        <div id="step-limit" class="step-content hidden">
+            <div class="step-title">5. عدد الأسئلة</div>
+            <div class="options-grid">
+                <div class="select-btn" onclick="startQuizWithLimit(10)">10 أسئلة</div>
+                <div class="select-btn" onclick="startQuizWithLimit(20)">20 سؤال</div>
+                <div class="select-btn" onclick="startQuizWithLimit(50)">50 سؤال</div>
+                <div class="select-btn" onclick="startQuizWithLimit('all')">كل الأسئلة المتاحة</div>
             </div>
         </div>
     </div>
 
-    <!-- Search Modal -->
-    <div id="search-modal" class="search-modal" onclick="closeSearch(event)">
-        <div class="search-content">
-            <h3>أدخل رقم السؤال (ID)</h3>
-            <input type="number" id="search-id-input" class="search-input" placeholder="مثال: 7650">
-            <br>
-            <button class="btn btn-primary" onclick="executeSearch()">بحث</button>
+    <!-- 4. Quiz Interface -->
+    <div id="quiz-view" class="quiz-container">
+        <div class="q-header">
+            <span>ID: <strong id="q-id">---</strong></span>
+            <span>Lesson: <strong id="q-lesson">---</strong></span>
+            <span>Chapter: <strong id="q-chapter">---</strong></span>
+            <span id="fav-indicator" style="cursor: pointer;" onclick="toggleBookmark()">☆ حفظ (S)</span>
+        </div>
+
+        <div class="question-text" id="q-text">Loading...</div>
+        <div id="q-options"></div>
+        
+        <div id="q-explanation" class="explanation"></div>
+
+        <div class="action-bar">
+            <button class="btn btn-gray" onclick="exitQuiz()">خروج 🏠</button>
+            <div id="q-progress" style="align-self: center; font-weight: bold;">1 / 20</div>
+            <button class="btn btn-primary hidden" id="btn-next" onclick="nextQuestion()">التالي (Enter) ➡</button>
         </div>
     </div>
 
-    <script>
-        // ==========================================
-        // 1. DATA LOADING (Simulated Merge)
-        // ==========================================
+</div>
+
+<!-- Search Modal -->
+<div id="search-modal" onclick="if(event.target==this) this.style.display='none'">
+    <div style="background:white; padding:30px; border-radius:10px; text-align:center; min-width: 300px;">
+        <h3>أدخل رقم السؤال (ID)</h3>
+        <input type="number" id="search-input" style="padding:10px; width:80%; font-size:1.2rem; margin:15px 0;" placeholder="مثال: 7650">
+        <br>
+        <button class="btn btn-primary" onclick="executeSearch()">بحث</button>
+    </div>
+</div>
+
+<script>
+    // ==========================================
+    // 1. DATA HANDLING
+    // ==========================================
+    let allQuestions = [];
+    let filteredQuestions = [];
+    let currentQuiz = [];
+    let currentIndex = 0;
+    
+    // User Selections
+    let selection = {
+        term: null,
+        subject: null,
+        lessons: [],
+        chapters: []
+    };
+
+    // Load from LocalStorage
+    let mistakes = JSON.parse(localStorage.getItem('medQuizMistakes')) || [];
+    let bookmarks = JSON.parse(localStorage.getItem('medQuizBookmarks')) || [];
+
+    // File Loader
+    document.getElementById('folderInput').addEventListener('change', async function(e) {
+        const files = e.target.files;
+        if (files.length === 0) return;
+
+        allQuestions = [];
+        let loadedCount = 0;
+
+        document.getElementById('status-text').innerText = 'جاري قراءة الملفات...';
+
+        for (let file of files) {
+            if (file.name.endsWith('.json')) {
+                try {
+                    const text = await file.text();
+                    const json = JSON.parse(text);
+                    if (json.questions && Array.isArray(json.questions)) {
+                        // Enhance questions with meta info if missing in question object
+                        const enhancedQs = json.questions.map(q => ({
+                            ...q,
+                            term: q.term || json.meta?.source || "Unknown Term",
+                            subject: q.subject || json.meta?.subject || "Unknown Subject",
+                            lesson: q.lesson || json.meta?.lesson || "Unknown Lesson",
+                            // Chapter is usually inside the question object
+                        }));
+                        allQuestions.push(...enhancedQs);
+                        loadedCount++;
+                    }
+                } catch (err) {
+                    console.error("Error parsing file:", file.name, err);
+                }
+            }
+        }
+
+        if (allQuestions.length > 0) {
+            document.getElementById('status-text').innerText = `تم تحميل ${allQuestions.length} سؤال من ${loadedCount} ملف.`;
+            document.getElementById('loader-section').classList.add('hidden');
+            document.getElementById('main-menu').style.display = 'grid';
+        } else {
+            alert('لم يتم العثور على أسئلة في الملفات المختارة.');
+        }
+    });
+
+    // ==========================================
+    // 2. SELECTION LOGIC
+    // ==========================================
+
+    function startSelectionProcess() {
+        document.getElementById('main-menu').style.display = 'none';
+        document.getElementById('selection-panel').style.display = 'block';
+        renderTerms();
+    }
+
+    function renderTerms() {
+        resetStepsFrom('term');
+        const terms = [...new Set(allQuestions.map(q => q.term))].sort();
+        const container = document.getElementById('grid-term');
+        container.innerHTML = '';
         
-        // In a real app, you would fetch these. Here we embed them for the demo to work.
-        const file1Data = {
-          "meta": { "source": "Term 7 - Endocrine", "lesson": "Diabetes" },
-          "questions": [
-            { "id": 7650, "question": "A 24-year-old woman with Type 1 diabetes (6 years) on insulin asks about congenital malformation risk. What is the relative risk in infants of diabetic mothers compared with non-diabetics?", "options": ["No increased risk", "2-4 fold increased risk", "8-10 fold", "6-8 fold", "> 10-fold increased risk"], "correct_option_id": 1, "explanation": "Maternal diabetes with suboptimal control during organogenesis increases the risk of congenital malformations (e.g., cardiac, neural tube) by 2-4 fold compared to the general population.", "term": "Term 7", "subject": "Endocrine", "lesson": "Diabetes" },
-            { "id": 7651, "question": "A 30-year-old man with insulin-dependent diabetes and hypothyroidism develops fatigue, weight loss, and increasing pigmentation of the skin and buccal mucosa. The most likely cause of the recent complaint is:", "options": ["Vitiligo.", "Pan hypopituitarism.", "Addison's disease.", "Celiac disease.", "Peutz-jeghers syndrome."], "correct_option_id": 2, "explanation": "This indicates Schmidt's Syndrome (APS Type 2): T1DM, Thyroid disease, and Addison's.", "term": "Term 7", "subject": "Endocrine", "lesson": "Diabetes" },
-            { "id": 8250, "question": "Which of the following hernias follows the path of the spermatic cord within the cremaster muscle?", "options": ["Direct inguinal", "Femoral", "Indirect inguinal", "Interparietal", "Spigelian"], "correct_option_id": 2, "explanation": "Indirect hernias traverse the deep ring and travel inside the spermatic cord, covered by cremaster muscle.", "term": "Term 7", "subject": "General Surgery", "lesson": "Hernia" },
-            { "id": 8251, "question": "The cremaster muscle is derived from:", "options": ["Conjoint tendon", "External oblique aponeurosis", "Internal oblique muscle", "Transversus abdominis muscle", "Transversalis Fascia"], "correct_option_id": 2, "explanation": "As the testis descends through the abdominal wall, it pulls muscle fibers from the internal oblique muscle.", "term": "Term 7", "subject": "General Surgery", "lesson": "Hernia" }
-            // Note: I have included a sample. In the full version, all questions from your files would be here.
-            // For the sake of this code running, I am using the first few from your input as an example.
-            // TO USE FULL DATA: Paste the entire content of the 'questions' arrays from both files into this array.
-          ]
-        };
+        terms.forEach(term => {
+            const count = allQuestions.filter(q => q.term === term).length;
+            container.innerHTML += createSelectBtn(term, count, () => selectTerm(term));
+        });
+    }
 
-        // Let's populate with more data from your prompt to make it realistic
-        // I will add a script logic to parse your provided text if this was a backend, 
-        // but here I will expand the dataset manually with a few more examples from your JSONs.
+    function selectTerm(term) {
+        selection.term = term;
+        document.getElementById('step-term').classList.add('hidden');
+        document.getElementById('step-subject').classList.remove('hidden');
+        renderSubjects();
+    }
+
+    function renderSubjects() {
+        const subjects = [...new Set(allQuestions.filter(q => q.term === selection.term).map(q => q.subject))].sort();
+        const container = document.getElementById('grid-subject');
+        container.innerHTML = '';
+
+        subjects.forEach(sub => {
+            const count = allQuestions.filter(q => q.term === selection.term && q.subject === sub).length;
+            container.innerHTML += createSelectBtn(sub, count, () => selectSubject(sub));
+        });
+    }
+
+    function selectSubject(sub) {
+        selection.subject = sub;
+        document.getElementById('step-subject').classList.add('hidden');
+        document.getElementById('step-lesson').classList.remove('hidden');
+        renderLessons();
+    }
+
+    // Multi-Select Logic for Lessons
+    function renderLessons() {
+        const subset = allQuestions.filter(q => q.term === selection.term && q.subject === selection.subject);
+        const lessons = [...new Set(subset.map(q => q.lesson))].sort();
+        const container = document.getElementById('grid-lesson');
+        container.innerHTML = '';
+        selection.lessons = []; // reset
+
+        lessons.forEach(lesson => {
+            const count = subset.filter(q => q.lesson === lesson).length;
+            const btn = document.createElement('div');
+            btn.className = 'select-btn';
+            btn.innerHTML = `<span>${lesson}</span> <span class="badge">${count}</span>`;
+            btn.dataset.value = lesson;
+            btn.onclick = () => {
+                btn.classList.toggle('selected');
+                updateLessonSelection();
+            };
+            container.appendChild(btn);
+        });
+    }
+
+    function updateLessonSelection() {
+        const btns = document.querySelectorAll('#grid-lesson .select-btn.selected');
+        selection.lessons = Array.from(btns).map(b => b.dataset.value);
+    }
+
+    function confirmLessons() {
+        if (selection.lessons.length === 0) { alert('يرجى اختيار درس واحد على الأقل'); return; }
+        document.getElementById('step-lesson').classList.add('hidden');
+        document.getElementById('step-chapter').classList.remove('hidden');
+        renderChapters();
+    }
+
+    // Multi-Select Logic for Chapters
+    function renderChapters() {
+        const subset = allQuestions.filter(q => 
+            q.term === selection.term && 
+            q.subject === selection.subject && 
+            selection.lessons.includes(q.lesson)
+        );
+        const chapters = [...new Set(subset.map(q => q.chapter))].sort();
+        const container = document.getElementById('grid-chapter');
+        container.innerHTML = '';
+        selection.chapters = [];
+
+        chapters.forEach(chap => {
+            const count = subset.filter(q => q.chapter === chap).length;
+            const btn = document.createElement('div');
+            btn.className = 'select-btn';
+            btn.innerHTML = `<span>${chap || 'No Chapter'}</span> <span class="badge">${count}</span>`;
+            btn.dataset.value = chap;
+            btn.onclick = () => {
+                btn.classList.toggle('selected');
+                updateChapterSelection();
+            };
+            container.appendChild(btn);
+        });
+    }
+
+    function updateChapterSelection() {
+        const btns = document.querySelectorAll('#grid-chapter .select-btn.selected');
+        selection.chapters = Array.from(btns).map(b => b.dataset.value);
+    }
+
+    function confirmChapters() {
+        if (selection.chapters.length === 0) { alert('يرجى اختيار شابتر واحد على الأقل'); return; }
         
-        const allQuestions = [
-            ...file1Data.questions,
-            // Adding a few more from your Endocrine file
-            { "id": 7662, "question": "Diabetic ketoacidosis caused by:", "options": ["Insulin deficiency.", "Glucagon colitis.", "Both."], "correct_option_id": 0, "explanation": "DKA is primarily driven by absolute or relative insulin deficiency.", "term": "Term 7", "subject": "Endocrine", "lesson": "Diabetes" },
-            // Adding a few more from your Surgery file
-            { "id": 8261, "question": "The overall ratio of indirect to direct inguinal hernia is:", "options": ["2:1 (indirect : direct)", "1:1 (indirect : direct)", "1:2 (indirect : direct)", "1:3 (indirect : direct)"], "correct_option_id": 0, "explanation": "Indirect inguinal hernias are the most common type of hernia overall.", "term": "Term 7", "subject": "General Surgery", "lesson": "Hernia" },
-            { "id": 8295, "question": "Which of the following is not a complication of an inguinal hernia?", "options": ["Irreducibility.", "Inflammation.", "Strangulation.", "Obstruction.", "Bleeding."], "correct_option_id": 4, "explanation": "Bleeding is not a complication of the hernia condition itself.", "term": "Term 7", "subject": "General Surgery", "lesson": "Hernia" }
-        ];
+        // Final Filter
+        filteredQuestions = allQuestions.filter(q => 
+            q.term === selection.term && 
+            q.subject === selection.subject && 
+            selection.lessons.includes(q.lesson) &&
+            selection.chapters.includes(q.chapter)
+        );
 
-        // ==========================================
-        // 2. STATE MANAGEMENT
-        // ==========================================
-        let currentQuizQueue = [];
-        let currentIndex = 0;
-        let mistakes = JSON.parse(localStorage.getItem('medQuizMistakes')) || [];
-        let bookmarks = JSON.parse(localStorage.getItem('medQuizBookmarks')) || [];
+        document.getElementById('step-chapter').classList.add('hidden');
+        document.getElementById('step-limit').classList.remove('hidden');
+    }
 
-        // ==========================================
-        // 3. UI LOGIC - NAVIGATION
-        // ==========================================
+    function createSelectBtn(text, count, onClick) {
+        return `<div class="select-btn" onclick="(${onClick})()">
+                    <span>${text}</span>
+                    <span class="badge">${count}</span>
+                </div>`;
+    }
 
-        function goHome() {
-            document.getElementById('home-screen').style.display = 'grid';
-            document.getElementById('selection-screen').style.display = 'none';
-            document.getElementById('quiz-screen').style.display = 'none';
-            resetSelection();
+    function toggleAll(type) {
+        const container = document.getElementById(`grid-${type}`);
+        const btns = container.querySelectorAll('.select-btn');
+        const allSelected = Array.from(btns).every(b => b.classList.contains('selected'));
+        
+        btns.forEach(b => {
+            if (allSelected) b.classList.remove('selected');
+            else b.classList.add('selected');
+        });
+
+        if(type === 'lesson') updateLessonSelection();
+        if(type === 'chapter') updateChapterSelection();
+    }
+
+    // ==========================================
+    // 3. QUIZ LOGIC
+    // ==========================================
+
+    function startQuizWithLimit(limit) {
+        // Shuffle
+        let finalSet = [...filteredQuestions].sort(() => 0.5 - Math.random());
+        
+        if (limit !== 'all') {
+            finalSet = finalSet.slice(0, limit);
         }
 
-        function startSelectionFlow() {
-            document.getElementById('home-screen').style.display = 'none';
-            document.getElementById('selection-screen').style.display = 'block';
-            
-            // Step 1: Render Terms
-            const terms = [...new Set(allQuestions.map(q => q.term))];
-            renderOptions('term-options', terms, handleTermSelect);
+        startQuiz(finalSet);
+    }
+
+    function startSpecialMode(mode) {
+        let qs = [];
+        if(mode === 'mistakes') qs = allQuestions.filter(q => mistakes.includes(q.id));
+        if(mode === 'bookmarks') qs = allQuestions.filter(q => bookmarks.includes(q.id));
+        
+        if(qs.length === 0) { alert('القائمة فارغة!'); return; }
+        
+        // Shuffle special modes too
+        startQuiz(qs.sort(() => 0.5 - Math.random()));
+    }
+
+    function startQuiz(questions) {
+        currentQuiz = questions;
+        currentIndex = 0;
+        
+        document.getElementById('selection-panel').style.display = 'none';
+        document.getElementById('main-menu').style.display = 'none';
+        document.getElementById('search-modal').style.display = 'none';
+        document.getElementById('quiz-view').style.display = 'block';
+        
+        renderQuestion();
+    }
+
+    function renderQuestion() {
+        const q = currentQuiz[currentIndex];
+        
+        // Headers
+        document.getElementById('q-id').innerText = q.id;
+        document.getElementById('q-lesson').innerText = q.lesson;
+        document.getElementById('q-chapter').innerText = q.chapter || 'General';
+        document.getElementById('q-progress').innerText = `${currentIndex + 1} / ${currentQuiz.length}`;
+        updateFavIcon(q.id);
+
+        // Body
+        document.getElementById('q-text').innerText = q.question;
+        const optsContainer = document.getElementById('q-options');
+        optsContainer.innerHTML = '';
+        
+        // Reset UI
+        document.getElementById('q-explanation').style.display = 'none';
+        document.getElementById('btn-next').classList.add('hidden');
+        quizState.answered = false;
+
+        // Render Options with Shortcuts
+        const keys = ['A', 'B', 'C', 'D', 'E'];
+        q.options.forEach((opt, idx) => {
+            const div = document.createElement('div');
+            div.className = 'quiz-option';
+            div.id = `opt-${idx}`;
+            div.innerHTML = `<span>${opt}</span> <div class="key-hint">${keys[idx] || ''}</div>`;
+            div.onclick = () => handleAnswer(idx);
+            optsContainer.appendChild(div);
+        });
+    }
+
+    let quizState = { answered: false };
+
+    function handleAnswer(selectedIdx) {
+        if (quizState.answered) return;
+        quizState.answered = true;
+
+        const q = currentQuiz[currentIndex];
+        const correctIdx = q.correct_option_id; // Assuming 0-based index from JSON
+
+        const opts = document.querySelectorAll('.quiz-option');
+        
+        // Style Correct
+        opts[correctIdx].classList.add('correct');
+        opts[correctIdx].querySelector('.key-hint').innerText = '✓';
+
+        // Style Wrong (if applicable)
+        if (selectedIdx !== correctIdx) {
+            opts[selectedIdx].classList.add('wrong');
+            opts[selectedIdx].querySelector('.key-hint').innerText = '✗';
+            saveMistake(q.id);
+        } else {
+            removeMistake(q.id);
         }
 
-        function renderOptions(containerId, items, callback) {
-            const container = document.getElementById(containerId);
-            container.innerHTML = '';
-            items.forEach(item => {
-                const btn = document.createElement('button');
-                btn.className = 'option-btn';
-                btn.innerText = item;
-                btn.onclick = () => {
-                    // Visual feedback
-                    Array.from(container.children).forEach(c => c.classList.remove('active'));
-                    btn.classList.add('active');
-                    callback(item);
-                };
-                container.appendChild(btn);
-            });
-        }
+        // Show Explanation
+        const expDiv = document.getElementById('q-explanation');
+        expDiv.innerHTML = `<strong>Explanation:</strong> ${q.explanation || 'No explanation available.'}`;
+        expDiv.style.display = 'block';
 
-        let selectedTerm = null;
-        let selectedSubject = null;
+        // Show Next Button
+        document.getElementById('btn-next').classList.remove('hidden');
+    }
 
-        function handleTermSelect(term) {
-            selectedTerm = term;
-            document.getElementById('step-subject').style.display = 'block';
-            document.getElementById('step-lesson').style.display = 'none'; // reset
-            
-            // Filter Subjects based on Term
-            const subjects = [...new Set(allQuestions.filter(q => q.term === term).map(q => q.subject))];
-            renderOptions('subject-options', subjects, handleSubjectSelect);
-        }
-
-        function handleSubjectSelect(subject) {
-            selectedSubject = subject;
-            document.getElementById('step-lesson').style.display = 'block';
-
-            // Filter Lessons based on Term & Subject
-            const lessons = [...new Set(allQuestions.filter(q => q.term === selectedTerm && q.subject === subject).map(q => q.lesson))];
-            renderOptions('lesson-options', lessons, handleLessonSelect);
-        }
-
-        function handleLessonSelect(lesson) {
-            // Start Quiz with filtered data
-            const questions = allQuestions.filter(q => 
-                q.term === selectedTerm && 
-                q.subject === selectedSubject && 
-                q.lesson === lesson
-            );
-            startQuiz(questions);
-        }
-
-        function resetSelection() {
-            selectedTerm = null;
-            selectedSubject = null;
-            document.getElementById('step-subject').style.display = 'none';
-            document.getElementById('step-lesson').style.display = 'none';
-            document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('active'));
-        }
-
-        // ==========================================
-        // 4. SPECIAL MODES
-        // ==========================================
-
-        function loadMode(mode) {
-            let queue = [];
-            if (mode === 'mistakes') {
-                if (mistakes.length === 0) { alert('لا يوجد أخطاء مسجلة حتى الآن!'); return; }
-                queue = allQuestions.filter(q => mistakes.includes(q.id));
-            } else if (mode === 'bookmarks') {
-                if (bookmarks.length === 0) { alert('قائمة المفضلة فارغة!'); return; }
-                queue = allQuestions.filter(q => bookmarks.includes(q.id));
-            } else if (mode === 'random') {
-                // Shuffle and pick 20
-                queue = [...allQuestions].sort(() => 0.5 - Math.random()).slice(0, 20);
-            }
-
-            if (queue.length > 0) {
-                document.getElementById('home-screen').style.display = 'none';
-                startQuiz(queue);
-            }
-        }
-
-        function openSearch() {
-            document.getElementById('search-modal').style.display = 'flex';
-            document.getElementById('search-id-input').focus();
-        }
-
-        function closeSearch(e) {
-            if (e.target.id === 'search-modal') {
-                document.getElementById('search-modal').style.display = 'none';
-            }
-        }
-
-        function executeSearch() {
-            const id = parseInt(document.getElementById('search-id-input').value);
-            const question = allQuestions.find(q => q.id === id);
-            
-            if (question) {
-                document.getElementById('search-modal').style.display = 'none';
-                document.getElementById('home-screen').style.display = 'none';
-                startQuiz([question]);
-            } else {
-                alert('لم يتم العثور على سؤال بهذا الرقم.');
-            }
-        }
-
-        // ==========================================
-        // 5. QUIZ ENGINE
-        // ==========================================
-
-        function startQuiz(questions) {
-            currentQuizQueue = questions;
-            currentIndex = 0;
-            document.getElementById('selection-screen').style.display = 'none';
-            document.getElementById('quiz-screen').style.display = 'block';
-            showQuestion();
-        }
-
-        function showQuestion() {
-            const q = currentQuizQueue[currentIndex];
-            
-            // Update Meta
-            document.getElementById('q-counter').innerText = `سؤال ${currentIndex + 1} من ${currentQuizQueue.length}`;
-            document.getElementById('q-id').innerText = `ID: ${q.id}`;
-            document.getElementById('q-category').innerText = `${q.subject} > ${q.lesson}`;
-            updateFavIcon(q.id);
-
-            // Update Text
-            document.getElementById('question-text').innerText = q.question;
-            
-            // Render Options
-            const optsContainer = document.getElementById('options-container');
-            optsContainer.innerHTML = '';
-            document.getElementById('explanation').style.display = 'none';
-            document.getElementById('next-btn').style.display = 'none';
-
-            q.options.forEach((opt, idx) => {
-                const div = document.createElement('div');
-                div.className = 'quiz-option';
-                div.innerText = opt;
-                div.onclick = () => handleAnswer(idx, q);
-                optsContainer.appendChild(div);
-            });
-        }
-
-        function handleAnswer(selectedIndex, qData) {
-            // Prevent multiple clicks
-            if (document.getElementById('explanation').style.display === 'block') return;
-
-            const opts = document.querySelectorAll('.quiz-option');
-            const correctIndex = qData.correct_option_id;
-
-            // Mark styles
-            opts[correctIndex].classList.add('correct');
-            if (selectedIndex !== correctIndex) {
-                opts[selectedIndex].classList.add('wrong');
-                saveMistake(qData.id);
-            } else {
-                removeMistake(qData.id); // If answered correctly now, remove from mistakes list
-            }
-
-            // Show Explanation
-            document.getElementById('explanation-text').innerText = qData.explanation || "No explanation provided.";
-            document.getElementById('explanation').style.display = 'block';
-            
-            // Show Next Button
-            if (currentIndex < currentQuizQueue.length - 1) {
-                document.getElementById('next-btn').style.display = 'block';
-            }
-        }
-
-        function nextQuestion() {
+    function nextQuestion() {
+        if (currentIndex < currentQuiz.length - 1) {
             currentIndex++;
-            showQuestion();
+            renderQuestion();
+        } else {
+            alert('انتهى الاختبار!');
+            exitQuiz();
+        }
+    }
+
+    function exitQuiz() {
+        document.getElementById('quiz-view').style.display = 'none';
+        document.getElementById('main-menu').style.display = 'grid';
+        // Reset Selection view to start
+        resetStepsFrom('term');
+    }
+
+    function resetStepsFrom(step) {
+        if(step === 'term') {
+            document.getElementById('step-term').classList.remove('hidden');
+            document.getElementById('step-subject').classList.add('hidden');
+            document.getElementById('step-lesson').classList.add('hidden');
+            document.getElementById('step-chapter').classList.add('hidden');
+            document.getElementById('step-limit').classList.add('hidden');
+        }
+    }
+
+    // ==========================================
+    // 4. SHORTCUTS & UTILS
+    // ==========================================
+
+    document.addEventListener('keydown', (e) => {
+        // Disable shortcuts if search modal is open
+        if(document.getElementById('search-modal').style.display === 'flex') return;
+        if(document.getElementById('quiz-view').style.display === 'none') return;
+
+        const key = e.key.toLowerCase();
+        
+        // Options A-E / 1-5
+        const map = { 'a':0, 'b':1, 'c':2, 'd':3, 'e':4, '1':0, '2':1, '3':2, '4':3, '5':4 };
+        
+        if (map.hasOwnProperty(key) && !quizState.answered) {
+            const idx = map[key];
+            const optionsCount = currentQuiz[currentIndex].options.length;
+            if(idx < optionsCount) handleAnswer(idx);
         }
 
-        // ==========================================
-        // 6. STORAGE HELPERS
-        // ==========================================
-
-        function saveMistake(id) {
-            if (!mistakes.includes(id)) {
-                mistakes.push(id);
-                localStorage.setItem('medQuizMistakes', JSON.stringify(mistakes));
-            }
+        // Save (S)
+        if (key === 's') {
+            toggleBookmark();
         }
 
-        function removeMistake(id) {
-            const idx = mistakes.indexOf(id);
-            if (idx > -1) {
-                mistakes.splice(idx, 1);
-                localStorage.setItem('medQuizMistakes', JSON.stringify(mistakes));
-            }
+        // Next (Enter/Space)
+        if ((key === 'enter' || key === ' ') && quizState.answered) {
+            e.preventDefault();
+            nextQuestion();
         }
+    });
 
-        function toggleBookmark() {
-            const currentId = currentQuizQueue[currentIndex].id;
-            const idx = bookmarks.indexOf(currentId);
-            
-            if (idx > -1) {
-                bookmarks.splice(idx, 1);
-            } else {
-                bookmarks.push(currentId);
-            }
-            localStorage.setItem('medQuizBookmarks', JSON.stringify(bookmarks));
-            updateFavIcon(currentId);
+    // Storage Functions
+    function saveMistake(id) {
+        if(!mistakes.includes(id)) {
+            mistakes.push(id);
+            localStorage.setItem('medQuizMistakes', JSON.stringify(mistakes));
         }
-
-        function updateFavIcon(id) {
-            const btn = document.getElementById('fav-btn');
-            if (bookmarks.includes(id)) {
-                btn.innerText = "★ محفوظ";
-                btn.style.color = "#f39c12";
-            } else {
-                btn.innerText = "☆ حفظ";
-                btn.style.color = "#7f8c8d";
-            }
+    }
+    function removeMistake(id) {
+        const idx = mistakes.indexOf(id);
+        if(idx > -1) {
+            mistakes.splice(idx, 1);
+            localStorage.setItem('medQuizMistakes', JSON.stringify(mistakes));
         }
+    }
+    function toggleBookmark() {
+        const id = currentQuiz[currentIndex].id;
+        const idx = bookmarks.indexOf(id);
+        if(idx > -1) bookmarks.splice(idx, 1);
+        else bookmarks.push(id);
+        
+        localStorage.setItem('medQuizBookmarks', JSON.stringify(bookmarks));
+        updateFavIcon(id);
+    }
+    function updateFavIcon(id) {
+        const el = document.getElementById('fav-indicator');
+        if(bookmarks.includes(id)) {
+            el.innerHTML = '★ محفوظ (S)';
+            el.style.color = '#f39c12';
+        } else {
+            el.innerHTML = '☆ حفظ (S)';
+            el.style.color = '#555';
+        }
+    }
 
-    </script>
+    // Search
+    function executeSearch() {
+        const id = parseInt(document.getElementById('search-input').value);
+        const q = allQuestions.find(i => i.id === id);
+        if(q) {
+            startQuiz([q]);
+        } else {
+            alert('السؤال غير موجود في الملفات المحملة.');
+        }
+    }
+</script>
+
 </body>
 </html>
