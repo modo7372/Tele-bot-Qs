@@ -10,296 +10,276 @@
 
     <style>
         :root {
-            /* Default Theme (Light) */
-            --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            --card-bg: rgba(255, 255, 255, 0.85);
-            --text-main: #2d3436;
-            --text-sec: #636e72;
+            /* --- Default Theme (Light Modern) --- */
+            --bg-grad: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+            --glass-bg: rgba(255, 255, 255, 0.85);
+            --glass-border: 1px solid rgba(0, 0, 0, 0.05);
+            --txt-main: #2d3436;
+            --txt-sec: #636e72;
             --primary: #6c5ce7;
             --secondary: #00cec9;
             --accent: #ff7675;
             --success: #00b894;
-            --glass-border: 1px solid rgba(255, 255, 255, 0.3);
-            --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
-            --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            
+            /* --- Sizing & Shape --- */
+            --radius: 8px; /* Slightly squared for compact look */
+            --btn-pad: 5px 12px; /* Small & Compact */
+            --font-size: 14px;
+            --font-fam: 'Segoe UI', Tahoma, sans-serif;
+            --shadow: 0 4px 6px rgba(0,0,0,0.05);
         }
 
-        /* Themes */
+        /* --- Themes --- */
         [data-theme="dark"] {
-            --bg-gradient: linear-gradient(135deg, #2d3436 0%, #000000 100%);
-            --card-bg: rgba(45, 52, 54, 0.85);
-            --text-main: #dfe6e9;
-            --text-sec: #b2bec3;
-            --primary: #a29bfe;
-            --secondary: #81ecec;
+            --bg-grad: linear-gradient(135deg, #232526 0%, #414345 100%);
+            --glass-bg: rgba(40, 40, 40, 0.9);
+            --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+            --txt-main: #dfe6e9; --txt-sec: #b2bec3;
+            --primary: #a29bfe; --secondary: #81ecec;
         }
-        [data-theme="midnight"] {
-            --bg-gradient: linear-gradient(to bottom, #0f2027, #203a43, #2c5364);
-            --card-bg: rgba(16, 33, 41, 0.8);
-            --text-main: #ecf0f1;
-            --primary: #f1c40f;
-            --secondary: #e67e22;
-        }
-        [data-theme="cyberpunk"] {
-            --bg-gradient: linear-gradient(45deg, #110022, #330033);
-            --card-bg: rgba(20, 10, 30, 0.9);
-            --text-main: #0ff;
-            --text-sec: #f0f;
-            --primary: #f0f;
-            --secondary: #0ff;
+        [data-theme="neon"] {
+            --bg-grad: linear-gradient(45deg, #000000, #1a0b2e);
+            --glass-bg: rgba(10, 10, 20, 0.9);
             --glass-border: 1px solid #0ff;
+            --txt-main: #fff; --txt-sec: #0ff;
+            --primary: #f0f; --secondary: #0ff; --accent: #ff0;
+            --radius: 0px; /* Sharp edges */
         }
-        [data-theme="ocean"] {
-            --bg-gradient: linear-gradient(to top, #1cb5e0 0%, #000851 100%);
-            --card-bg: rgba(255, 255, 255, 0.9);
-            --text-main: #004e92;
-            --primary: #004e92;
+        [data-theme="forest"] {
+            --bg-grad: linear-gradient(to bottom, #134e5e, #71b280);
+            --glass-bg: rgba(230, 245, 230, 0.9);
+            --txt-main: #1b5e20; --txt-sec: #388e3c;
+            --primary: #2e7d32; --secondary: #ffa000;
+        }
+        [data-theme="coffee"] {
+            --bg-grad: linear-gradient(to right, #3e2b26, #6d4c41);
+            --glass-bg: rgba(255, 248, 240, 0.9);
+            --txt-main: #3e2723; --txt-sec: #5d4037;
+            --primary: #795548; --secondary: #d7ccc8;
         }
 
-        * { box-sizing: border-box; transition: background 0.3s, color 0.3s; }
-        
+        * { box-sizing: border-box; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
+
         body {
             margin: 0; padding: 0;
-            font-family: var(--font-family);
-            color: var(--text-main);
-            height: 100vh;
-            overflow: hidden;
-            background: var(--bg-gradient);
+            font-family: var(--font-fam);
+            font-size: var(--font-size);
+            color: var(--txt-main);
+            background: var(--bg-grad);
+            height: 100vh; overflow: hidden;
             user-select: none;
         }
 
-        #bg-canvas {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 0; pointer-events: none;
-        }
+        #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
 
         .container {
             position: relative; z-index: 1;
-            width: 100%; height: 100%; max-width: 900px; margin: 0 auto;
+            width: 100%; height: 100%; max-width: 850px; margin: 0 auto;
             display: flex; flex-direction: column; padding: 10px;
         }
 
-        /* --- Glassmorphism UI Components --- */
-        .glass-panel {
-            background: var(--card-bg);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            border-radius: 16px;
-            border: var(--glass-border);
-            box-shadow: var(--shadow);
-            padding: 15px;
-            margin-bottom: 10px;
+        /* --- UI Components --- */
+        .glass-box {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            border: var(--glass-border); border-radius: var(--radius);
+            box-shadow: var(--shadow); padding: 12px; margin-bottom: 8px;
         }
 
-        /* Header */
-        header {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 10px 20px;
+        .btn {
+            border: none; outline: none; cursor: pointer;
+            padding: var(--btn-pad); border-radius: var(--radius);
+            font-size: 0.9em; font-weight: 600;
+            display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        
-        .logo h1 { margin: 0; font-size: 1.4rem; background: -webkit-linear-gradient(45deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        
-        .top-btns button {
-            background: none; border: none; font-size: 1.3rem; cursor: pointer;
-            margin-left: 8px; transition: transform 0.2s; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
-        }
-        .top-btns button:hover { transform: scale(1.1); }
+        .btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
+        .btn:active { transform: scale(0.95); }
 
-        /* Main Menu Grid */
+        .btn-primary { background: var(--primary); color: #fff; }
+        .btn-sec { background: transparent; border: 1px solid var(--txt-sec); color: var(--txt-sec); }
+        .btn-ghost { background: rgba(0,0,0,0.05); color: var(--txt-main); }
+        .btn-icon { padding: 6px; border-radius: 50%; aspect-ratio: 1; }
+
+        /* --- Header --- */
+        header { display: flex; justify-content: space-between; align-items: center; }
+        .logo h1 { margin: 0; font-size: 1.1rem; background: -webkit-linear-gradient(0deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .logo small { font-size: 0.7em; opacity: 0.7; }
+
+        /* --- Menu Grid --- */
         .grid-menu {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            gap: 15px; padding: 10px; flex-grow: 1; overflow-y: auto;
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px; padding: 5px; flex-grow: 1; overflow-y: auto;
         }
 
         .menu-card {
-            background: var(--card-bg);
-            border-radius: 16px; padding: 20px; text-align: center;
+            background: var(--glass-bg); border-radius: var(--radius);
             border: var(--glass-border); box-shadow: var(--shadow);
-            cursor: pointer; position: relative; overflow: hidden;
+            padding: 15px; text-align: center; cursor: pointer;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            min-height: 120px;
+            min-height: 100px;
         }
-        
-        .menu-card::before {
-            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
-            transform: rotate(45deg); opacity: 0; transition: opacity 0.3s;
-        }
-        .menu-card:hover { transform: translateY(-5px); box-shadow: 0 12px 40px rgba(0,0,0,0.2); }
-        .menu-card:hover::before { opacity: 1; }
+        .menu-card:hover { border-color: var(--primary); transform: translateY(-3px); }
+        .menu-card .icon { font-size: 1.8rem; margin-bottom: 5px; }
+        .menu-card h3 { margin: 0; font-size: 0.9rem; color: var(--txt-main); }
+        .menu-card small { font-size: 0.7rem; color: var(--txt-sec); margin-top: 2px; }
 
-        .menu-card .icon { font-size: 2.5rem; margin-bottom: 10px; }
-        .menu-card h3 { margin: 0; font-size: 1rem; color: var(--text-main); }
-        .menu-card small { font-size: 0.75rem; color: var(--text-sec); margin-top: 5px; }
-
-        /* Selection Screen */
-        .selection-area { flex-grow: 1; overflow-y: auto; padding-right: 5px; }
-        
+        /* --- Selection --- */
+        .selection-list { flex-grow: 1; overflow-y: auto; padding: 5px; }
         .section-header {
-            width: 100%; padding: 10px; margin: 15px 0 5px 0;
-            background: linear-gradient(90deg, var(--primary), transparent);
-            color: #fff; border-radius: 8px; font-weight: bold; font-size: 0.9rem;
+            font-size: 0.8em; font-weight: bold; color: var(--primary);
+            margin: 10px 0 5px; padding: 4px 8px; background: rgba(0,0,0,0.03); border-radius: 4px;
         }
-
-        .options-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+        .select-grid { display: flex; flex-wrap: wrap; gap: 6px; }
         
-        .select-btn {
-            background: rgba(255,255,255,0.5); border: 1px solid var(--primary);
-            color: var(--text-main); padding: 8px 15px; border-radius: 20px;
-            cursor: pointer; flex: 1 1 auto; text-align: center; font-size: 0.9rem;
-            display: flex; justify-content: center; align-items: center; gap: 5px;
-            min-width: 100px;
+        .chip {
+            background: rgba(255,255,255,0.5); border: 1px solid rgba(0,0,0,0.1);
+            color: var(--txt-main); padding: 5px 10px; border-radius: 20px;
+            cursor: pointer; font-size: 0.85em; user-select: none; flex: 1 1 auto;
+            text-align: center; max-width: 100%; transition: 0.2s;
         }
-        .select-btn:hover { background: var(--primary); color: #fff; }
-        .select-btn.selected { background: var(--primary); color: #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .chip:hover { border-color: var(--secondary); }
+        .chip.selected { background: var(--primary); color: #fff; border-color: var(--primary); }
 
-        /* Quiz UI */
+        /* --- Quiz View --- */
         .quiz-view { display: none; flex-direction: column; height: 100%; }
         
-        .q-card {
-            background: var(--card-bg); border-radius: 16px; padding: 20px;
-            box-shadow: var(--shadow); margin-bottom: 15px; border: var(--glass-border);
-            font-size: 1.1rem; line-height: 1.6; direction: ltr; text-align: left;
-            position: relative;
+        #timer-bar { 
+            height: 4px; background: var(--accent); width: 100%; 
+            margin-bottom: 8px; border-radius: 2px; display: none; 
+            transition: width 1s linear; 
         }
 
-        .option-row {
-            background: rgba(255,255,255,0.4); border: 1px solid rgba(0,0,0,0.1);
-            padding: 12px 15px; margin-bottom: 8px; border-radius: 12px;
-            cursor: pointer; direction: ltr; text-align: left; display: flex; justify-content: space-between;
-        }
-        .option-row:hover { background: rgba(255,255,255,0.8); transform: translateX(5px); }
-        .option-row.correct { background: var(--success); color: white; border-color: var(--success); }
-        .option-row.wrong { background: var(--accent); color: white; border-color: var(--accent); }
-
-        .key-hint { 
-            background: rgba(0,0,0,0.1); width: 24px; height: 24px; 
-            border-radius: 50%; display: flex; justify-content: center; align-items: center;
-            font-size: 0.75rem; font-weight: bold;
-        }
-
-        /* Bottom Bar */
-        .bottom-nav {
-            margin-top: auto; padding-top: 10px;
+        .q-text { font-size: 1.1em; line-height: 1.5; direction: ltr; text-align: left; }
+        
+        .option {
+            background: rgba(255,255,255,0.5); border: 1px solid rgba(0,0,0,0.1);
+            padding: 10px; margin-bottom: 6px; border-radius: var(--radius);
+            cursor: pointer; direction: ltr; text-align: left; font-size: 0.95em;
             display: flex; justify-content: space-between; align-items: center;
         }
-
-        .btn-modern {
-            background: var(--primary); color: white; border: none;
-            padding: 10px 20px; border-radius: 30px; font-weight: bold;
-            cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            display: flex; align-items: center; gap: 5px;
+        .option:hover { background: rgba(255,255,255,0.8); border-color: var(--primary); }
+        .option.correct { background: rgba(46, 204, 113, 0.25); border-color: #2ecc71; }
+        .option.wrong { background: rgba(231, 76, 60, 0.25); border-color: #e74c3c; }
+        
+        .key-hint { 
+            font-size: 0.7em; color: var(--txt-sec); border: 1px solid rgba(0,0,0,0.1);
+            padding: 1px 5px; border-radius: 4px; min-width: 20px; text-align: center;
         }
-        .btn-modern:hover { transform: translateY(-2px); filter: brightness(1.1); }
-        .btn-sec { background: var(--text-sec); }
-        .btn-success { background: var(--success); }
 
-        /* Modals */
-        .modal-overlay {
+        /* --- Modals --- */
+        .modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6); backdrop-filter: blur(5px);
-            z-index: 1000; display: none; justify-content: center; align-items: center;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(2px); z-index: 999;
+            display: none; justify-content: center; align-items: center;
         }
-        .modal-box {
-            background: var(--card-bg); width: 90%; max-width: 400px;
-            border-radius: 20px; padding: 25px; border: var(--glass-border);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.3); text-align: center;
+        .modal-content {
+            background: var(--glass-bg); padding: 20px; border-radius: var(--radius);
+            width: 90%; max-width: 350px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
 
-        /* Utilities */
         .hidden { display: none !important; }
-        .mirror-mode { transform: scaleX(-1); }
 
     </style>
 </head>
-<body data-theme="light" id="body-el">
-
+<body data-theme="light">
 <canvas id="bg-canvas"></canvas>
 
-<div class="container" id="main-container">
-    <header class="glass-panel">
+<div class="container">
+    
+    <!-- HEADER -->
+    <header class="glass-box">
         <div class="logo">
             <h1>MedQuiz Ultimate</h1>
-            <small id="status-txt" style="color:var(--text-sec)">جاري تحميل المكتبة...</small>
+            <small id="status">جاري التحميل...</small>
         </div>
-        <div class="top-btns">
-            <button onclick="shareBot()" title="دعوة صديق">🔗</button>
-            <button onclick="openLeaderboard()" title="المتصدرين">🏆</button>
-            <button onclick="openSettings()" title="الإعدادات">⚙️</button>
+        <div style="display:flex; gap:5px;">
+            <button class="btn btn-icon btn-ghost" onclick="chaosMode()" title="توليد ثيم عشوائي (Chaos)">🎲</button>
+            <button class="btn btn-icon btn-ghost" onclick="shareBot()" title="مشاركة">📤</button>
+            <button class="btn btn-icon btn-ghost" onclick="openSettings()" title="الإعدادات">⚙️</button>
         </div>
     </header>
 
-    <div class="content-wrapper" style="flex-grow:1; display:flex; flex-direction:column; overflow:hidden;">
+    <div style="flex-grow:1; display:flex; flex-direction:column; overflow:hidden;">
         
         <!-- === HOME MENU === -->
         <div id="view-home" class="grid-menu">
-            <div class="menu-card" onclick="startSelection('normal')">
+            <div class="menu-card" onclick="startFlow('normal')">
                 <div class="icon">🚀</div>
-                <h3>بدء الاختبار</h3>
-                <small>اختر دروسك بنفسك</small>
+                <h3>اختبار عادي</h3>
             </div>
-            <div class="menu-card" onclick="startSelection('mistakes')">
-                <div class="icon">⚠️</div>
-                <h3>مراجعة الأخطاء</h3>
-                <small>الدروس التي أخطأت بها</small>
+            
+            <div class="menu-card" style="border-color:var(--accent)" onclick="startFlow('survival')">
+                <div class="icon">🔥</div>
+                <h3>وضع البقاء</h3>
+                <small>خطأ واحد = خسارة</small>
             </div>
-            <div class="menu-card" style="border-color:var(--accent)" onclick="luckyShot()">
+            
+            <div class="menu-card" style="border-color:var(--secondary)" onclick="startFlow('timeAttack')">
+                <div class="icon">⚡</div>
+                <h3>هجوم الوقت</h3>
+                <small>60 ثانية</small>
+            </div>
+
+            <div class="menu-card" style="border-color:#f1c40f" onclick="luckyShot()">
                 <div class="icon">🎁</div>
                 <h3>ضربة حظ</h3>
-                <small>سؤال عشوائي فوراً!</small>
+                <small>سؤال عشوائي فوراً</small>
             </div>
-            <div class="menu-card" style="border-color:var(--primary)" onclick="toggleMirrorMode()">
-                <div class="icon">🔮</div>
-                <h3>وضع المرآة</h3>
-                <small>اقلب الشاشة للتحدي</small>
+
+            <div class="menu-card" onclick="startFlow('mistakes')">
+                <div class="icon">⚠️</div>
+                <h3>أخطائي</h3>
+                <small>راجع نقاط ضعفك</small>
             </div>
-            <div class="menu-card" onclick="startMode('fav')">
+
+            <div class="menu-card" onclick="startFavMode()">
                 <div class="icon">⭐</div>
                 <h3>المفضلة</h3>
-                <small>الاختصار: S</small>
             </div>
+
             <div class="menu-card" onclick="document.getElementById('modal-search').style.display='flex'">
                 <div class="icon">🔍</div>
-                <h3>بحث سريع</h3>
-                <small>بواسطة الـ ID</small>
+                <h3>بحث ID</h3>
             </div>
         </div>
 
         <!-- === SELECTION PANEL === -->
-        <div id="view-select" class="glass-panel hidden" style="height:100%; display:none; flex-direction:column;">
-            <div style="display:flex; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid rgba(0,0,0,0.1); padding-bottom:10px;">
-                <h3 id="step-title" style="margin:0; color:var(--primary)">اختر...</h3>
-                <button class="btn-modern btn-sec" style="padding:5px 15px; font-size:0.8rem;" onclick="goHome()">عودة 🏠</button>
+        <div id="view-select" class="glass-box hidden" style="height:100%; display:none; flex-direction:column;">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(0,0,0,0.1); padding-bottom:5px;">
+                <h3 id="sel-title" style="margin:0; font-size:1em; color:var(--primary);">اختر...</h3>
+                <button class="btn btn-sec" style="font-size:0.75em;" onclick="goHome()">عودة 🏠</button>
             </div>
-
-            <div id="selection-content" class="selection-area"></div>
-
-            <div class="bottom-nav">
-                <button id="btn-all" class="btn-modern btn-sec hidden" onclick="toggleSelectAll()">تحديد الكل</button>
-                <button class="btn-modern" onclick="nextStep()">التالي ➡</button>
+            
+            <div id="sel-content" class="selection-list"></div>
+            
+            <div style="margin-top:auto; padding-top:8px; display:flex; justify-content:space-between; border-top:1px solid rgba(0,0,0,0.05);">
+                <button id="btn-all" class="btn btn-ghost hidden" onclick="toggleAll()">تحديد الكل</button>
+                <button class="btn btn-primary" onclick="nextStep()">التالي ➡</button>
             </div>
         </div>
 
         <!-- === QUIZ VIEW === -->
         <div id="view-quiz" class="quiz-view">
-            <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:0.85rem; color:var(--text-sec);">
-                <span>ID: <b id="q-id">---</b></span>
-                <span id="q-counter">1 / 10</span>
-                <span id="fav-trigger" style="cursor:pointer" onclick="toggleFav()">☆ حفظ</span>
+            <div id="timer-bar"></div>
+            
+            <div style="display:flex; justify-content:space-between; font-size:0.75em; color:var(--txt-sec); margin-bottom:5px; padding:0 5px;">
+                <span>ID: <b id="q-id">---</b> | <span id="q-counter">1/10</span></span>
+                <span id="fav-btn" style="cursor:pointer; font-size:1.2em;" onclick="toggleFav()">☆</span>
             </div>
 
-            <div class="q-card">
-                <div style="font-size:0.8rem; color:var(--primary); margin-bottom:5px;" id="q-crumb">Path</div>
-                <div id="q-text">Loading...</div>
+            <div class="glass-box">
+                <div id="q-crumb" style="font-size:0.75em; color:var(--primary); margin-bottom:5px;">Path > Path</div>
+                <div id="q-txt" class="q-text">Loading...</div>
             </div>
 
-            <div id="q-options" style="flex-grow:1; overflow-y:auto;"></div>
+            <div id="q-opts" style="overflow-y:auto; flex-grow:1; padding-right:2px;"></div>
 
-            <div id="q-exp" class="glass-panel" style="display:none; margin-top:10px; background:#e3f2fd; color:#333; direction:ltr;"></div>
+            <div id="q-exp" class="glass-box" style="display:none; margin-top:5px; background:rgba(255,255,255,0.9); color:#000; direction:ltr; font-size:0.9em;"></div>
 
-            <div class="bottom-nav">
-                <button class="btn-modern btn-sec" onclick="goHome()">خروج</button>
-                <button id="btn-next" class="btn-modern hidden" onclick="nextQ()">التالي (Space)</button>
+            <div style="margin-top:8px; display:flex; justify-content:space-between;">
+                <button class="btn btn-sec" onclick="goHome()">خروج</button>
+                <button id="btn-next" class="btn btn-primary hidden" onclick="nextQ()">التالي (Space)</button>
             </div>
         </div>
 
@@ -308,234 +288,233 @@
 
 <!-- === MODALS === -->
 <!-- Settings -->
-<div id="modal-settings" class="modal-overlay" onclick="if(event.target==this) this.style.display='none'">
-    <div class="modal-box">
+<div id="modal-settings" class="modal" onclick="if(event.target==this) this.style.display='none'">
+    <div class="modal-content">
         <h3>⚙️ الإعدادات</h3>
-        <p>🎨 اختر الثيم:</p>
-        <div class="options-grid" style="justify-content:center; margin-bottom:15px;">
-            <button class="select-btn" onclick="setAppTheme('light')">☀️ Light</button>
-            <button class="select-btn" onclick="setAppTheme('dark')">🌑 Dark</button>
-            <button class="select-btn" onclick="setAppTheme('midnight')">🌌 Midnight</button>
-            <button class="select-btn" onclick="setAppTheme('cyberpunk')">🤖 Cyber</button>
-            <button class="select-btn" onclick="setAppTheme('ocean')">🌊 Ocean</button>
+        <p style="font-size:0.9em; margin-bottom:5px;">اختر الثيم:</p>
+        <div class="select-grid" style="justify-content:center; margin-bottom:15px;">
+            <button class="chip" onclick="setTheme('light')">Light</button>
+            <button class="chip" onclick="setTheme('dark')">Dark</button>
+            <button class="chip" onclick="setTheme('neon')">Neon</button>
+            <button class="chip" onclick="setTheme('forest')">Forest</button>
+            <button class="chip" onclick="setTheme('coffee')">Coffee</button>
         </div>
-        <p>✨ الخلفية المتحركة:</p>
-        <div class="options-grid" style="justify-content:center;">
-            <button class="select-btn" onclick="setAnim('bubbles')">🫧 Bubbles</button>
-            <button class="select-btn" onclick="setAnim('particles')">✨ Particles</button>
-            <button class="select-btn" onclick="setAnim('none')">🚫 None</button>
-        </div>
-        <br>
-        <button class="btn-modern" style="width:100%" onclick="document.getElementById('modal-settings').style.display='none'">إغلاق</button>
-    </div>
-</div>
-
-<!-- Leaderboard -->
-<div id="modal-lb" class="modal-overlay" onclick="if(event.target==this) this.style.display='none'">
-    <div class="modal-box">
-        <h3 style="color:#f1c40f">🏆 لوحة الصدارة</h3>
-        <input type="text" id="p-name" placeholder="اسمك" style="padding:10px; width:100%; border-radius:10px; border:1px solid #ccc; margin-bottom:10px;">
-        <button class="btn-modern" style="width:100%" onclick="submitScore()">تسجيل نقاطي (<span id="my-xp">0</span>)</button>
-        <div id="lb-list" style="margin-top:15px; text-align:left; max-height:200px; overflow-y:auto; font-size:0.9rem;"></div>
+        
+        <p style="font-size:0.9em; margin-bottom:5px;">حجم الخط:</p>
+        <input type="range" min="12" max="22" value="14" style="width:100%" oninput="document.documentElement.style.setProperty('--font-size', this.value+'px')">
+        
+        <br><br>
+        <button class="btn btn-primary" style="width:100%" onclick="document.getElementById('modal-settings').style.display='none'">إغلاق</button>
     </div>
 </div>
 
 <!-- Search -->
-<div id="modal-search" class="modal-overlay" onclick="if(event.target==this) this.style.display='none'">
-    <div class="modal-box">
-        <h3>بحث برقم السؤال</h3>
-        <input type="number" id="s-inp" style="padding:10px; width:100%; border-radius:10px; margin:15px 0;" placeholder="ID...">
-        <button class="btn-modern" onclick="doSearch()">بحث</button>
+<div id="modal-search" class="modal" onclick="if(event.target==this) this.style.display='none'">
+    <div class="modal-content">
+        <h3>🔍 بحث سريع</h3>
+        <input type="number" id="search-inp" style="width:100%; padding:10px; margin:15px 0; border:1px solid #ccc; border-radius:5px;" placeholder="أدخل رقم السؤال (ID)">
+        <button class="btn btn-primary" onclick="doSearch()">بحث</button>
     </div>
 </div>
 
 <script>
-    // --- Config & State ---
+    // --- Config & Firebase ---
     const CONFIG = {
-        files: 'questions_list.json',
-        firebase: {
-            apiKey: "AIzaSyDEZFJmcXK2LxYAZ-Yjv_M1HbC6zi_qilg",
-            authDomain: "exambotdb.firebaseapp.com",
-            databaseURL: "https://exambotdb-default-rtdb.firebaseio.com",
-            projectId: "exambotdb",
-            storageBucket: "exambotdb.firebasestorage.app",
-            messagingSenderId: "950600562980",
-            appId: "1:950600562980:web:f993c22d45e5cfdd3d9bb1"
-        }
+        firebase: { apiKey: "AIzaSyDEZFJmcXK2LxYAZ-Yjv_M1HbC6zi_qilg", authDomain: "exambotdb.firebaseapp.com", databaseURL: "https://exambotdb-default-rtdb.firebaseio.com", projectId: "exambotdb", storageBucket: "exambotdb.firebasestorage.app", messagingSenderId: "950600562980", appId: "1:950600562980:web:f993c22d45e5cfdd3d9bb1" }
     };
-
     firebase.initializeApp(CONFIG.firebase);
-    const db = firebase.database();
 
-    let allQs = [], activePool = [], quizQ = [], qIdx = 0;
-    let user = { xp: parseInt(localStorage.getItem('xp')||0), mistakes: JSON.parse(localStorage.getItem('mis')||'[]'), fav: JSON.parse(localStorage.getItem('fav')||'[]') };
+    // --- State ---
+    let allQs=[], activePool=[], quiz=[], qIdx=0, flowMode='normal';
+    let user = { 
+        mistakes: JSON.parse(localStorage.getItem('mistakes')||'[]'), 
+        fav: JSON.parse(localStorage.getItem('fav')||'[]') 
+    };
     let sel = { term:null, subj:null, lessons:[], chapters:[] };
-    let currStep = '';
-    let animationType = localStorage.getItem('anim') || 'bubbles';
-    let currentTheme = localStorage.getItem('theme') || 'light';
+    let currStep = '', timerInt;
 
     // --- Init ---
     window.onload = async () => {
-        setAppTheme(currentTheme);
         initCanvas();
         try {
-            const list = await (await fetch(CONFIG.files)).json();
+            // Load List
+            const list = await (await fetch('questions_list.json')).json();
             for(let f of list) {
                 try {
+                    // Load Files
                     let d = await (await fetch(`Questions/${f}`)).json();
                     allQs.push(...d.questions.map(q => ({
-                        ...q,
-                        term: q.term || d.meta.source,
-                        subject: q.subject || d.meta.subject,
-                        lesson: q.lesson || d.meta.lesson,
+                        ...q, 
+                        term: q.term || d.meta.source, 
+                        subject: q.subject || d.meta.subject, 
+                        lesson: q.lesson || d.meta.lesson, 
                         chapter: q.chapter || "General"
                     })));
-                } catch(e){}
+                } catch(e){ console.warn("Failed to load", f); }
             }
-            document.getElementById('status-txt').innerText = `${allQs.length} سؤال متاح`;
-        } catch(e) { document.getElementById('status-txt').innerText = "خطأ في التحميل"; }
+            document.getElementById('status').innerText = `${allQs.length} سؤال متاح`;
+        } catch(e) { document.getElementById('status').innerText = "خطأ في تحميل الملفات"; }
     };
 
-    // --- Navigation & Selection ---
-    function switchView(id) {
-        ['view-home','view-select','view-quiz'].forEach(v => document.getElementById(v).classList.add('hidden')); // fix: add hidden class instead of display:none directly to toggle flex
-        document.getElementById(id).classList.remove('hidden');
-        if(id === 'view-select' || id === 'view-quiz') document.getElementById(id).style.display = 'flex';
-        else document.getElementById(id).style.display = 'grid'; // Home is grid
-    }
-
-    function startSelection(mode) {
-        activePool = mode === 'mistakes' ? allQs.filter(q => user.mistakes.includes(q.id)) : allQs;
-        if(!activePool.length) return alert("لا توجد أسئلة متاحة في هذا الوضع");
-        sel = {term:null, subj:null, lessons:[], chapters:[]};
+    // --- Flow Logic ---
+    function startFlow(mode) {
+        flowMode = mode;
+        activePool = (mode === 'mistakes') ? allQs.filter(q => user.mistakes.includes(q.id)) : allQs;
+        
+        if(!activePool.length) return alert('لا توجد أسئلة متاحة في هذا الوضع.');
+        
+        sel = { term:null, subj:null, lessons:[], chapters:[] };
         renderStep('term');
     }
 
     function renderStep(step) {
         currStep = step;
-        switchView('view-select');
-        const cont = document.getElementById('selection-content');
-        cont.innerHTML = '';
-        const title = document.getElementById('step-title');
-        const btnAll = document.getElementById('btn-all');
-        btnAll.classList.add('hidden');
+        document.getElementById('view-home').classList.add('hidden');
+        document.getElementById('view-select').style.display = 'flex';
+        document.getElementById('view-select').classList.remove('hidden');
 
-        // Logic
-        let items = [], isMulti = false;
-        const sub = activePool.filter(q => 
+        const cont = document.getElementById('sel-content'); cont.innerHTML='';
+        const title = document.getElementById('sel-title');
+        const btnAll = document.getElementById('btn-all'); btnAll.classList.add('hidden');
+
+        // Filter Data
+        const subset = activePool.filter(q => 
             (!sel.term || q.term === sel.term) && 
             (!sel.subj || q.subject === sel.subj)
         );
 
-        if(step === 'term') { title.innerText = "1. اختر الترم"; items = [...new Set(sub.map(q=>q.term))]; }
-        else if(step === 'subj') { title.innerText = "2. اختر المادة"; items = [...new Set(sub.map(q=>q.subject))]; }
-        else if(step === 'lesson') { 
-            title.innerText = "3. اختر الدروس"; isMulti = true; btnAll.classList.remove('hidden');
-            items = [...new Set(sub.map(q=>q.lesson))]; 
-        }
-        else if(step === 'chapter') {
-            title.innerText = "4. اختر الشباتر"; isMulti = true; btnAll.classList.remove('hidden');
-            // Grouping Logic requested
-            sel.lessons.forEach(l => {
-                const header = document.createElement('div');
-                header.className = 'section-header';
-                header.innerText = `📂 ${l}`;
-                cont.appendChild(header);
+        let items=[], isMulti=false;
 
-                const grid = document.createElement('div');
-                grid.className = 'options-grid';
-                
-                const chapters = [...new Set(sub.filter(q => q.lesson === l).map(q => q.chapter))];
-                chapters.forEach(ch => {
-                    const btn = createSelBtn(ch, sub.filter(q=>q.lesson===l && q.chapter===ch).length, true);
-                    grid.appendChild(btn);
-                });
+        if(step === 'term') { title.innerText='1. اختر الترم'; items=[...new Set(subset.map(q=>q.term))]; }
+        else if(step === 'subj') { title.innerText='2. اختر المادة'; items=[...new Set(subset.map(q=>q.subject))]; }
+        else if(step === 'lesson') { title.innerText='3. اختر الدرس'; items=[...new Set(subset.map(q=>q.lesson))]; isMulti=true; }
+        else if(step === 'chapter') {
+            title.innerText='4. اختر الشابتر'; isMulti=true;
+            // Grouped Rendering
+            sel.lessons.forEach(l => {
+                const head = document.createElement('div'); head.className='section-header'; head.innerText = `📂 ${l}`;
+                cont.appendChild(head);
+                const grid = document.createElement('div'); grid.className='select-grid';
+                const chaps = [...new Set(subset.filter(q=>q.lesson===l).map(q=>q.chapter))];
+                chaps.forEach(ch => grid.appendChild(createChip(ch, true)));
                 cont.appendChild(grid);
             });
-            return; // Custom rendering done
+            btnAll.classList.remove('hidden');
+            return;
         }
 
-        // Render standard grid
-        const grid = document.createElement('div');
-        grid.className = 'options-grid';
-        items.sort().forEach(i => grid.appendChild(createSelBtn(i, 0, isMulti))); // Count logic simplified
+        const grid = document.createElement('div'); grid.className='select-grid';
+        items.sort().forEach(i => grid.appendChild(createChip(i, isMulti)));
         cont.appendChild(grid);
+        if(isMulti) btnAll.classList.remove('hidden');
     }
 
-    function createSelBtn(val, count, isMulti) {
-        const btn = document.createElement('div');
-        btn.className = 'select-btn';
-        btn.innerHTML = `<span>${val}</span>`;
-        btn.dataset.val = val;
-        btn.onclick = () => {
-            if(isMulti) btn.classList.toggle('selected');
+    function createChip(val, isMulti) {
+        const c = document.createElement('div'); c.className='chip'; c.innerText=val; c.dataset.val=val;
+        c.onclick = () => {
+            if(isMulti) c.classList.toggle('selected');
             else {
-                if(currStep === 'term') { sel.term = val; renderStep('subj'); }
-                else if(currStep === 'subj') { sel.subj = val; renderStep('lesson'); }
+                if(currStep==='term') { sel.term=val; renderStep('subj'); }
+                else if(currStep==='subj') { sel.subj=val; renderStep('lesson'); }
             }
         };
-        return btn;
+        return c;
     }
 
     function nextStep() {
-        const allSel = Array.from(document.querySelectorAll('.select-btn.selected'));
+        const selChips = Array.from(document.querySelectorAll('.chip.selected'));
         if(currStep === 'lesson') {
-            if(!allSel.length) return alert('اختر درساً واحداً على الأقل');
-            sel.lessons = allSel.map(b=>b.dataset.val);
+            if(!selChips.length) return alert('اختر درساً واحداً على الأقل');
+            sel.lessons = selChips.map(c=>c.dataset.val);
             renderStep('chapter');
         } else if(currStep === 'chapter') {
-            if(!allSel.length) return alert('اختر شابتر واحداً على الأقل');
-            sel.chapters = allSel.map(b=>b.dataset.val);
-            const final = activePool.filter(q => sel.term === q.term && sel.subj === q.subject && sel.lessons.includes(q.lesson) && sel.chapters.includes(q.chapter));
+            if(!selChips.length) return alert('اختر شابتر واحداً على الأقل');
+            sel.chapters = selChips.map(c=>c.dataset.val);
+            const final = activePool.filter(q => sel.term===q.term && sel.subj===q.subject && sel.lessons.includes(q.lesson) && sel.chapters.includes(q.chapter));
             startQuiz(final);
         }
     }
 
-    function toggleSelectAll() {
-        const btns = document.querySelectorAll('.select-btn');
-        const allSel = Array.from(btns).every(b => b.classList.contains('selected'));
-        btns.forEach(b => allSel ? b.classList.remove('selected') : b.classList.add('selected'));
+    function toggleAll() {
+        const chips = document.querySelectorAll('.chip');
+        const all = Array.from(chips).every(c=>c.classList.contains('selected'));
+        chips.forEach(c => all ? c.classList.remove('selected') : c.classList.add('selected'));
     }
 
-    // --- Quiz Logic ---
+    // --- Quiz Engine ---
     function startQuiz(arr) {
-        if(!arr.length) return alert("لا أسئلة");
-        quizQ = arr.sort(()=>0.5-Math.random());
+        if(!arr.length) return alert('لا توجد أسئلة تطابق اختيارك.');
+        quiz = arr.sort(()=>0.5-Math.random());
         qIdx = 0;
-        switchView('view-quiz');
+
+        document.getElementById('view-select').classList.add('hidden');
+        document.getElementById('view-home').classList.add('hidden');
+        document.getElementById('view-quiz').style.display = 'flex';
+
+        if(flowMode === 'timeAttack') startTimer();
+        else document.getElementById('timer-bar').style.display='none';
+
         renderQ();
+    }
+
+    function luckyShot() {
+        if(!allQs.length) return;
+        flowMode = 'normal';
+        const randQ = allQs[Math.floor(Math.random()*allQs.length)];
+        quiz = [randQ]; qIdx=0;
+        document.getElementById('view-home').classList.add('hidden');
+        document.getElementById('view-quiz').style.display = 'flex';
+        document.getElementById('timer-bar').style.display='none';
+        renderQ();
+    }
+
+    function startFavMode() {
+        const pool = allQs.filter(q => user.fav.includes(q.id));
+        if(!pool.length) return alert('المفضلة فارغة.');
+        flowMode = 'normal'; startQuiz(pool);
+    }
+
+    let timeRem = 60;
+    function startTimer() {
+        timeRem = 60;
+        const bar = document.getElementById('timer-bar');
+        bar.style.display='block'; bar.style.width='100%';
+        clearInterval(timerInt);
+        timerInt = setInterval(() => {
+            timeRem--;
+            bar.style.width = (timeRem/60*100) + '%';
+            if(timeRem<=0) { clearInterval(timerInt); alert("انتهى الوقت!"); goHome(); }
+        }, 1000);
     }
 
     let answered = false;
     function renderQ() {
         answered = false;
-        const q = quizQ[qIdx];
+        const q = quiz[qIdx];
         document.getElementById('q-id').innerText = q.id;
-        document.getElementById('q-counter').innerText = `${qIdx+1} / ${quizQ.length}`;
+        document.getElementById('q-counter').innerText = `${qIdx+1}/${quiz.length}`;
         document.getElementById('q-crumb').innerText = `${q.lesson} > ${q.chapter}`;
-        document.getElementById('q-text').innerText = q.question;
+        document.getElementById('q-txt').innerText = q.question;
         updateFavIcon();
 
-        const opts = document.getElementById('q-options');
-        opts.innerHTML = '';
+        const opts = document.getElementById('q-opts'); opts.innerHTML='';
         document.getElementById('q-exp').style.display='none';
         document.getElementById('btn-next').classList.add('hidden');
 
         const keys = ['A','B','C','D','E'];
-        q.options.forEach((opt, i) => {
-            const d = document.createElement('div');
-            d.className = 'option-row';
-            d.innerHTML = `<span>${opt}</span><span class="key-hint">${keys[i]}</span>`;
-            d.onclick = () => solve(i);
+        q.options.forEach((o, i) => {
+            const d = document.createElement('div'); d.className='option';
+            d.innerHTML = `<span>${o}</span><span class="key-hint">${keys[i]}</span>`;
+            d.onclick = () => check(i);
             opts.appendChild(d);
         });
     }
 
-    function solve(idx) {
+    function check(idx) {
         if(answered) return;
         answered = true;
-        const q = quizQ[qIdx];
-        const divs = document.querySelectorAll('.option-row');
+        const q = quiz[qIdx];
+        const divs = document.querySelectorAll('.option');
         
         divs[q.correct_option_id].classList.add('correct');
         divs[q.correct_option_id].querySelector('.key-hint').innerText = '✓';
@@ -543,154 +522,111 @@
         if(idx !== q.correct_option_id) {
             divs[idx].classList.add('wrong');
             divs[idx].querySelector('.key-hint').innerText = '✗';
-            if(!user.mistakes.includes(q.id)) { user.mistakes.push(q.id); localStorage.setItem('mis', JSON.stringify(user.mistakes)); }
+            
+            if(!user.mistakes.includes(q.id)) { user.mistakes.push(q.id); localStorage.setItem('mistakes', JSON.stringify(user.mistakes)); }
+
+            if(flowMode === 'survival') {
+                clearInterval(timerInt);
+                setTimeout(() => { alert("💥 خسرت! وضع البقاء لا يرحم."); goHome(); }, 500);
+                return;
+            }
         } else {
-            user.xp += 10; localStorage.setItem('xp', user.xp);
-            user.mistakes = user.mistakes.filter(x=>x!==q.id); localStorage.setItem('mis', JSON.stringify(user.mistakes));
+            user.mistakes = user.mistakes.filter(x=>x!==q.id); 
+            localStorage.setItem('mistakes', JSON.stringify(user.mistakes));
         }
 
         const exp = document.getElementById('q-exp');
-        exp.style.display = 'block';
-        exp.innerHTML = `<b>توضيح:</b> ${q.explanation || 'لا يوجد شرح متاح.'}`;
+        exp.style.display='block';
+        exp.innerHTML = `<b>Explanation:</b> ${q.explanation || 'No explanation.'}`;
         document.getElementById('btn-next').classList.remove('hidden');
     }
 
     function nextQ() {
-        if(qIdx < quizQ.length-1) { qIdx++; renderQ(); }
+        if(qIdx < quiz.length-1) { qIdx++; renderQ(); }
         else { alert("انتهى الاختبار!"); goHome(); }
     }
 
     // --- Features ---
-    function luckyShot() {
-        if(!allQs.length) return;
-        const rand = allQs[Math.floor(Math.random() * allQs.length)];
-        quizQ = [rand]; qIdx=0; switchView('view-quiz'); renderQ();
-    }
-
-    function toggleMirrorMode() {
-        document.getElementById('main-container').classList.toggle('mirror-mode');
-    }
-
-    function shareBot() {
-        const url = "https://t.me/share/url?url=" + encodeURIComponent("جرب هذا البوت الطبي الرائع! يحتوي على بنك أسئلة شامل ونظام اختبارات ذكي. @Heailloo_bot");
-        window.open(url, '_blank');
+    function chaosMode() {
+        const rc = () => `hsl(${Math.random()*360}, ${40+Math.random()*60}%, ${20+Math.random()*60}%)`;
+        const root = document.documentElement;
+        
+        root.style.setProperty('--bg-grad', `linear-gradient(${Math.random()*360}deg, ${rc()}, ${rc()})`);
+        root.style.setProperty('--glass-bg', `rgba(${Math.random()*255},${Math.random()*255},${Math.random()*255}, 0.8)`);
+        root.style.setProperty('--primary', rc());
+        root.style.setProperty('--secondary', rc());
+        root.style.setProperty('--radius', `${Math.random()*25}px`);
+        root.style.setProperty('--btn-pad', `${5+Math.random()*10}px ${10+Math.random()*10}px`);
+        
+        // Random Fonts
+        const f = ['cursive', 'monospace', 'serif', 'sans-serif', 'fantasy'];
+        root.style.setProperty('--font-fam', f[Math.floor(Math.random()*f.length)]);
     }
 
     function toggleFav() {
-        const id = quizQ[qIdx].id;
+        const id = quiz[qIdx].id;
         if(user.fav.includes(id)) user.fav = user.fav.filter(x=>x!==id);
         else user.fav.push(id);
         localStorage.setItem('fav', JSON.stringify(user.fav));
         updateFavIcon();
     }
-
     function updateFavIcon() {
-        const el = document.getElementById('fav-trigger');
-        const isFav = user.fav.includes(quizQ[qIdx].id);
-        el.innerText = isFav ? "★ محفوظ" : "☆ حفظ";
-        el.style.color = isFav ? "#f1c40f" : "var(--text-sec)";
+        const el = document.getElementById('fav-btn');
+        el.innerText = user.fav.includes(quiz[qIdx].id) ? "★" : "☆";
+        el.style.color = user.fav.includes(quiz[qIdx].id) ? "orange" : "var(--txt-sec)";
     }
 
-    // --- Search & Settings ---
     function doSearch() {
-        const id = parseInt(document.getElementById('s-inp').value);
+        const id = parseInt(document.getElementById('search-inp').value);
         const q = allQs.find(x=>x.id===id);
-        if(q) { quizQ=[q]; qIdx=0; switchView('view-quiz'); renderQ(); document.getElementById('modal-search').style.display='none'; }
-        else alert("غير موجود");
+        if(q) {
+            quiz=[q]; qIdx=0; flowMode='normal';
+            document.getElementById('view-home').classList.add('hidden');
+            document.getElementById('view-quiz').style.display='flex';
+            document.getElementById('modal-search').style.display='none';
+            document.getElementById('timer-bar').style.display='none';
+            renderQ();
+        } else alert('غير موجود');
     }
 
-    function setAppTheme(t) {
-        document.body.setAttribute('data-theme', t);
-        localStorage.setItem('theme', t);
-    }
-    
-    function setAnim(type) {
-        animationType = type;
-        localStorage.setItem('anim', type);
-        initCanvas(); // restart
+    function goHome() {
+        clearInterval(timerInt);
+        document.getElementById('view-quiz').style.display='none';
+        document.getElementById('view-select').classList.add('hidden');
+        document.getElementById('view-home').classList.remove('hidden');
     }
 
-    // --- Leaderboard ---
-    function openLeaderboard() {
-        document.getElementById('modal-lb').style.display = 'flex';
-        document.getElementById('my-xp').innerText = user.xp;
-        const list = document.getElementById('lb-list');
-        list.innerHTML = 'جاري التحميل...';
-        db.ref('scores').orderByChild('xp').limitToLast(10).once('value', snap => {
-            let d = []; snap.forEach(c => d.push(c.val()));
-            d.reverse();
-            list.innerHTML = d.map((p,i) => `<div style="padding:5px; border-bottom:1px solid #eee;"><b>#${i+1} ${p.name}</b>: ${p.xp} XP</div>`).join('');
-        });
-    }
-
-    function submitScore() {
-        const name = document.getElementById('p-name').value;
-        if(!name) return alert("اكتب اسمك");
-        db.ref('scores/'+name.replace(/\./g,'_')).set({name, xp: user.xp, time: Date.now()});
-        alert("تم الحفظ");
-        openLeaderboard();
-    }
-
-    function goHome() { switchView('view-home'); }
+    function setTheme(t) { document.body.setAttribute('data-theme', t); }
     function openSettings() { document.getElementById('modal-settings').style.display='flex'; }
+    function shareBot() { window.open('https://t.me/share/url?url='+encodeURIComponent('جرب @Heailloo_bot'), '_blank'); }
 
     // --- Shortcuts ---
     document.addEventListener('keydown', e => {
-        if(document.getElementById('view-quiz').classList.contains('hidden')) return;
+        if(document.getElementById('view-quiz').style.display === 'none') return;
         const k = e.key.toLowerCase();
         const map = {'a':0,'b':1,'c':2,'d':3,'e':4};
-        if(map[k]!==undefined) solve(map[k]);
+        if(map[k]!==undefined) check(map[k]);
         if(k==='s') toggleFav();
         if((k===' '||k==='enter') && answered) { e.preventDefault(); nextQ(); }
     });
 
-    // --- Canvas Animation System (The "Wow" Factor) ---
+    // --- Background Animation ---
     function initCanvas() {
-        const canvas = document.getElementById('bg-canvas');
-        const ctx = canvas.getContext('2d');
-        let w, h, particles = [];
+        const c = document.getElementById('bg-canvas'), x = c.getContext('2d');
+        let w, h, p=[];
+        const r = () => { w=c.width=window.innerWidth; h=c.height=window.innerHeight; };
+        window.onresize=r; r();
         
-        const resize = () => { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; };
-        window.onresize = resize; resize();
-
-        class Particle {
-            constructor() {
-                this.reset();
-            }
-            reset() {
-                this.x = Math.random() * w;
-                this.y = Math.random() * h;
-                this.size = Math.random() * 5 + 1;
-                this.speedX = Math.random() * 1 - 0.5;
-                this.speedY = Math.random() * 1 - 0.5;
-                this.alpha = Math.random() * 0.5 + 0.1;
-            }
-            update() {
-                this.x += this.speedX; this.y += this.speedY;
-                if(animationType === 'bubbles') this.y -= 0.5; // Bubble up
-                if(this.x < 0 || this.x > w || this.y < 0 || this.y > h) this.reset();
-            }
-            draw() {
-                ctx.fillStyle = `rgba(100, 100, 255, ${this.alpha})`;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI*2);
-                ctx.fill();
-            }
+        class P {
+            constructor(){this.init();}
+            init(){this.x=Math.random()*w; this.y=Math.random()*h; this.r=Math.random()*4; this.vx=(Math.random()-.5); this.vy=(Math.random()-.5);}
+            up(){this.x+=this.vx; this.y+=this.vy; if(this.x<0||this.x>w||this.y<0||this.y>h)this.init();}
+            dr(){x.beginPath(); x.arc(this.x,this.y,this.r,0,7); x.fillStyle='rgba(100,100,200,0.2)'; x.fill();}
         }
-
-        if(animationType === 'none') { ctx.clearRect(0,0,w,h); return; }
-
-        particles = Array(50).fill().map(() => new Particle());
-
-        function animate() {
-            if(animationType === 'none') return;
-            ctx.clearRect(0, 0, w, h);
-            particles.forEach(p => { p.update(); p.draw(); });
-            requestAnimationFrame(animate);
-        }
-        animate();
+        p = Array(60).fill().map(()=>new P());
+        function anim(){ x.clearRect(0,0,w,h); p.forEach(i=>{i.up();i.dr()}); requestAnimationFrame(anim); }
+        anim();
     }
-
 </script>
 </body>
 </html>
