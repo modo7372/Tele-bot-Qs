@@ -7,43 +7,60 @@ const Data = {
             for(let f of list) {
                 try {
                     let d = await (await fetch(`Questions/${f}`)).json();
-                    // Normalize data structure
                     State.allQ.push(...d.questions.map(q => ({
-                        ...q, 
-                        term: q.term || d.meta.source, 
-                        subject: q.subject || d.meta.subject, 
-                        lesson: q.lesson || d.meta.lesson, 
-                        chapter: q.chapter || "General"
+                        ...q, term: q.term || d.meta.source, subject: q.subject || d.meta.subject, 
+                        lesson: q.lesson || d.meta.lesson, chapter: q.chapter || "General"
                     })));
-                } catch(e){ console.warn("Skipped file:", f); }
+                } catch(e){}
             }
-            document.getElementById('db-status').innerText = `${State.allQ.length} Questions Loaded`;
-        } catch(e){ 
-            document.getElementById('db-status').innerText = "Load Error"; 
-        }
+            document.getElementById('db-status').innerText = `${State.allQ.length} Questions`;
+        } catch(e){ document.getElementById('db-status').innerText = "Err"; }
     },
 
-    saveLeaderboard: (score, total) => {
-        // Only save if context exists
-        if(State.sel.term && State.sel.subj) {
-            const context = `${State.sel.term}_${State.sel.subj}`.replace(/[.#$/\[\]]/g, "_");
-            const userId = State.user.id;
-            const userName = State.user.first_name || "Unknown";
-            
-            // Console Log as requested
-            console.log(`📡 Stats Upload: UserID=${userId}, Name=${userName}, ScoreAdded=${score}, Context=${context}`);
+    // --- Sync Logic (Cloud + Local) ---
+    initSync: async () => {
+        // Load from LocalStorage first (Fast)
+        const local = {
+            mistakes: JSON.parse(localStorage.getItem('mistakes')||'[]'),
+            archive: JSON.parse(localStorage.getItem('archive')||'[]'),
+            fav: JSON.parse(localStorage.getItem('fav')||'[]'),
+            settings: JSON.parse(localStorage.getItem('settings')||'{}')
+        };
+        State.localData = local;
 
-            const ref = db.ref(`ranks/${context}/${userId}`);
-            
-            // Transaction to update score safely
-            ref.transaction((currentData) => {
-                if (currentData === null) {
-                    return { score: score, name: userName };
-                } else {
-                    // Handle legacy data (if it was just a number)
-                    let oldScore = (typeof currentData === 'object') ? currentData.score : currentData;
-                    return { score: oldScore + score, name: userName };
+        // Try Cloud Storage (Async)
+        try {
+            Telegram.WebApp.CloudStorage.getItem('medquiz_data', (err, val) => {
+                if(!err && val) {
+                    const cloud = JSON.parse(val);
+                    // Merge strategies could be complex, for now, Cloud overwrites Local if exists
+                    State.localData = { ...local, ...cloud };
+                    // Apply loaded settings immediately
+                    if(State.localData.settings.theme) UI.setTheme(State.localData.settings.theme);
                 }
+            });
+        } catch(e) { console.log("Cloud storage not available"); }
+    },
+
+    saveData: () => {
+        const str = JSON.stringify(State.localData);
+        localStorage.setItem('mistakes', JSON.stringify(State.localData.mistakes));
+        localStorage.setItem('archive', JSON.stringify(State.localData.archive));
+        localStorage.setItem('fav', JSON.stringify(State.localData.fav));
+        localStorage.setItem('settings', JSON.stringify(State.localData.settings));
+        
+        // Sync to Cloud
+        try {
+            Telegram.WebApp.CloudStorage.setItem('medquiz_data', str);
+        } catch(e){}
+    },
+
+    saveLeaderboard: (score) => {
+        if(State.sel.term && State.sel.subj) {
+            const ctx = `${State.sel.term}_${State.sel.subj}`.replace(/[.#$/\[\]]/g, "_");
+            db.ref(`ranks/${ctx}/${State.user.id}`).transaction((curr) => {
+                let old = (curr && typeof curr==='object') ? curr.score : (curr||0);
+                return { score: old + score, name: State.user.first_name };
             });
         }
     }
