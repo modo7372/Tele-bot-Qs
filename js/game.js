@@ -4,12 +4,17 @@ let tInt; let cStep = '';
 
 const Game = {
     triggerHaptic: (type) => {
+        // فحص الإصدار + الإعدادات لتجنب الأخطاء
         if(State.localData.settings?.haptic === false) return;
-        try {
-            if(type === 'success') Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-            else if(type === 'error') Telegram.WebApp.HapticFeedback.notificationOccurred('error');
-            else Telegram.WebApp.HapticFeedback.selectionChanged();
-        } catch(e){}
+        
+        // Check if Haptic is supported (Requires v6.1+)
+        if (window.Telegram.WebApp.isVersionAtLeast && window.Telegram.WebApp.isVersionAtLeast('6.1')) {
+            try {
+                if(type === 'success') Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+                else if(type === 'error') Telegram.WebApp.HapticFeedback.notificationOccurred('error');
+                else Telegram.WebApp.HapticFeedback.selectionChanged();
+            } catch(e){}
+        }
     },
 
     // --- Randomizer Feature ---
@@ -24,16 +29,17 @@ const Game = {
         const fonts = ["'Cairo', sans-serif", "'Segoe UI', Tahoma, sans-serif", "'Courier New', monospace"];
         UI.updateStyleVar('--font-fam', fonts[Math.floor(Math.random() * fonts.length)]);
 
-        // 3. Random Mode Warning
+        // 3. Random Mode Selection
         const modes = ['normal', 'survival', 'timeAttack'];
         const rndMode = modes[Math.floor(Math.random() * modes.length)];
         
-        // Show Toast
-        alert(`🎲 Chaos Mode!\nTheme: ${rndTheme.name}\nMode: ${rndMode.toUpperCase()}\nSelect a subject now!`);
+        // ❌ تم حذف الـ Alert المزعج من هنا
+        // alert(`🎲 Chaos Mode!\nTheme: ${rndTheme.name}\nMode: ${rndMode.toUpperCase()}\nSelect a subject now!`);
         
         // Prepare to start
         State.mode = rndMode;
-        // Just reset selection to force user to pick subject with new style
+        
+        // إعادة التوجيه للاختيار فوراً بصمت
         Game.startFlow(rndMode); 
     },
 
