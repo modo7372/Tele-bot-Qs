@@ -3,8 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MedQuiz Master Suite</title>
+    <title>MedQuiz Master</title>
     
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#6c5ce7">
+
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -16,7 +19,7 @@
     <div id="lock-screen">
         <div class="lock-icon">🔒</div>
         <h3>التطبيق محمي</h3>
-        <p>يجب فتح الرابط عبر تليجرام ومن حساب مصرح له.</p>
+        <p>يجب فتح الرابط عبر تليجرام.</p>
         <p id="debug-id" class="debug-text"></p>
     </div>
 
@@ -30,7 +33,7 @@
                 <small id="db-status">جاري التحميل...</small>
             </div>
             <div class="header-actions">
-                <button class="btn btn-ghost" onclick="UI.toggleZenMode()" title="وضع التركيز">👁️</button>
+                <button class="btn btn-ghost" onclick="Game.randomizeExperience()" title="وضع الفوضى">🎲</button>
                 <button class="btn btn-ghost" onclick="UI.shareApp()" title="مشاركة">📤</button>
                 <button class="btn btn-ghost" onclick="UI.openModal('m-set')" title="الإعدادات">⚙️</button>
             </div>
@@ -60,7 +63,6 @@
                 <div class="menu-card" onclick="Game.startFlow('mistakes')">
                     <div class="icon">⚠️</div>
                     <h3>أخطائي</h3>
-                    <small>النشطة</small>
                 </div>
                 <div class="menu-card" onclick="UI.openModal('m-archive')">
                     <div class="icon">📚</div>
@@ -118,45 +120,33 @@
             
             <div class="set-group">
                 <label>الثيم (Theme)</label>
-                <div class="chip-group">
-                    <button class="chip" onclick="UI.setTheme('light')">☀️ فاتح</button>
-                    <button class="chip" onclick="UI.setTheme('dark')">🌑 داكن</button>
-                    <button class="chip" onclick="UI.setTheme('midnight')">🌌 ليلي</button>
+                <div class="chip-group scrollable-chips" id="theme-list">
+                    </div>
+            </div>
+
+            <div class="set-group">
+                <label>الصوت والاهتزاز</label>
+                <div class="toggle-row">
+                    <span>🔊 تأثيرات صوتية</span>
+                    <input type="checkbox" id="chk-sound" onchange="UI.toggleSound(this.checked)">
+                </div>
+                <div class="toggle-row" style="margin-top:5px;">
+                    <span>📳 اهتزاز (Haptics)</span>
+                    <input type="checkbox" id="chk-haptic" onchange="UI.toggleHaptic(this.checked)">
                 </div>
             </div>
 
             <div class="set-group">
-                <label>الخط (Font)</label>
+                <label>الخط</label>
                 <select id="set-font" onchange="UI.updateStyleVar('--font-fam', this.value)">
-                    <option value="'Segoe UI', Tahoma, sans-serif">Default</option>
+                    <option value="'Segoe UI', Tahoma, sans-serif">System</option>
                     <option value="'Cairo', sans-serif">Cairo</option>
                     <option value="'Tajawal', sans-serif">Tajawal</option>
-                    <option value="Times New Roman">Serif</option>
+                    <option value="'Courier New', monospace">Hacker</option>
                 </select>
             </div>
 
-            <div class="set-group">
-                <label>حجم الخط</label>
-                <input type="range" min="12" max="20" value="14" oninput="UI.updateStyleVar('--font-size', this.value+'px')">
-            </div>
-
-            <div class="set-group">
-                <label>حجم الأزرار</label>
-                <div class="chip-group">
-                    <button class="chip" onclick="UI.updateStyleVar('--btn-pad', '6px 12px')">صغير</button>
-                    <button class="chip" onclick="UI.updateStyleVar('--btn-pad', '10px 20px')">كبير</button>
-                </div>
-            </div>
-
-            <div class="set-group">
-                <label>الخلفية</label>
-                <div class="toggle-row">
-                    <span>تحريك الفقاقيع</span>
-                    <input type="checkbox" checked onchange="UI.toggleBgAnim(this.checked)">
-                </div>
-            </div>
-
-            <button class="btn btn-primary full-width" onclick="UI.closeModal('m-set')">حفظ وإغلاق</button>
+            <button class="btn btn-primary full-width" onclick="UI.closeModal('m-set')">حفظ</button>
         </div>
     </div>
 
@@ -188,12 +178,10 @@
     <div id="m-archive" class="modal" onclick="if(event.target==this) UI.closeModal('m-archive')">
         <div class="modal-content">
             <h3>📚 الأرشيف</h3>
-            <p>الأسئلة هنا دائمة.</p>
             <div class="modal-actions vertical">
                 <button class="btn btn-primary" onclick="Game.startArchive('quiz')">✍️ إعادة اختبار</button>
                 <button class="btn btn-sec" onclick="Game.startArchive('view')">👁️ وضع المذاكرة</button>
             </div>
-            <button class="btn btn-ghost" onclick="UI.closeModal('m-archive')">إغلاق</button>
         </div>
     </div>
 
@@ -206,9 +194,5 @@
     </div>
 
     <script src="js/config.js"></script>
-    <script src="js/ui.js"></script>
-    <script src="js/data.js"></script>
-    <script src="js/game.js"></script>
-    <script src="js/main.js"></script>
-</body>
+    <script src="js/data.js"></script> <script src="js/ui.js"></script>   <script src="js/game.js"></script> <script src="js/main.js"></script> </body>
 </html>
