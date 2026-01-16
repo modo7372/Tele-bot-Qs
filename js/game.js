@@ -18,7 +18,6 @@ const Game = {
         UI.setTheme(rndTheme.id);
         const fonts = ["'Cairo', sans-serif", "'Segoe UI', Tahoma, sans-serif", "'Courier New', monospace"];
         UI.updateStyleVar('--font-fam', fonts[Math.floor(Math.random() * fonts.length)]);
-        // Randomize Bubble Shapes
         UI.initAnim(true); 
     },
 
@@ -43,36 +42,28 @@ const Game = {
     startGlobalRandom: () => {
         let sub = Game.getFilteredPool();
         if(!sub.length) return alert('القائمة فارغة حسب الفلتر المختار.');
-        
         State.mode = 'normal';
         sub.sort(() => 0.5 - Math.random());
-        
-        // Random count between 1 and 50
         const count = Math.floor(Math.random() * 50) + 1;
-        
         State.quiz = sub.slice(0, count);
         State.qIdx = 0; State.score = 0;
         UI.showView('v-quiz');
-        UI.initAnim(true); // Random bubbles
+        UI.initAnim(true); 
         Game.renderQ();
     },
 
     startFlow: (m) => {
         State.mode = m;
         State.pool = Game.getFilteredPool();
-        
         if(m === 'mistakes') {
             State.pool = State.pool.filter(q => State.localData.mistakes.includes(q.id));
         }
-
         if(!State.pool.length) return alert('لا توجد أسئلة متاحة في هذا الوضع/الفلتر.');
-        
         State.sel = {term:null, subj:null, lessons:[], chapters:[], limit:'All'};
         Game.renderSel('term');
     },
 
     startRandomInMode: () => {
-        // Filter based on current selection stage
         let sub = State.pool;
         if(State.sel.term) sub = sub.filter(q => q.term === State.sel.term);
         if(State.sel.subj) sub = sub.filter(q => q.subject === State.sel.subj);
@@ -83,7 +74,6 @@ const Game = {
         
         const count = Math.floor(Math.random() * 50) + 1;
         State.quiz = sub.slice(0, count);
-        
         State.qIdx = 0; State.score = 0;
         UI.showView('v-quiz');
         UI.initAnim(true);
@@ -101,10 +91,8 @@ const Game = {
         btnRnd.classList.add('hidden');
         document.getElementById('btn-all').classList.add('hidden');
 
-        // Filter pool logic
         const sub = State.pool.filter(q => (!State.sel.term||q.term===State.sel.term) && (!State.sel.subj||q.subject===State.sel.subj));
         
-        // Show Random Button in all steps except limit
         if(step !== 'limit' && step !== 'term') {
              btnRnd.classList.remove('hidden');
              btnRnd.innerText = `🎲 امتحان عشوائي من الـ ${titleMap[step] || step} الحالية`;
@@ -117,7 +105,6 @@ const Game = {
         else if(step==='lesson') { items=[...new Set(sub.map(q=>q.lesson))]; isMulti=true; }
         else if(step==='chapter') {
             isMulti=true;
-            // Group by Lesson
             State.sel.lessons.forEach(l => {
                 const lDiv = document.createElement('div');
                 lDiv.innerHTML = `<div style="position:sticky; top:0; background:var(--glass-bg); padding:5px; z-index:2; font-weight:bold; color:var(--primary); border-bottom:1px solid #ccc;">📂 ${l}</div>`;
@@ -188,18 +175,9 @@ const Game = {
 
     prevSel: () => {
         if(cStep === 'term') UI.goHome();
-        else if(cStep === 'subj') { 
-            State.sel.term = null; // Clear term selection logic if needed, but mainly re-render
-            Game.renderSel('term'); 
-        }
-        else if(cStep === 'lesson') {
-            State.sel.subj = null; // FIX: Clear Subject to allow re-selecting another subject
-            Game.renderSel('subj');
-        }
-        else if(cStep === 'chapter') {
-            // Keep Lessons selected, just go back to view
-            Game.renderSel('lesson');
-        }
+        else if(cStep === 'subj') { State.sel.term = null; Game.renderSel('term'); }
+        else if(cStep === 'lesson') { State.sel.subj = null; Game.renderSel('subj'); }
+        else if(cStep === 'chapter') { Game.renderSel('lesson'); }
         else if(cStep === 'limit') Game.renderSel('chapter');
     },
 
@@ -245,8 +223,6 @@ const Game = {
         clearTimeout(autoNavTimer);
         Game.answered = false;
         const q = State.quiz[State.qIdx];
-        
-        // Handle Saved Answers in view mode
         const isAlreadyAnswered = State.localData.archive.includes(q.id) && State.mode === 'view_mode';
         
         document.getElementById('q-id').innerText = q.id;
@@ -266,9 +242,7 @@ const Game = {
             opts.appendChild(d);
         });
         
-        if(isAlreadyAnswered) {
-             Game.answer(q.correct_option_id, true);
-        }
+        if(isAlreadyAnswered) { Game.answer(q.correct_option_id, true); }
     },
 
     answer: (idx, sim=false) => {
@@ -281,25 +255,16 @@ const Game = {
         const isCorrect = (idx === q.correct_option_id);
 
         if(isCorrect) {
-            if(!sim) {
-                State.score++;
-                AudioSys.playSuccess();
-                Game.triggerHaptic('success');
-            }
+            if(!sim) { State.score++; AudioSys.playSuccess(); Game.triggerHaptic('success'); }
             State.localData.mistakes = State.localData.mistakes.filter(x=>x!==q.id);
         } else {
             divs[idx].classList.add('wrong');
-            if(!sim) {
-                AudioSys.playError();
-                Game.triggerHaptic('error');
-            }
+            if(!sim) { AudioSys.playError(); Game.triggerHaptic('error'); }
             if(!State.localData.mistakes.includes(q.id)) State.localData.mistakes.push(q.id);
             if(State.mode==='survival') { setTimeout(()=>alert('🔥 Game Over'), 500); return UI.goHome(); }
         }
         
-        // Add to Archive (All attempted questions)
         if(!State.localData.archive.includes(q.id)) State.localData.archive.push(q.id);
-        
         Data.saveData();
 
         if(q.explanation) {
@@ -309,28 +274,20 @@ const Game = {
         }
         document.getElementById('btn-next').classList.remove('hidden');
 
-        // Auto Advance Logic (Only if not sim/view mode)
         if(!sim && State.mode !== 'view_mode') {
             const delay = isCorrect ? 1000 : 3000;
-            autoNavTimer = setTimeout(() => {
-                if(Game.answered) Game.nextQ();
-            }, delay);
+            autoNavTimer = setTimeout(() => { if(Game.answered) Game.nextQ(); }, delay);
         }
     },
 
     navQ: (dir) => {
-        if(dir === -1 && State.qIdx > 0) {
-             State.qIdx--; Game.renderQ();
-        } else if (dir === 1) {
-             Game.nextQ();
-        }
+        if(dir === -1 && State.qIdx > 0) { State.qIdx--; Game.renderQ(); } 
+        else if (dir === 1) { Game.nextQ(); }
     },
 
     nextQ: () => { 
-        if(State.qIdx < State.quiz.length-1){ 
-            State.qIdx++; Game.renderQ(); 
-            Game.triggerHaptic('selection');
-        } else Game.finishQuiz(); 
+        if(State.qIdx < State.quiz.length-1){ State.qIdx++; Game.renderQ(); Game.triggerHaptic('selection'); } 
+        else Game.finishQuiz(); 
     },
 
     startTimer: () => {
