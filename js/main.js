@@ -1,47 +1,43 @@
 // js/main.js
 
-window.onload = () => {
-    // 1. UI Init
+window.onload = async () => {
+    // 1. Data & Sync
+    await Data.initSync();
+
+    // 2. UI Init
     UI.init();
 
-    // 2. Telegram Auth
+    // 3. Telegram & Security
     const tg = window.Telegram.WebApp; 
-    tg.ready();
-    tg.expand();
-    
-    // Get User Data
-    State.user = tg.initDataUnsafe.user || {id: 0, first_name: "Guest", username: "Guest"};
+    tg.ready(); tg.expand();
+    State.user = tg.initDataUnsafe.user || {id: 0, first_name: "Guest"};
 
-    // 3. Security Check
     if(ENABLE_SECURITY) {
         if(ALLOWED_IDS.includes(State.user.id)) {
             document.getElementById('lock-screen').style.display = 'none';
             document.getElementById('app-wrap').style.display = 'flex';
         } else {
             document.getElementById('debug-id').innerText = `ID: ${State.user.id}`;
-            return; // Stop here
+            return;
         }
     } else {
         document.getElementById('lock-screen').style.display = 'none';
         document.getElementById('app-wrap').style.display = 'flex';
     }
 
-    // 4. Load Data
+    // 4. Load Qs
     Data.loadQuestions();
 
-    // 5. Global Key Bindings
+    // 5. PWA Registration
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js').then(()=>console.log('SW Ready')).catch(()=>console.log('SW Fail'));
+    }
+
+    // 6. Keys
     document.addEventListener('keydown', e => {
         if(document.getElementById('v-quiz').classList.contains('hidden')) return;
-        
-        const k = e.key.toLowerCase();
-        // Options A, B, C, D
-        const m = {'a':0, 'b':1, 'c':2, 'd':3, 'e':4}; 
-        if(m[k] !== undefined) Game.answer(m[k]);
-        
-        // Next on Enter/Space if answered
-        if((k === ' ' || k === 'enter') && Game.answered) { 
-            e.preventDefault(); 
-            Game.nextQ(); 
-        }
+        const k = e.key.toLowerCase(), m = {'a':0,'b':1,'c':2,'d':3,'e':4}; 
+        if(m[k]!==undefined) Game.answer(m[k]);
+        if((k===' '||k==='enter') && Game.answered) { e.preventDefault(); Game.nextQ(); }
     });
 };
