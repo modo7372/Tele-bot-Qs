@@ -1,4 +1,4 @@
-const CACHE_NAME = 'medquiz-v1';
+const CACHE_NAME = 'medquiz-v2';
 const ASSETS = [
   './',
   './index.html',
