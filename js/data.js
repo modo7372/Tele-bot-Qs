@@ -1,5 +1,3 @@
-// js/data.js
-
 const Data = {
     loadQuestions: async () => {
         try {
