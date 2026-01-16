@@ -2,640 +2,213 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>MedQuiz Master Suite</title>
     
-    <!-- Firebase & Telegram SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-    <style>
-        :root {
-            /* --- Themes & Variables --- */
-            --bg-grad: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
-            --glass-bg: rgba(255, 255, 255, 0.9);
-            --glass-border: 1px solid rgba(0, 0, 0, 0.05);
-            --txt-main: #2d3436; --txt-sec: #636e72;
-            --primary: #6c5ce7; --secondary: #00cec9; --accent: #ff7675; --success: #00b894;
-            --radius: 10px; 
-            --btn-pad: 6px 14px; /* Compact Buttons */
-            --font-size: 14px; 
-            --font-fam: 'Segoe UI', Tahoma, sans-serif;
-            --shadow: 0 4px 15px rgba(0,0,0,0.08);
-        }
-
-        /* Dark Theme */
-        [data-theme="dark"] {
-            --bg-grad: linear-gradient(135deg, #232526 0%, #414345 100%);
-            --glass-bg: rgba(40, 40, 40, 0.95);
-            --glass-border: 1px solid rgba(255, 255, 255, 0.1);
-            --txt-main: #dfe6e9; --txt-sec: #b2bec3;
-            --primary: #a29bfe; --secondary: #81ecec;
-        }
-
-        * { box-sizing: border-box; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); outline: none; -webkit-tap-highlight-color: transparent; }
-        body { margin: 0; padding: 0; font-family: var(--font-fam); font-size: var(--font-size); color: var(--txt-main); background: var(--bg-grad); height: 100vh; overflow: hidden; user-select: none; }
-        
-        #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
-
-        /* Security Overlay */
-        #lock-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #1e1e1e; color: #fff; z-index: 99999;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            text-align: center;
-        }
-
-        /* Main Layout */
-        .container { position: relative; z-index: 1; width: 100%; height: 100%; max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; padding: 10px; }
-
-        .glass-box {
-            background: var(--glass-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-            border: var(--glass-border); border-radius: var(--radius); box-shadow: var(--shadow);
-            padding: 12px; margin-bottom: 8px;
-        }
-
-        /* Buttons */
-        .btn {
-            border: none; cursor: pointer; padding: var(--btn-pad); border-radius: var(--radius);
-            font-weight: 600; font-size: 0.9em; display: inline-flex; align-items: center; justify-content: center; gap: 5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1); white-space: nowrap;
-        }
-        .btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
-        .btn:active { transform: scale(0.96); }
-        .btn-primary { background: var(--primary); color: #fff; }
-        .btn-sec { background: transparent; border: 1px solid var(--txt-sec); color: var(--txt-sec); }
-        .btn-ghost { background: rgba(0,0,0,0.05); color: var(--txt-main); padding: 8px; border-radius: 50%; aspect-ratio: 1; }
-
-        /* Grid Menu */
-        .grid-menu { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; padding: 5px; flex-grow: 1; overflow-y: auto; }
-        .menu-card {
-            background: var(--glass-bg); border-radius: var(--radius); border: var(--glass-border);
-            box-shadow: var(--shadow); padding: 15px; text-align: center; cursor: pointer;
-            display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100px;
-        }
-        .menu-card:hover { border-color: var(--primary); transform: translateY(-4px); }
-        .menu-card .icon { font-size: 1.8em; margin-bottom: 5px; }
-        .menu-card h3 { margin: 0; font-size: 0.9em; }
-        .menu-card small { font-size: 0.7em; color: var(--txt-sec); margin-top: 2px; }
-
-        /* Selection */
-        .sel-list { flex-grow: 1; overflow-y: auto; padding: 5px; }
-        .sec-head { font-size: 0.8em; font-weight: bold; color: var(--primary); margin: 10px 0 5px; background: rgba(0,0,0,0.04); padding: 4px 8px; border-radius: 4px; }
-        .chip-grid { display: flex; flex-wrap: wrap; gap: 6px; }
-        .chip {
-            background: rgba(255,255,255,0.5); border: 1px solid rgba(0,0,0,0.1); color: var(--txt-main);
-            padding: 6px 10px; border-radius: 20px; cursor: pointer; font-size: 0.85em; flex: 1 1 auto; text-align: center;
-        }
-        .chip.selected { background: var(--primary); color: #fff; border-color: var(--primary); }
-
-        /* Quiz UI */
-        .quiz-view { display: none; flex-direction: column; height: 100%; }
-        #timer-bar { height: 4px; background: var(--accent); width: 100%; margin-bottom: 5px; border-radius: 2px; display: none; transition: width 1s linear; }
-        .q-text { font-size: 1.1em; line-height: 1.5; direction: ltr; text-align: left; }
-        .opt {
-            background: rgba(255,255,255,0.5); border: 1px solid rgba(0,0,0,0.1); padding: 10px; margin-bottom: 6px;
-            border-radius: var(--radius); cursor: pointer; direction: ltr; text-align: left; display: flex; justify-content: space-between; align-items: center;
-        }
-        .opt:hover { border-color: var(--primary); background: rgba(255,255,255,0.8); }
-        .opt.correct { background: rgba(46, 204, 113, 0.2); border-color: #2ecc71; }
-        .opt.wrong { background: rgba(231, 76, 60, 0.2); border-color: #e74c3c; }
-
-        /* Modals */
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 999; display: none; justify-content: center; align-items: center; backdrop-filter: blur(3px); }
-        .modal-content { background: var(--glass-bg); padding: 25px; border-radius: var(--radius); width: 90%; max-width: 350px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
-
-        .hidden { display: none !important; }
-    </style>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body data-theme="light">
 
-<!-- 🔒 Security -->
-<div id="lock-screen">
-    <div style="font-size:3rem; margin-bottom:10px;">🔒</div>
-    <h3>التطبيق محمي</h3>
-    <p>يجب فتح الرابط عبر تليجرام ومن حساب مصرح له.</p>
-    <p id="debug-id" style="color:#666; font-size:0.8em; margin-top:20px;"></p>
-</div>
+    <div id="lock-screen">
+        <div class="lock-icon">🔒</div>
+        <h3>التطبيق محمي</h3>
+        <p>يجب فتح الرابط عبر تليجرام ومن حساب مصرح له.</p>
+        <p id="debug-id" class="debug-text"></p>
+    </div>
 
-<canvas id="bg-canvas"></canvas>
+    <canvas id="bg-canvas"></canvas>
 
-<div class="container" id="app-wrap" style="display:none;">
-    
-    <!-- Header -->
-    <header class="glass-box" style="display:flex; justify-content:space-between; align-items:center;">
-        <div>
-            <h1 style="margin:0; font-size:1.1rem; color:var(--primary);">MedQuiz Master</h1>
-            <small id="db-status" style="font-size:0.7em; opacity:0.7;">Loading...</small>
-        </div>
-        <div style="display:flex; gap:5px;">
-            <button class="btn btn-ghost" onclick="chaosMode()" title="Chaos">🎲</button>
-            <button class="btn btn-ghost" onclick="shareApp()" title="Share">📤</button>
-            <button class="btn btn-ghost" onclick="openSettings()" title="Settings">⚙️</button>
-        </div>
-    </header>
-
-    <!-- Content Area -->
-    <div style="flex-grow:1; display:flex; flex-direction:column; overflow:hidden;">
+    <div class="container" id="app-wrap" style="display:none;">
         
-        <!-- 1. Home Grid -->
-        <div id="v-home" class="grid-menu">
-            <div class="menu-card" onclick="startFlow('normal')">
-                <div class="icon">🚀</div>
-                <h3>اختبار عادي</h3>
+        <header class="glass-box app-header">
+            <div>
+                <h1 class="app-title">MedQuiz Master</h1>
+                <small id="db-status">جاري التحميل...</small>
             </div>
-            <div class="menu-card" style="border-color:var(--secondary);" onclick="startFlow('survival')">
-                <div class="icon">🔥</div>
-                <h3>وضع البقاء</h3>
-                <small>خطأ = خسارة</small>
+            <div class="header-actions">
+                <button class="btn btn-ghost" onclick="UI.toggleZenMode()" title="وضع التركيز">👁️</button>
+                <button class="btn btn-ghost" onclick="UI.shareApp()" title="مشاركة">📤</button>
+                <button class="btn btn-ghost" onclick="UI.openModal('m-set')" title="الإعدادات">⚙️</button>
             </div>
-            <div class="menu-card" style="border-color:var(--accent);" onclick="startFlow('timeAttack')">
-                <div class="icon">⚡</div>
-                <h3>هجوم الوقت</h3>
-                <small>60 ثانية</small>
-            </div>
-            <div class="menu-card" style="border-color:#f1c40f;" onclick="luckyShot()">
-                <div class="icon">🎁</div>
-                <h3>ضربة حظ</h3>
-                <small>سؤال عشوائي</small>
-            </div>
-            <div class="menu-card" onclick="startFlow('mistakes')">
-                <div class="icon">⚠️</div>
-                <h3>أخطائي (النشطة)</h3>
-                <small>تحذف عند الحل</small>
-            </div>
-            <div class="menu-card" style="border:1px solid var(--txt-main);" onclick="openArchiveModal()">
-                <div class="icon">📚</div>
-                <h3>أرشيف الأخطاء</h3>
-                <small>سجل دائم</small>
-            </div>
-            <div class="menu-card" onclick="startFavMode()">
-                <div class="icon">⭐</div>
-                <h3>المفضلة</h3>
-            </div>
-            <div class="menu-card" onclick="openSearchModal()">
-                <div class="icon">🔍</div>
-                <h3>بحث ID</h3>
-            </div>
-        </div>
+        </header>
 
-        <!-- 2. Selection Funnel -->
-        <div id="v-select" class="glass-box hidden" style="height:100%; display:none; flex-direction:column;">
-            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(0,0,0,0.1); padding-bottom:5px;">
-                <h3 id="sel-head" style="margin:0; font-size:1em; color:var(--primary);">Select</h3>
-                <button class="btn btn-sec" style="font-size:0.75em;" onclick="goHome()">Back</button>
-            </div>
-            <div id="sel-body" class="sel-list"></div>
-            <div style="margin-top:auto; padding-top:8px; display:flex; justify-content:space-between;">
-                <button id="btn-all" class="btn btn-sec hidden" style="border:none;" onclick="toggleAll()">Select All</button>
-                <button class="btn btn-primary" onclick="nextSel()">Next ➡</button>
-            </div>
-        </div>
-
-        <!-- 3. Quiz Interface -->
-        <div id="v-quiz" class="quiz-view">
-            <div id="timer-bar"></div>
-            <div style="display:flex; justify-content:space-between; font-size:0.8em; color:var(--txt-sec); margin-bottom:5px; padding:0 5px;">
-                <span>ID:<b id="q-id">--</b> | <b id="q-idx">1/10</b></span>
-                <span id="fav-icon" style="cursor:pointer; font-size:1.2em;" onclick="toggleFav()">☆</span>
-            </div>
-
-            <div class="glass-box" style="flex-shrink:0;">
-                <div id="q-path" style="font-size:0.7em; color:var(--primary); margin-bottom:5px;">Term > Subject</div>
-                <div id="q-txt" class="q-text">Loading Question...</div>
-            </div>
-
-            <div id="q-opts" style="overflow-y:auto; flex-grow:1; padding-right:2px;"></div>
+        <main id="main-content">
             
-            <div id="q-exp" class="glass-box" style="display:none; margin-top:5px; background:rgba(255,255,255,0.95); color:#000; direction:ltr; font-size:0.9em; flex-shrink:0;"></div>
+            <div id="v-home" class="grid-menu">
+                <div class="menu-card" onclick="Game.startFlow('normal')">
+                    <div class="icon">🚀</div>
+                    <h3>اختبار عادي</h3>
+                </div>
+                <div class="menu-card survival" onclick="Game.startFlow('survival')">
+                    <div class="icon">🔥</div>
+                    <h3>وضع البقاء</h3>
+                    <small>خطأ = خسارة</small>
+                </div>
+                <div class="menu-card time-attack" onclick="Game.startFlow('timeAttack')">
+                    <div class="icon">⚡</div>
+                    <h3>هجوم الوقت</h3>
+                    <small>60 ثانية</small>
+                </div>
+                <div class="menu-card lucky" onclick="Game.luckyShot()">
+                    <div class="icon">🎁</div>
+                    <h3>ضربة حظ</h3>
+                </div>
+                <div class="menu-card" onclick="Game.startFlow('mistakes')">
+                    <div class="icon">⚠️</div>
+                    <h3>أخطائي</h3>
+                    <small>النشطة</small>
+                </div>
+                <div class="menu-card" onclick="UI.openModal('m-archive')">
+                    <div class="icon">📚</div>
+                    <h3>الأرشيف</h3>
+                </div>
+                <div class="menu-card" onclick="Game.startFavMode()">
+                    <div class="icon">⭐</div>
+                    <h3>المفضلة</h3>
+                </div>
+                <div class="menu-card" onclick="UI.openModal('m-search')">
+                    <div class="icon">🔍</div>
+                    <h3>بحث ID</h3>
+                </div>
+            </div>
 
-            <div style="margin-top:8px; display:flex; justify-content:space-between; flex-shrink:0;">
-                <button class="btn btn-sec" onclick="finishQuiz()">إنهاء</button>
-                <button id="btn-next" class="btn btn-primary hidden" onclick="nextQ()">التالي</button>
+            <div id="v-select" class="glass-box hidden column-flex">
+                <div class="view-header">
+                    <h3 id="sel-head">اختر</h3>
+                    <button class="btn btn-sec btn-sm" onclick="UI.goHome()">رجوع</button>
+                </div>
+                <div id="sel-body" class="sel-list"></div>
+                <div class="view-footer">
+                    <button id="btn-all" class="btn btn-sec hidden" onclick="Game.toggleAll()">الكل</button>
+                    <button class="btn btn-primary" onclick="Game.nextSel()">التالي ➡</button>
+                </div>
+            </div>
+
+            <div id="v-quiz" class="quiz-view hidden">
+                <div id="timer-bar"></div>
+                <div class="quiz-meta">
+                    <span>ID:<b id="q-id">--</b> | <b id="q-idx">--</b></span>
+                    <span id="fav-icon" onclick="Game.toggleFav()">☆</span>
+                </div>
+
+                <div class="glass-box question-box">
+                    <div id="q-path">Term > Subject</div>
+                    <div id="q-txt" class="q-text">...</div>
+                </div>
+
+                <div id="q-opts" class="options-list"></div>
+                
+                <div id="q-exp" class="glass-box explanation hidden"></div>
+
+                <div class="quiz-footer">
+                    <button class="btn btn-sec" onclick="Game.finishQuiz()">إنهاء</button>
+                    <button id="btn-next" class="btn btn-primary hidden" onclick="Game.nextQ()">التالي</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="m-set" class="modal" onclick="if(event.target==this) UI.closeModal('m-set')">
+        <div class="modal-content settings-modal">
+            <h3>⚙️ التخصيص</h3>
+            
+            <div class="set-group">
+                <label>الثيم (Theme)</label>
+                <div class="chip-group">
+                    <button class="chip" onclick="UI.setTheme('light')">☀️ فاتح</button>
+                    <button class="chip" onclick="UI.setTheme('dark')">🌑 داكن</button>
+                    <button class="chip" onclick="UI.setTheme('midnight')">🌌 ليلي</button>
+                </div>
+            </div>
+
+            <div class="set-group">
+                <label>الخط (Font)</label>
+                <select id="set-font" onchange="UI.updateStyleVar('--font-fam', this.value)">
+                    <option value="'Segoe UI', Tahoma, sans-serif">Default</option>
+                    <option value="'Cairo', sans-serif">Cairo</option>
+                    <option value="'Tajawal', sans-serif">Tajawal</option>
+                    <option value="Times New Roman">Serif</option>
+                </select>
+            </div>
+
+            <div class="set-group">
+                <label>حجم الخط</label>
+                <input type="range" min="12" max="20" value="14" oninput="UI.updateStyleVar('--font-size', this.value+'px')">
+            </div>
+
+            <div class="set-group">
+                <label>حجم الأزرار</label>
+                <div class="chip-group">
+                    <button class="chip" onclick="UI.updateStyleVar('--btn-pad', '6px 12px')">صغير</button>
+                    <button class="chip" onclick="UI.updateStyleVar('--btn-pad', '10px 20px')">كبير</button>
+                </div>
+            </div>
+
+            <div class="set-group">
+                <label>الخلفية</label>
+                <div class="toggle-row">
+                    <span>تحريك الفقاقيع</span>
+                    <input type="checkbox" checked onchange="UI.toggleBgAnim(this.checked)">
+                </div>
+            </div>
+
+            <button class="btn btn-primary full-width" onclick="UI.closeModal('m-set')">حفظ وإغلاق</button>
+        </div>
+    </div>
+
+    <div id="m-rank" class="modal">
+        <div class="modal-content">
+            <h2 class="text-primary">🏆 الترتيب</h2>
+            <div class="rank-body">
+                <p id="rank-topic">Topic</p>
+                <h1 id="rank-val">#--</h1>
+                <p id="rank-user-name" style="font-weight:bold; color:var(--primary);"></p>
+                <p id="rank-total">جاري الحساب...</p>
+            </div>
+            <button class="btn btn-primary" onclick="UI.closeModal('m-rank')">إغلاق</button>
+        </div>
+    </div>
+
+    <div id="m-score" class="modal">
+        <div class="modal-content">
+            <h2>🏁 النتيجة</h2>
+            <h1 id="sc-val">0%</h1>
+            <p id="sc-txt">--</p>
+            <div class="modal-actions">
+                <button class="btn btn-sec" onclick="Game.showRank()">عرض ترتيبي</button>
+                <button class="btn btn-primary" onclick="UI.closeModal('m-score'); UI.goHome();">خروج</button>
             </div>
         </div>
-
     </div>
-</div>
 
-<!-- MODALS -->
-<!-- Rank Modal -->
-<div id="m-rank" class="modal">
-    <div class="modal-content">
-        <h2 style="color:var(--primary)">🏆 ترتيبك</h2>
-        <div style="margin:15px 0;">
-            <p id="rank-topic" style="font-size:0.8em; color:var(--txt-sec);">Endocrine</p>
-            <h1 id="rank-val" style="font-size:3em; margin:0;">#--</h1>
-            <p id="rank-total">جاري الحساب...</p>
-        </div>
-        <button class="btn btn-primary" onclick="closeModal('m-rank')">إغلاق</button>
-    </div>
-</div>
-
-<!-- Score Modal -->
-<div id="m-score" class="modal">
-    <div class="modal-content">
-        <h2>🏁 النتيجة</h2>
-        <h1 id="sc-val" style="font-size:3em; margin:10px 0;">0%</h1>
-        <p id="sc-txt">--</p>
-        <div style="display:flex; gap:10px; justify-content:center; margin-top:15px;">
-            <button class="btn btn-sec" onclick="showRank()">عرض ترتيبي</button>
-            <button class="btn btn-primary" onclick="closeModal('m-score'); goHome();">خروج</button>
+    <div id="m-archive" class="modal" onclick="if(event.target==this) UI.closeModal('m-archive')">
+        <div class="modal-content">
+            <h3>📚 الأرشيف</h3>
+            <p>الأسئلة هنا دائمة.</p>
+            <div class="modal-actions vertical">
+                <button class="btn btn-primary" onclick="Game.startArchive('quiz')">✍️ إعادة اختبار</button>
+                <button class="btn btn-sec" onclick="Game.startArchive('view')">👁️ وضع المذاكرة</button>
+            </div>
+            <button class="btn btn-ghost" onclick="UI.closeModal('m-archive')">إغلاق</button>
         </div>
     </div>
-</div>
 
-<!-- Archive Modal -->
-<div id="m-archive" class="modal">
-    <div class="modal-content">
-        <h3>📚 الأرشيف</h3>
-        <p>الأسئلة هنا لا تحذف أبداً.</p>
-        <div style="display:flex; flex-direction:column; gap:8px; margin-top:10px;">
-            <button class="btn btn-primary" onclick="startArchive('quiz')">✍️ إعادة اختبار</button>
-            <button class="btn btn-sec" onclick="startArchive('view')">👁️ وضع المذاكرة (عرض الحل)</button>
+    <div id="m-search" class="modal" onclick="if(event.target==this) UI.closeModal('m-search')">
+        <div class="modal-content">
+            <h3>بحث ID</h3>
+            <input type="number" id="inp-search" class="inp-box" placeholder="رقم السؤال...">
+            <button class="btn btn-primary full-width" onclick="Game.execSearch()">بحث</button>
         </div>
-        <br>
-        <button class="btn btn-ghost" onclick="closeModal('m-archive')">إغلاق</button>
     </div>
-</div>
 
-<!-- Settings & Search -->
-<div id="m-set" class="modal" onclick="if(event.target==this) closeModal('m-set')">
-    <div class="modal-content">
-        <h3>⚙️ الإعدادات</h3>
-        <p>الثيم:</p>
-        <div style="display:flex; gap:5px; justify-content:center;">
-            <button class="chip" onclick="setTheme('light')">Light</button>
-            <button class="chip" onclick="setTheme('dark')">Dark</button>
-        </div>
-        <br>
-        <button class="btn btn-primary" onclick="closeModal('m-set')">تم</button>
-    </div>
-</div>
-
-<div id="m-search" class="modal" onclick="if(event.target==this) closeModal('m-search')">
-    <div class="modal-content">
-        <h3>بحث ID</h3>
-        <input type="number" id="inp-search" style="width:100%; padding:10px; margin:15px 0; border:1px solid #ccc; border-radius:5px;">
-        <button class="btn btn-primary" onclick="execSearch()">بحث</button>
-    </div>
-</div>
-
-<script>
-    // ==========================================
-    // 1. CONFIG & SECURITY
-    // ==========================================
-    
-    // 🛑 ALLOWED TELEGRAM IDs
-    const ALLOWED_IDS = [ 5814737296, 2004826495 ]; 
-    
-    // 🛑 TOGGLE SECURITY (Set to true for production)
-    const ENABLE_SECURITY = false; 
-
-    // Firebase
-    const FB_CONF = { apiKey: "AIzaSyDEZFJmcXK2LxYAZ-Yjv_M1HbC6zi_qilg", authDomain: "exambotdb.firebaseapp.com", databaseURL: "https://exambotdb-default-rtdb.firebaseio.com", projectId: "exambotdb", storageBucket: "exambotdb.firebasestorage.app", messagingSenderId: "950600562980", appId: "1:950600562980:web:f993c22d45e5cfdd3d9bb1" };
-    firebase.initializeApp(FB_CONF);
-    const db = firebase.database();
-
-    // User Info
-    let currentUser = { id: 0, name: "User" };
-
-    // ==========================================
-    // 2. INIT & DATA LOADING
-    // ==========================================
-    let allQ=[], pool=[], quiz=[], qIdx=0, score=0, mode='normal';
-    let localData = { 
-        mistakes: JSON.parse(localStorage.getItem('mistakes')||'[]'), 
-        archive: JSON.parse(localStorage.getItem('archive')||'[]'), 
-        fav: JSON.parse(localStorage.getItem('fav')||'[]') 
-    };
-    let sel = { term:null, subj:null, lessons:[], chapters:[], limit:'All' };
-    let cStep = '';
-
-    window.onload = async () => {
-        initAnim(); // Background
-        
-        // Security Check
-        const tg = window.Telegram.WebApp; 
-        tg.ready();
-        currentUser = tg.initDataUnsafe.user || {id: 0, first_name: "Guest"};
-        
-        if(ENABLE_SECURITY) {
-            if(ALLOWED_IDS.includes(currentUser.id)) {
-                document.getElementById('lock-screen').style.display = 'none';
-                document.getElementById('app-wrap').style.display = 'flex';
-            } else {
-                document.getElementById('debug-id').innerText = `ID: ${currentUser.id}`;
-                return; // Stop execution
-            }
-        } else {
-            document.getElementById('lock-screen').style.display = 'none';
-            document.getElementById('app-wrap').style.display = 'flex';
-        }
-
-        // Load Data
-        try {
-            const list = await (await fetch('questions_list.json')).json();
-            for(let f of list) {
-                try {
-                    let d = await (await fetch(`Questions/${f}`)).json();
-                    allQ.push(...d.questions.map(q => ({
-                        ...q, term:q.term||d.meta.source, subject:q.subject||d.meta.subject, lesson:q.lesson||d.meta.lesson, chapter:q.chapter||"General"
-                    })));
-                } catch(e){}
-            }
-            document.getElementById('db-status').innerText = `${allQ.length} Questions`;
-        } catch(e){ document.getElementById('db-status').innerText = "Load Error"; }
-    };
-
-    // ==========================================
-    // 3. SELECTION LOGIC
-    // ==========================================
-    function startFlow(m) {
-        mode = m;
-        pool = (m==='mistakes') ? allQ.filter(q=>localData.mistakes.includes(q.id)) : allQ;
-        if(!pool.length) return alert('القائمة فارغة.');
-        
-        sel = {term:null, subj:null, lessons:[], chapters:[], limit:'All'};
-        renderSel('term');
-    }
-
-    function renderSel(step) {
-        cStep = step;
-        showView('v-select');
-        const list = document.getElementById('sel-body'); list.innerHTML='';
-        document.getElementById('sel-head').innerText = `Select ${step}`;
-        document.getElementById('btn-all').classList.add('hidden');
-
-        const sub = pool.filter(q => (!sel.term||q.term===sel.term) && (!sel.subj||q.subject===sel.subj));
-        let items=[], isMulti=false;
-
-        if(step==='term') items=[...new Set(sub.map(q=>q.term))];
-        else if(step==='subj') items=[...new Set(sub.map(q=>q.subject))];
-        else if(step==='lesson') { items=[...new Set(sub.map(q=>q.lesson))]; isMulti=true; }
-        else if(step==='chapter') {
-            isMulti=true;
-            sel.lessons.forEach(l => {
-                list.innerHTML += `<div class="sec-head">📂 ${l}</div>`;
-                const g = document.createElement('div'); g.className='chip-grid';
-                [...new Set(sub.filter(q=>q.lesson===l).map(q=>q.chapter))].forEach(ch => g.appendChild(createChip(ch, true)));
-                list.appendChild(g);
-            });
-            document.getElementById('btn-all').classList.remove('hidden');
-            return;
-        }
-        else if(step==='limit') {
-            ['10','20','30','All'].forEach(l => {
-                const b = document.createElement('div'); b.className='chip'; b.innerText=l;
-                b.onclick = () => { sel.limit=l; initQuiz(); };
-                list.appendChild(b);
-            });
-            return;
-        }
-
-        const g = document.createElement('div'); g.className='chip-grid';
-        items.sort().forEach(i => g.appendChild(createChip(i, isMulti)));
-        list.appendChild(g);
-        if(isMulti) document.getElementById('btn-all').classList.remove('hidden');
-    }
-
-    function createChip(val, multi) {
-        const c = document.createElement('div'); c.className='chip'; c.innerText=val; c.dataset.val=val;
-        c.onclick = () => {
-            if(multi) c.classList.toggle('selected');
-            else {
-                if(cStep==='term') sel.term=val;
-                else if(cStep==='subj') sel.subj=val;
-                nextSel();
-            }
-        };
-        return c;
-    }
-
-    function nextSel() {
-        const picked = Array.from(document.querySelectorAll('.chip.selected')).map(c=>c.dataset.val);
-        if(cStep==='term') renderSel('subj');
-        else if(cStep==='subj') renderSel('lesson');
-        else if(cStep==='lesson') { if(!picked.length) return alert('Select one'); sel.lessons=picked; renderSel('chapter'); }
-        else if(cStep==='chapter') { if(!picked.length) return alert('Select one'); sel.chapters=picked; renderSel('limit'); }
-    }
-
-    function toggleAll() { document.querySelectorAll('.chip').forEach(c => c.classList.toggle('selected')); }
-
-    // ==========================================
-    // 4. QUIZ LOGIC
-    // ==========================================
-    function initQuiz() {
-        let final = pool.filter(q => sel.term===q.term && sel.subj===q.subject && sel.lessons.includes(q.lesson) && sel.chapters.includes(q.chapter));
-        if(!final.length) return alert('No questions.');
-        
-        final.sort(()=>0.5-Math.random());
-        if(sel.limit!=='All') final = final.slice(0, parseInt(sel.limit));
-        
-        quiz = final; qIdx=0; score=0;
-        showView('v-quiz');
-        if(mode==='time') startTimer(); else document.getElementById('timer-bar').style.display='none';
-        renderQ();
-    }
-
-    // Special Start Methods
-    function luckyShot() { mode='normal'; quiz=[allQ[Math.floor(Math.random()*allQ.length)]]; qIdx=0; showView('v-quiz'); renderQ(); }
-    function startArchive(type) { 
-        const p = allQ.filter(q=>localData.archive.includes(q.id));
-        if(!p.length) return alert('Archive empty');
-        closeModal('m-archive'); mode=(type==='view'?'view_mode':'normal');
-        quiz=p; qIdx=0; showView('v-quiz'); renderQ();
-    }
-    function startFavMode() {
-        const p = allQ.filter(q=>localData.fav.includes(q.id));
-        if(!p.length) return alert('Favorites empty');
-        mode='normal'; quiz=p; qIdx=0; showView('v-quiz'); renderQ();
-    }
-
-    let answered = false;
-    function renderQ() {
-        answered = false;
-        const q = quiz[qIdx];
-        
-        document.getElementById('q-id').innerText = q.id;
-        document.getElementById('q-idx').innerText = `${qIdx+1}/${quiz.length}`;
-        document.getElementById('q-path').innerText = `${q.subject} > ${q.lesson}`;
-        document.getElementById('q-txt').innerText = q.question;
-        updateFav();
-
-        const opts = document.getElementById('q-opts'); opts.innerHTML='';
-        document.getElementById('q-exp').style.display='none';
-        document.getElementById('btn-next').classList.add('hidden');
-
-        q.options.forEach((o, i) => {
-            const d = document.createElement('div'); d.className='opt';
-            d.innerHTML = `<span>${o}</span>`;
-            d.onclick = () => answer(i);
-            opts.appendChild(d);
-        });
-
-        if(mode==='view_mode') answer(q.correct_option_id, true);
-    }
-
-    function answer(idx, sim=false) {
-        if(answered && !sim) return;
-        answered = true;
-        const q = quiz[qIdx];
-        const divs = document.querySelectorAll('.opt');
-
-        divs[q.correct_option_id].classList.add('correct');
-
-        if(idx === q.correct_option_id) {
-            if(!sim) score++;
-            localData.mistakes = localData.mistakes.filter(x=>x!==q.id); // Remove from active mistakes
-        } else {
-            divs[idx].classList.add('wrong');
-            if(!localData.mistakes.includes(q.id)) localData.mistakes.push(q.id); // Add to active
-            if(!localData.archive.includes(q.id)) localData.archive.push(q.id); // Add to permanent archive
-            
-            if(mode==='survival') { setTimeout(()=>alert('Game Over'),500); return goHome(); }
-        }
-        
-        localStorage.setItem('mistakes', JSON.stringify(localData.mistakes));
-        localStorage.setItem('archive', JSON.stringify(localData.archive));
-
-        document.getElementById('q-exp').innerHTML = `<b>Explanation:</b> ${q.explanation||''}`;
-        document.getElementById('q-exp').style.display='block';
-        document.getElementById('btn-next').classList.remove('hidden');
-    }
-
-    function nextQ() { if(qIdx<quiz.length-1){ qIdx++; renderQ(); } else finishQuiz(); }
-    
-    // Timer for Time Attack
-    let tInt;
-    function startTimer() {
-        let t = 60; const b = document.getElementById('timer-bar'); b.style.display='block';
-        clearInterval(tInt);
-        tInt = setInterval(()=>{
-            t--; b.style.width = (t/60*100)+'%';
-            if(t<=0) { clearInterval(tInt); alert('Time Up'); finishQuiz(); }
-        },1000);
-    }
-
-    function finishQuiz() {
-        clearInterval(tInt);
-        // Save Score for Leaderboard (Context Aware)
-        // Context is Term + Subject
-        if(sel.term && sel.subj) {
-            const context = `${sel.term}_${sel.subj}`.replace(/[.#$/\[\]]/g, "_");
-            const ref = db.ref(`ranks/${context}/${currentUser.id}`);
-            // Increment score in DB
-            ref.transaction(curr => (curr||0) + score);
-        }
-
-        const pct = Math.round((score/quiz.length)*100);
-        document.getElementById('sc-val').innerText = `${pct}%`;
-        document.getElementById('sc-txt').innerText = `${score} / ${quiz.length}`;
-        document.getElementById('m-score').style.display='flex';
-    }
-
-    // ==========================================
-    // 5. LEADERBOARD (Context Aware)
-    // ==========================================
-    function showRank() {
-        if(!sel.term || !sel.subj) return alert('الترتيب متاح فقط عند اختيار مادة محددة.');
-        
-        const context = `${sel.term}_${sel.subj}`.replace(/[.#$/\[\]]/g, "_");
-        document.getElementById('rank-topic').innerText = context;
-        document.getElementById('rank-val').innerText = '...';
-        document.getElementById('m-rank').style.display='flex';
-
-        db.ref(`ranks/${context}`).once('value', snap => {
-            const data = snap.val();
-            if(!data) { document.getElementById('rank-val').innerText = 'No Data'; return; }
-            
-            // Convert object to array: [{id, score}]
-            let arr = Object.keys(data).map(k => ({id: k, score: data[k]}));
-            arr.sort((a,b) => b.score - a.score); // High to Low
-            
-            // Find my rank
-            const myRank = arr.findIndex(x => x.id == currentUser.id) + 1;
-            
-            if(myRank > 0) {
-                document.getElementById('rank-val').innerText = `#${myRank}`;
-                document.getElementById('rank-total').innerText = `من بين ${arr.length} متسابق`;
-            } else {
-                document.getElementById('rank-val').innerText = 'Unranked';
-            }
-        });
-    }
-
-    // ==========================================
-    // 6. UTILITIES
-    // ==========================================
-    function showView(id) {
-        ['v-home','v-select','v-quiz'].forEach(v => document.getElementById(v).classList.add('hidden')); // Logic fix: Hide all then show
-        ['v-home','v-select','v-quiz'].forEach(v => document.getElementById(v).style.display = 'none');
-        
-        const el = document.getElementById(id);
-        el.classList.remove('hidden');
-        el.style.display = (id==='v-home') ? 'grid' : 'flex';
-    }
-    
-    function goHome() { clearInterval(tInt); showView('v-home'); }
-    function closeModal(id) { document.getElementById(id).style.display='none'; }
-    function openArchiveModal() { document.getElementById('m-archive').style.display='flex'; }
-    function openSearchModal() { document.getElementById('m-search').style.display='flex'; }
-    function openSettings() { document.getElementById('m-set').style.display='flex'; }
-
-    function toggleFav() {
-        const id = quiz[qIdx].id;
-        if(localData.fav.includes(id)) localData.fav = localData.fav.filter(x=>x!==id);
-        else localData.fav.push(id);
-        localStorage.setItem('fav', JSON.stringify(localData.fav));
-        updateFav();
-    }
-    function updateFav() {
-        const el = document.getElementById('fav-icon');
-        el.innerText = localData.fav.includes(quiz[qIdx].id) ? "★" : "☆";
-        el.style.color = localData.fav.includes(quiz[qIdx].id) ? "#f1c40f" : "var(--txt-sec)";
-    }
-
-    function chaosMode() {
-        const rc = ()=>`hsl(${Math.random()*360},${50+Math.random()*50}%,${20+Math.random()*60}%)`;
-        document.documentElement.style.setProperty('--bg-grad', `linear-gradient(${Math.random()*360}deg, ${rc()}, ${rc()})`);
-        document.documentElement.style.setProperty('--primary', rc());
-    }
-
-    function shareApp() {
-        const url = "https://t.me/share/url?url=" + encodeURIComponent("Join me on MedQuiz Master! @Heailloo_bot");
-        window.open(url, '_blank');
-    }
-
-    function execSearch() {
-        const id = parseInt(document.getElementById('inp-search').value);
-        const q = allQ.find(x=>x.id===id);
-        if(q) { mode='normal'; quiz=[q]; qIdx=0; showView('v-quiz'); closeModal('m-search'); renderQ(); }
-        else alert('Not found');
-    }
-
-    function setTheme(t) { document.body.setAttribute('data-theme', t); }
-
-    // Shortcuts
-    document.addEventListener('keydown', e => {
-        if(document.getElementById('v-quiz').style.display==='none') return;
-        const k = e.key.toLowerCase(), m = {'a':0,'b':1,'c':2,'d':3,'e':4};
-        if(m[k]!==undefined) answer(m[k]);
-        if(k==='s') toggleFav();
-        if((k===' '||k==='enter') && answered) { e.preventDefault(); nextQ(); }
-    });
-
-    // Background Animation
-    function initAnim() {
-        const c=document.getElementById('bg-canvas'), x=c.getContext('2d');
-        let w,h,p=[]; const r=()=>{w=c.width=window.innerWidth;h=c.height=window.innerHeight;}; window.onresize=r; r();
-        class P{constructor(){this.i();} i(){this.x=Math.random()*w;this.y=Math.random()*h;this.r=Math.random()*3;this.vx=(Math.random()-.5)*.5;this.vy=(Math.random()-.5)*.5;} u(){this.x+=this.vx;this.y+=this.vy;if(this.x<0||this.x>w||this.y<0||this.y>h)this.i();} d(){x.beginPath();x.arc(this.x,this.y,this.r,0,7);x.fillStyle='rgba(100,100,200,0.1)';x.fill();}}
-        p=Array(50).fill().map(()=>new P());
-        function a(){x.clearRect(0,0,w,h);p.forEach(n=>{n.u();n.d()});requestAnimationFrame(a);} a();
-    }
-</script>
+    <script src="js/config.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/game.js"></script>
+    <script src="js/main.js"></script>
 </body>
 </html>
-
-
