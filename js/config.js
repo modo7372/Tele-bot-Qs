@@ -6,7 +6,7 @@ const FB_CONF = { apiKey: "AIzaSyDEZFJmcXK2LxYAZ-Yjv_M1HbC6zi_qilg", authDomain:
 if (!firebase.apps.length) firebase.initializeApp(FB_CONF);
 const db = firebase.database();
 
-// Theme Definitions
+// Theme Definitions - هذه القائمة هي التي تظهر الخيارات
 const THEMES = [
     { id: 'light', name: 'Light', color: '#f5f7fa' },
     { id: 'dark', name: 'Dark', color: '#232526' },
