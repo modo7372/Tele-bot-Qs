@@ -1,5 +1,5 @@
 const ALLOWED_IDS = [ 5814737296, 2004826495 ]; 
-const ENABLE_SECURITY = false; // Set true in production
+const ENABLE_SECURITY = false; 
 
 // Firebase Config
 const FB_CONF = { apiKey: "AIzaSyDEZFJmcXK2LxYAZ-Yjv_M1HbC6zi_qilg", authDomain: "exambotdb.firebaseapp.com", databaseURL: "https://exambotdb-default-rtdb.firebaseio.com", projectId: "exambotdb", storageBucket: "exambotdb.firebasestorage.app", messagingSenderId: "950600562980", appId: "1:950600562980:web:f993c22d45e5cfdd3d9bb1" };
