@@ -7,6 +7,11 @@
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#6c5ce7">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2966/2966327.png">
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/2966/2966327.png">
 
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
@@ -33,7 +38,7 @@
                 <small id="db-status">جاري التحميل...</small>
             </div>
             <div class="header-actions">
-                <button class="btn btn-ghost" onclick="Game.randomizeExperience()" title="وضع الفوضى">🎲</button>
+                <button class="btn btn-ghost" onclick="Game.randomizeUI()" title="تغيير الألوان">🎨</button>
                 <button class="btn btn-ghost" onclick="UI.shareApp()" title="مشاركة">📤</button>
                 <button class="btn btn-ghost" onclick="UI.openModal('m-set')" title="الإعدادات">⚙️</button>
             </div>
@@ -42,6 +47,12 @@
         <main id="main-content">
             
             <div id="v-home" class="grid-menu">
+                <div class="menu-card full-span-card" onclick="Game.startGlobalRandom()">
+                    <div class="icon">🎲</div>
+                    <h3>اختبار عشوائي سريع</h3>
+                    <small>كوكتيل من كل الأسئلة</small>
+                </div>
+
                 <div class="menu-card" onclick="Game.startFlow('normal')">
                     <div class="icon">🚀</div>
                     <h3>اختبار عادي</h3>
@@ -58,7 +69,7 @@
                 </div>
                 <div class="menu-card lucky" onclick="Game.luckyShot()">
                     <div class="icon">🎁</div>
-                    <h3>ضربة حظ</h3>
+                    <h3>سؤال حظ</h3>
                 </div>
                 <div class="menu-card" onclick="Game.startFlow('mistakes')">
                     <div class="icon">⚠️</div>
@@ -81,9 +92,13 @@
             <div id="v-select" class="glass-box hidden column-flex">
                 <div class="view-header">
                     <h3 id="sel-head">اختر</h3>
-                    <button class="btn btn-sec btn-sm" onclick="UI.goHome()">رجوع</button>
+                    <button class="btn btn-sec btn-sm" onclick="Game.prevSel()">↩️ سابق</button>
                 </div>
+                
+                <button id="btn-mode-random" class="btn btn-accent full-width hidden" onclick="Game.startRandomInMode()">🎲 امتحان عشوائي من هذا القسم</button>
+
                 <div id="sel-body" class="sel-list"></div>
+                
                 <div class="view-footer">
                     <button id="btn-all" class="btn btn-sec hidden" onclick="Game.toggleAll()">الكل</button>
                     <button class="btn btn-primary" onclick="Game.nextSel()">التالي ➡</button>
@@ -94,8 +109,7 @@
                 <div id="timer-bar"></div>
                 <div class="quiz-meta">
                     <span>ID:<b id="q-id">--</b> | <b id="q-idx">--</b></span>
-                    <span id="fav-icon" onclick="Game.toggleFav()">☆</span>
-                </div>
+                    </div>
 
                 <div class="glass-box question-box">
                     <div id="q-path">Term > Subject</div>
@@ -104,6 +118,10 @@
 
                 <div id="q-opts" class="options-list"></div>
                 
+                <button id="btn-fav-big" class="btn btn-ghost full-width" style="margin-top:5px; border:1px dashed var(--txt-sec);" onclick="Game.toggleFav()">
+                    ☆ أضف للمفضلة (S)
+                </button>
+
                 <div id="q-exp" class="glass-box explanation hidden"></div>
 
                 <div class="quiz-footer">
@@ -116,12 +134,28 @@
 
     <div id="m-set" class="modal" onclick="if(event.target==this) UI.closeModal('m-set')">
         <div class="modal-content settings-modal">
-            <h3>⚙️ التخصيص</h3>
+            <h3>⚙️ الإعدادات</h3>
             
             <div class="set-group">
                 <label>الثيم (Theme)</label>
-                <div class="chip-group scrollable-chips" id="theme-list">
-                    </div>
+                <div class="chip-group scrollable-chips" id="theme-list"></div>
+            </div>
+
+            <div class="set-group">
+                <label>تفضيلات العرض</label>
+                <div class="toggle-row">
+                    <span>🫧 فقاعات الخلفية</span>
+                    <input type="checkbox" id="chk-anim" onchange="UI.toggleAnim(this.checked)">
+                </div>
+                <div class="toggle-row" style="margin-top:8px;">
+                     <span>🔠 حجم الخط</span>
+                     <select id="set-size" onchange="UI.updateStyleVar('--font-size', this.value)">
+                        <option value="12px">صغير</option>
+                        <option value="14px">متوسط</option>
+                        <option value="16px">كبير</option>
+                        <option value="18px">ضخم</option>
+                     </select>
+                </div>
             </div>
 
             <div class="set-group">
@@ -137,7 +171,7 @@
             </div>
 
             <div class="set-group">
-                <label>الخط</label>
+                <label>نوع الخط</label>
                 <select id="set-font" onchange="UI.updateStyleVar('--font-fam', this.value)">
                     <option value="'Segoe UI', Tahoma, sans-serif">System</option>
                     <option value="'Cairo', sans-serif">Cairo</option>
@@ -146,7 +180,7 @@
                 </select>
             </div>
 
-            <button class="btn btn-primary full-width" onclick="UI.closeModal('m-set')">حفظ</button>
+            <button class="btn btn-primary full-width" onclick="UI.closeModal('m-set')">حفظ وإغلاق</button>
         </div>
     </div>
 
@@ -194,5 +228,9 @@
     </div>
 
     <script src="js/config.js"></script>
-    <script src="js/data.js"></script> <script src="js/ui.js"></script>   <script src="js/game.js"></script> <script src="js/main.js"></script> </body>
+    <script src="js/data.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/game.js"></script>
+    <script src="js/main.js"></script>
+</body>
 </html>
