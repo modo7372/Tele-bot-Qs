@@ -1,6 +1,7 @@
 let tInt; let cStep = ''; let autoNavTimer = null;
 
 const Game = {
+    // --- أدوات مساعدة ---
     triggerHaptic: (type) => {
         if(State.localData.settings?.haptic === false) return;
         if (window.Telegram.WebApp.isVersionAtLeast && window.Telegram.WebApp.isVersionAtLeast('6.1')) {
@@ -21,6 +22,9 @@ const Game = {
         UI.initAnim(true); 
     },
 
+    toggleInstant: (val) => { State.instantFeedback = val; },
+
+    // --- الفلاتر ---
     setFilter: (f, el) => {
         State.filter = f;
         document.querySelectorAll('#filter-opts .chip').forEach(c => c.classList.remove('selected'));
@@ -39,30 +43,41 @@ const Game = {
         return p;
     },
 
+    // --- أوضاع اللعب ---
+    // 1. ضربة حظ (سؤال واحد عشوائي مع احترام الفلتر)
+    luckyShot: () => {
+        let pool = Game.getFilteredPool();
+        if(!pool.length) return alert('لا توجد أسئلة متاحة حسب الفلتر المختار.');
+        
+        const q = pool[Math.floor(Math.random() * pool.length)];
+        Game.startQuizSession([q], 'lucky');
+    },
+
+    // 2. اختبار عشوائي سريع
     startGlobalRandom: () => {
         let sub = Game.getFilteredPool();
         if(!sub.length) return alert('القائمة فارغة حسب الفلتر المختار.');
-        State.mode = 'normal';
         sub.sort(() => 0.5 - Math.random());
         const count = Math.floor(Math.random() * 50) + 1;
-        State.quiz = sub.slice(0, count);
-        State.qIdx = 0; State.score = 0;
-        UI.showView('v-quiz');
-        UI.initAnim(true); 
-        Game.renderQ();
+        Game.startQuizSession(sub.slice(0, count), 'normal');
     },
 
+    // 3. بدء تدفق الاختيار (مذاكرة / بقاء / هجوم وقت)
     startFlow: (m) => {
-        State.mode = m;
+        State.tempMode = m; // تخزين الوضع مؤقتاً لحين اختيار الأسئلة
         State.pool = Game.getFilteredPool();
-        if(m === 'mistakes') {
+        
+        if(m === 'mistakes') { // legacy check
             State.pool = State.pool.filter(q => State.localData.mistakes.includes(q.id));
         }
+
         if(!State.pool.length) return alert('لا توجد أسئلة متاحة في هذا الوضع/الفلتر.');
+        
         State.sel = {term:null, subj:null, lessons:[], chapters:[], limit:'All'};
         Game.renderSel('term');
     },
 
+    // داخل وضع الاختيار: بدء عشوائي
     startRandomInMode: () => {
         let sub = State.pool;
         if(State.sel.term) sub = sub.filter(q => q.term === State.sel.term);
@@ -73,14 +88,10 @@ const Game = {
         sub.sort(() => 0.5 - Math.random());
         
         const count = Math.floor(Math.random() * 50) + 1;
-        State.quiz = sub.slice(0, count);
-        State.qIdx = 0; State.score = 0;
-        UI.showView('v-quiz');
-        UI.initAnim(true);
-        if(State.mode==='timeAttack') Game.startTimer();
-        Game.renderQ();
+        Game.startQuizSession(sub.slice(0, count), State.tempMode || 'normal');
     },
 
+    // --- منطق الاختيار (Selection Logic) ---
     renderSel: (step) => {
         cStep = step; UI.showView('v-select');
         const list = document.getElementById('sel-body'); list.innerHTML='';
@@ -180,9 +191,10 @@ const Game = {
         else if(cStep === 'chapter') { Game.renderSel('lesson'); }
         else if(cStep === 'limit') Game.renderSel('chapter');
     },
-
+    
     toggleAll: () => document.querySelectorAll('.chip').forEach(c => c.classList.toggle('selected')),
 
+    // --- بدء جلسة الاختبار (Quiz Session Initialization) ---
     initQuiz: () => {
         let final = State.pool.filter(q => State.sel.term===q.term && State.sel.subj===q.subject && State.sel.lessons.includes(q.lesson) && State.sel.chapters.includes(q.chapter));
         if(!final.length) return alert('No questions.');
@@ -190,106 +202,257 @@ const Game = {
         final.sort(()=>0.5-Math.random());
         if(State.sel.limit!=='All') final = final.slice(0, parseInt(State.sel.limit));
         
-        State.quiz = final; State.qIdx = 0; State.score = 0;
+        Game.startQuizSession(final, State.tempMode || 'normal');
+    },
+
+    startQuizSession: (questions, mode) => {
+        State.quiz = questions;
+        State.mode = mode;
+        State.qIdx = 0;
+        State.score = 0;
+        
+        // **هام: مصفوفة لحفظ حالة الإجابات لكل سؤال**
+        // كل عنصر سيكون: { answered: false, selectedIdx: null, isCorrect: false }
+        State.answers = new Array(questions.length).fill(null).map(() => ({ answered: false, selectedIdx: null, isCorrect: false }));
+        
+        // إعدادات الوضع الفوري
+        State.instantFeedback = document.getElementById('chk-instant').checked;
+
         UI.showView('v-quiz');
-        if(State.mode==='timeAttack') Game.startTimer(); else document.getElementById('timer-bar').style.display='none';
+        UI.initAnim(true);
+
+        // إعدادات المؤقت
+        if(mode === 'timeAttack') Game.startTimer();
+        else document.getElementById('timer-bar').style.display='none';
+
+        // إخفاء/إظهار أزرار التحكم
+        const isSearchOrView = (mode === 'view_mode' || mode === 'search_mode');
+        document.getElementById('btn-finish').style.display = isSearchOrView ? 'none' : 'inline-block';
+        document.getElementById('archive-controls').classList.toggle('hidden', !isSearchOrView);
+
         Game.renderQ();
     },
 
-    luckyShot: () => { State.mode='normal'; State.quiz=[State.allQ[Math.floor(Math.random()*State.allQ.length)]]; State.qIdx=0; UI.showView('v-quiz'); Game.renderQ(); },
-    
+    // --- الأرشيف والبحث ---
     startArchive: (type) => { 
+        // type: 'quiz' (إعادة حل), 'view' (تصفح)
         const p = State.allQ.filter(q=>State.localData.archive.includes(q.id));
         if(!p.length) return alert('الأرشيف فارغ');
-        UI.closeModal('m-archive'); State.mode=(type==='view'?'view_mode':'normal');
-        State.quiz=p; State.qIdx=0; UI.showView('v-quiz'); Game.renderQ();
-    },
-    
-    startFavMode: () => {
-        const p = State.allQ.filter(q=>State.localData.fav.includes(q.id));
-        if(!p.length) return alert('المفضلة فارغة');
-        State.mode='normal'; State.quiz=p; State.qIdx=0; UI.showView('v-quiz'); Game.renderQ();
-    },
-    
-    execSearch: () => {
-        const id = parseInt(document.getElementById('inp-search').value);
-        const q = State.allQ.find(x=>x.id===id);
-        if(q) { State.mode='normal'; State.quiz=[q]; State.qIdx=0; UI.showView('v-quiz'); UI.closeModal('m-search'); Game.renderQ(); }
-        else alert('غير موجود');
+        UI.closeModal('m-archive');
+        Game.startQuizSession(p, type==='view'?'view_mode':'normal');
     },
 
-    answered: false,
+    execSearch: () => {
+        const idVal = document.getElementById('inp-search-id').value;
+        const txtVal = document.getElementById('inp-search-txt').value.toLowerCase();
+        
+        let found = [];
+        if(idVal) {
+            const q = State.allQ.find(x => x.id == idVal);
+            if(q) found.push(q);
+        } else if (txtVal && txtVal.length > 2) {
+            found = State.allQ.filter(q => q.question.toLowerCase().includes(txtVal));
+        }
+
+        if(found.length) {
+            UI.closeModal('m-search');
+            // وضع 'search_mode' لا يخرج المستخدم بنتيجة نهائية
+            Game.startQuizSession(found, 'search_mode');
+        } else {
+            alert('لم يتم العثور على نتائج.');
+        }
+    },
+
+    searchWrong: () => {
+        const mistakes = State.localData.mistakes;
+        if(!mistakes.length) return alert('لا يوجد سجل أخطاء.');
+        const found = State.allQ.filter(q => mistakes.includes(q.id));
+        UI.closeModal('m-search');
+        Game.startQuizSession(found, 'search_mode');
+    },
+
+    toggleAnswerView: () => {
+        // خاص بوضع الأرشيف لإظهار/إخفاء الحل
+        const qState = State.answers[State.qIdx];
+        const q = State.quiz[State.qIdx];
+        
+        if(qState.answered) {
+            // إذا كانت ظاهرة، نخفيها (Reset visually)
+            qState.answered = false; 
+            Game.renderQ();
+        } else {
+            // نظهر الحل
+            Game.answer(q.correct_option_id, true); // True = simulation mode
+        }
+    },
+
+    // --- عرض السؤال (Rendering) ---
     renderQ: () => {
         clearTimeout(autoNavTimer);
-        Game.answered = false;
         const q = State.quiz[State.qIdx];
-        const isAlreadyAnswered = State.localData.archive.includes(q.id) && State.mode === 'view_mode';
-        
+        const qState = State.answers[State.qIdx]; // استرجاع الحالة المحفوظة
+
         document.getElementById('q-id').innerText = q.id;
         document.getElementById('q-idx').innerText = `${State.qIdx+1}/${State.quiz.length}`;
         document.getElementById('q-path').innerText = `${q.subject} > ${q.lesson}`;
         document.getElementById('q-txt').innerText = q.question;
+        
         Game.updateFavUI();
 
         const opts = document.getElementById('q-opts'); opts.innerHTML='';
-        document.getElementById('q-exp').classList.add('hidden');
-        document.getElementById('btn-next').classList.add('hidden');
+        const expBox = document.getElementById('q-exp');
+        const btnCheck = document.getElementById('btn-check');
+        
+        expBox.classList.add('hidden');
+        btnCheck.classList.add('hidden');
 
+        // بناء الخيارات
         q.options.forEach((o, i) => {
             const d = document.createElement('div'); d.className='opt';
             d.innerHTML = `<span>${o}</span>`;
-            d.onclick = () => Game.answer(i);
+            
+            // استرجاع الستايل إذا كان مجاباً
+            if(qState.answered) {
+                if(i === q.correct_option_id) d.classList.add('correct');
+                else if(i === qState.selectedIdx) d.classList.add('wrong');
+                d.style.pointerEvents = 'none'; // منع التغيير بعد الإجابة النهائية
+            } else if (qState.selectedIdx === i) {
+                // تم الاختيار لكن لم يتم التصحيح بعد (في الوضع غير الفوري)
+                d.classList.add('selected-temp');
+            }
+
+            d.onclick = () => Game.handleOptionClick(i, d);
             opts.appendChild(d);
         });
-        
-        if(isAlreadyAnswered) { Game.answer(q.correct_option_id, true); }
+
+        // إذا كان مجاباً، نظهر التفسير
+        if(qState.answered && q.explanation) {
+            expBox.innerHTML = `<b>توضيح:</b> ${q.explanation}`;
+            expBox.classList.remove('hidden');
+        }
+
+        // زر التحقق اليدوي (يظهر فقط إذا تم اختيار إجابة ولم يتم اعتمادها، والوضع غير فوري)
+        if(!State.instantFeedback && qState.selectedIdx !== null && !qState.answered) {
+            btnCheck.classList.remove('hidden');
+        }
     },
 
-    answer: (idx, sim=false) => {
-        if(Game.answered && !sim) return;
-        Game.answered = true;
-        const q = State.quiz[State.qIdx];
-        const divs = document.querySelectorAll('.opt');
+    // --- معالجة الإجابة ---
+    handleOptionClick: (idx, el) => {
+        const qState = State.answers[State.qIdx];
+        if(qState.answered) return; // لا يمكن التغيير بعد التصحيح النهائي
 
-        divs[q.correct_option_id].classList.add('correct');
+        // تحديد الاختيار
+        qState.selectedIdx = idx;
+
+        if(State.instantFeedback || State.mode === 'lucky') {
+            // تصحيح فوري
+            Game.confirmAnswer(idx);
+        } else {
+            // وضع غير فوري: فقط نعلم الاختيار وننتظر زر التحقق
+            document.querySelectorAll('.opt').forEach(o => o.classList.remove('selected-temp'));
+            el.classList.add('selected-temp');
+            document.getElementById('btn-check').classList.remove('hidden');
+        }
+    },
+
+    checkManual: () => {
+        const qState = State.answers[State.qIdx];
+        if(qState.selectedIdx !== null) {
+            Game.confirmAnswer(qState.selectedIdx);
+        }
+    },
+
+    confirmAnswer: (idx, isSim = false) => {
+        const q = State.quiz[State.qIdx];
+        const qState = State.answers[State.qIdx];
+        
+        qState.answered = true; // تم الاعتماد
+        qState.selectedIdx = idx;
+        
         const isCorrect = (idx === q.correct_option_id);
+        qState.isCorrect = isCorrect;
+
+        // تحديث الواجهة
+        const divs = document.querySelectorAll('.opt');
+        // إزالة التحديد المؤقت
+        divs.forEach(d => d.classList.remove('selected-temp')); 
+        
+        divs[q.correct_option_id].classList.add('correct');
 
         if(isCorrect) {
-            if(!sim) { State.score++; AudioSys.playSuccess(); Game.triggerHaptic('success'); }
-            State.localData.mistakes = State.localData.mistakes.filter(x=>x!==q.id);
+            if(!isSim) {
+                State.score++;
+                AudioSys.playSuccess();
+                Game.triggerHaptic('success');
+                // إزالة من الأخطاء
+                State.localData.mistakes = State.localData.mistakes.filter(x=>x!==q.id);
+            }
         } else {
             divs[idx].classList.add('wrong');
-            if(!sim) { AudioSys.playError(); Game.triggerHaptic('error'); }
-            if(!State.localData.mistakes.includes(q.id)) State.localData.mistakes.push(q.id);
-            if(State.mode==='survival') { setTimeout(()=>alert('🔥 Game Over'), 500); return UI.goHome(); }
+            if(!isSim) {
+                AudioSys.playError();
+                Game.triggerHaptic('error');
+                // إضافة للأخطاء
+                if(!State.localData.mistakes.includes(q.id)) State.localData.mistakes.push(q.id);
+                // وضع البقاء
+                if(State.mode==='survival') { 
+                    setTimeout(()=>alert('🔥 Game Over'), 500); 
+                    return UI.goHome(); 
+                }
+            }
         }
-        
+
+        // إضافة للأرشيف
         if(!State.localData.archive.includes(q.id)) State.localData.archive.push(q.id);
         Data.saveData();
 
+        // إظهار التفسير
         if(q.explanation) {
             const expBox = document.getElementById('q-exp');
             expBox.innerHTML = `<b>توضيح:</b> ${q.explanation}`;
             expBox.classList.remove('hidden');
         }
-        document.getElementById('btn-next').classList.remove('hidden');
 
-        if(!sim && State.mode !== 'view_mode') {
+        document.getElementById('btn-check').classList.add('hidden'); // إخفاء زر التحقق
+
+        // الانتقال التلقائي (فقط إذا كان التصحيح فورياً ولم يكن محاكاة)
+        if(State.instantFeedback && !isSim && State.mode !== 'view_mode' && State.mode !== 'search_mode') {
             const delay = isCorrect ? 1000 : 3000;
-            autoNavTimer = setTimeout(() => { if(Game.answered) Game.nextQ(); }, delay);
+            autoNavTimer = setTimeout(() => {
+                if(State.qIdx < State.quiz.length - 1) Game.nextQ();
+            }, delay);
         }
     },
 
+    // --- دالة محاكاة (للعرض فقط في الأرشيف) ---
+    answer: (idx, sim=true) => {
+        // هذه الدالة الآن تستخدم ConfirmAnswer منطقياً
+        // ولكن تم الإبقاء عليها للتوافق مع استدعاءات الأرشيف القديمة
+        const qState = State.answers[State.qIdx];
+        qState.selectedIdx = idx; // نفترض أن المستخدم اختار الصحيح للعرض
+        Game.confirmAnswer(idx, sim);
+    },
+
+    // --- التنقل ---
     navQ: (dir) => {
-        if(dir === -1 && State.qIdx > 0) { State.qIdx--; Game.renderQ(); } 
-        else if (dir === 1) { Game.nextQ(); }
+        const newIdx = State.qIdx + dir;
+        if(newIdx >= 0 && newIdx < State.quiz.length) {
+            State.qIdx = newIdx;
+            Game.renderQ();
+            Game.triggerHaptic('selection');
+        } else if (newIdx >= State.quiz.length && State.mode !== 'view_mode' && State.mode !== 'search_mode') {
+            // الوصول للنهاية في وضع الاختبار
+            Game.finishQuiz();
+        } else {
+            // أطراف القائمة في وضع التصفح
+            Game.triggerHaptic('error'); // نبضة خفيفة للوصول للحد
+        }
     },
 
-    nextQ: () => { 
-        if(State.qIdx < State.quiz.length-1){ State.qIdx++; Game.renderQ(); Game.triggerHaptic('selection'); } 
-        else Game.finishQuiz(); 
-    },
+    nextQ: () => Game.navQ(1),
 
+    // --- المؤقت والإنهاء ---
     startTimer: () => {
         let t = 60; const b = document.getElementById('timer-bar'); b.style.display='block';
         clearInterval(tInt);
@@ -303,6 +466,11 @@ const Game = {
     finishQuiz: () => {
         Game.stopTimer();
         clearTimeout(autoNavTimer);
+        
+        // حساب النتيجة من مصفوفة الإجابات
+        let finalScore = State.answers.filter(a => a.isCorrect).length;
+        State.score = finalScore;
+
         Data.saveLeaderboard(State.score);
         AudioSys.playSuccess();
         const pct = Math.round((State.score/State.quiz.length)*100);
@@ -311,6 +479,7 @@ const Game = {
         UI.openModal('m-score');
     },
 
+    // --- المفضلة والترتيب ---
     toggleFav: () => {
         const id = State.quiz[State.qIdx].id;
         if(State.localData.fav.includes(id)) State.localData.fav = State.localData.fav.filter(x=>x!==id);
@@ -328,7 +497,8 @@ const Game = {
     },
 
     showRank: () => {
-        if(!State.sel.term || !State.sel.subj) return alert('الترتيب متاح عند اختيار مادة.');
+        // الترتيب الآن زر منفصل
+        if(!State.sel || !State.sel.term || !State.sel.subj) return alert('الترتيب متاح عند اختيار مادة محددة.');
         const ctx = `${State.sel.term}_${State.sel.subj}`.replace(/[.#$/\[\]]/g, "_");
         document.getElementById('rank-topic').innerText = ctx.replace('_', ' > ');
         document.getElementById('rank-val').innerText = '...';
