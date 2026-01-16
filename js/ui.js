@@ -23,8 +23,9 @@ const AudioSys = {
 
 const UI = {
     init: () => {
-        UI.renderThemes();
-        UI.renderAvatars();
+        // Safe Init: Render elements if containers exist
+        if(document.getElementById('theme-list')) UI.renderThemes();
+        if(document.getElementById('avatar-list')) UI.renderAvatars();
         
         // Load Settings
         const s = State.localData.settings || {};
@@ -32,12 +33,20 @@ const UI = {
         if(s.fontFam) UI.updateStyleVar('--font-fam', s.fontFam);
         if(s.fontSize) UI.updateStyleVar('--font-size', s.fontSize);
         
-        document.getElementById('chk-sound').checked = s.sound !== false;
-        document.getElementById('chk-haptic').checked = s.haptic !== false;
-        document.getElementById('chk-anim').checked = s.anim !== false;
+        // --- SAFE CHECK: Prevent crash if elements missing ---
+        const setCheck = (id, val) => {
+            const el = document.getElementById(id);
+            if(el) el.checked = val;
+        };
+        
+        setCheck('chk-sound', s.sound !== false);
+        setCheck('chk-haptic', s.haptic !== false);
+        setCheck('chk-anim', s.anim !== false);
 
         // Profile
-        document.getElementById('set-gender').value = s.gender || 'male';
+        const genderEl = document.getElementById('set-gender');
+        if(genderEl) genderEl.value = s.gender || 'male';
+        
         UI.updateProfileDisplay();
         
         AudioSys.enabled = s.sound !== false;
@@ -53,7 +62,9 @@ const UI = {
     },
 
     renderThemes: () => {
-        const c = document.getElementById('theme-list'); c.innerHTML = '';
+        const c = document.getElementById('theme-list');
+        if(!c) return;
+        c.innerHTML = '';
         THEMES.forEach(t => {
             const d = document.createElement('div');
             d.className = 'theme-preview';
@@ -65,6 +76,8 @@ const UI = {
 
     renderAvatars: () => {
         const c = document.getElementById('avatar-list');
+        if(!c) return;
+        c.innerHTML = ''; // clear old
         AVATARS.forEach(a => {
             const d = document.createElement('div');
             d.className = 'avatar-opt';
@@ -82,14 +95,20 @@ const UI = {
     updateProfileDisplay: () => {
         const s = State.localData.settings || {};
         const av = s.avatar || (s.gender === 'female' ? "👩‍⚕️" : "👨‍⚕️");
-        document.getElementById('u-avatar').innerText = av;
-        document.getElementById('u-name').innerText = State.user.first_name || "Guest";
+        
+        const elAv = document.getElementById('u-avatar');
+        const elName = document.getElementById('u-name');
+        
+        if(elAv) elAv.innerText = av;
+        if(elName) elName.innerText = State.user.first_name || "Guest";
     },
 
     saveProfile: () => {
-        const g = document.getElementById('set-gender').value;
-        UI.saveSetting('gender', g);
-        UI.updateProfileDisplay();
+        const genderEl = document.getElementById('set-gender');
+        if(genderEl) {
+            UI.saveSetting('gender', genderEl.value);
+            UI.updateProfileDisplay();
+        }
     },
 
     showTotalStats: () => {
@@ -98,40 +117,43 @@ const UI = {
         
         const solved = State.localData.archive.length;
         const mistakes = State.localData.mistakes.length;
-        // In this logic, answered - mistakes = correct (approximate, assuming archived means tried)
-        // A better approach is to track "correct" explicitly, but we work with what we have.
-        // Assuming 'mistakes' stores IDs of questions currently wrong.
-        
-        // Actually, let's count strictly based on IDs:
-        // Solved = Unique IDs in Archive
-        // Wrong = IDs in Archive AND in Mistakes
-        // Correct = IDs in Archive AND NOT in Mistakes
-        
         const wrongCnt = State.localData.archive.filter(id => State.localData.mistakes.includes(id)).length;
         const correctCnt = solved - wrongCnt;
         
-        document.getElementById('st-total').innerText = total;
-        document.getElementById('st-solved').innerText = Math.round((solved/total)*100) + '%';
-        document.getElementById('st-correct').innerText = correctCnt;
-        document.getElementById('st-wrong').innerText = wrongCnt;
+        const setText = (id, txt) => {
+            const el = document.getElementById(id);
+            if(el) el.innerText = txt;
+        };
+
+        setText('st-total', total);
+        setText('st-solved', Math.round((solved/total)*100) + '%');
+        setText('st-correct', correctCnt);
+        setText('st-wrong', wrongCnt);
         
         const acc = solved > 0 ? Math.round((correctCnt/solved)*100) : 0;
-        document.getElementById('st-acc').innerText = acc + '%';
-        document.getElementById('st-bar').style.width = acc + '%';
+        setText('st-acc', acc + '%');
+        
+        const bar = document.getElementById('st-bar');
+        if(bar) bar.style.width = acc + '%';
         
         UI.openModal('m-stats');
     },
 
     showView: (id) => {
-        ['v-home','v-select','v-quiz'].forEach(v => document.getElementById(v).classList.add('hidden'));
+        ['v-home','v-select','v-quiz'].forEach(v => {
+            const el = document.getElementById(v);
+            if(el) el.classList.add('hidden');
+        });
         const el = document.getElementById(id);
-        el.classList.remove('hidden');
-        el.style.display = (id === 'v-home') ? 'grid' : 'flex';
+        if(el) {
+            el.classList.remove('hidden');
+            el.style.display = (id === 'v-home') ? 'grid' : 'flex';
+        }
     },
 
     goHome: () => { Game.stopTimer(); UI.showView('v-home'); UI.closeModal('m-score'); },
-    openModal: (id) => document.getElementById(id).style.display = 'flex',
-    closeModal: (id) => document.getElementById(id).style.display = 'none',
+    openModal: (id) => { const el = document.getElementById(id); if(el) el.style.display = 'flex'; },
+    closeModal: (id) => { const el = document.getElementById(id); if(el) el.style.display = 'none'; },
 
     setTheme: (t) => {
         document.body.setAttribute('data-theme', t);
@@ -145,7 +167,8 @@ const UI = {
     toggleHaptic: (v) => { UI.saveSetting('haptic', v); },
     toggleAnim: (v) => { 
         const cvs = document.getElementById('bg-canvas');
-        if(v) cvs.classList.remove('hidden'); else cvs.classList.add('hidden');
+        if(v && cvs) cvs.classList.remove('hidden'); 
+        else if(cvs) cvs.classList.add('hidden');
         UI.saveSetting('anim', v); 
     },
 
@@ -161,9 +184,10 @@ const UI = {
         Data.saveData(); 
     },
 
-    // --- Enhanced Animation ---
     initAnim: (randomize = false) => {
-        const c=document.getElementById('bg-canvas'), x=c.getContext('2d');
+        const c=document.getElementById('bg-canvas');
+        if(!c) return;
+        const x=c.getContext('2d');
         let w,h,p=[]; 
         const r=()=>{w=c.width=window.innerWidth;h=c.height=window.innerHeight;}; 
         window.onresize=r; r();
@@ -177,8 +201,7 @@ const UI = {
                 this.vx=(Math.random()-.5)*1; 
                 this.vy=-(Math.random()*1 + 0.5); 
                 this.a = Math.random() * 0.3;
-                // Random shapes if randomize is true
-                this.type = randomize ? Math.floor(Math.random()*3) : 0; // 0:Circle, 1:Square, 2:Tri
+                this.type = randomize ? Math.floor(Math.random()*3) : 0; 
             } 
             u(){
                 this.x+=this.vx; this.y+=this.vy; 
