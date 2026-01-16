@@ -13,13 +13,13 @@ const Data = {
                     })));
                 } catch(e){}
             }
-            document.getElementById('db-status').innerText = `${State.allQ.length} Questions`;
-        } catch(e){ document.getElementById('db-status').innerText = "Err"; }
+            document.getElementById('db-status').innerText = `${State.allQ.length} سؤال`;
+        } catch(e){ document.getElementById('db-status').innerText = "خطأ في التحميل"; }
     },
 
     // --- Sync Logic (Cloud + Local) ---
     initSync: async () => {
-        // Load from LocalStorage first (Fast)
+        // Load from LocalStorage first (Fast & Safe)
         const local = {
             mistakes: JSON.parse(localStorage.getItem('mistakes')||'[]'),
             archive: JSON.parse(localStorage.getItem('archive')||'[]'),
@@ -28,33 +28,40 @@ const Data = {
         };
         State.localData = local;
 
-        // Try Cloud Storage only if supported (v6.9+)
+        // Try Cloud Storage ONLY if version >= 6.9
         if (window.Telegram.WebApp.isVersionAtLeast && window.Telegram.WebApp.isVersionAtLeast('6.9')) {
             try {
                 Telegram.WebApp.CloudStorage.getItem('medquiz_data', (err, val) => {
                     if(!err && val) {
                         const cloud = JSON.parse(val);
+                        // Merge strategies could go here, for now cloud overwrites clashes
                         State.localData = { ...local, ...cloud };
                         // Apply loaded settings immediately
                         if(State.localData.settings.theme) UI.setTheme(State.localData.settings.theme);
+                        if(State.localData.settings.anim === false) UI.toggleAnim(false);
+                        if(State.localData.settings.fontSize) UI.updateStyleVar('--font-size', State.localData.settings.fontSize);
                     }
                 });
-            } catch(e) { console.log("Cloud unavailable"); }
+            } catch(e) { console.log("Cloud init skipped: ", e); }
+        } else {
+             // Fallback for older versions or non-TG envs: Just apply local settings
+             if(State.localData.settings.theme) UI.setTheme(State.localData.settings.theme);
         }
     },
 
     saveData: () => {
         const str = JSON.stringify(State.localData);
+        // Always save local
         localStorage.setItem('mistakes', JSON.stringify(State.localData.mistakes));
         localStorage.setItem('archive', JSON.stringify(State.localData.archive));
         localStorage.setItem('fav', JSON.stringify(State.localData.fav));
         localStorage.setItem('settings', JSON.stringify(State.localData.settings));
         
-        // Sync to Cloud only if supported (v6.9+)
+        // Save Cloud ONLY if version >= 6.9
         if (window.Telegram.WebApp.isVersionAtLeast && window.Telegram.WebApp.isVersionAtLeast('6.9')) {
             try {
                 Telegram.WebApp.CloudStorage.setItem('medquiz_data', str);
-            } catch(e){}
+            } catch(e){ console.log("Cloud save skipped"); }
         }
     },
 
