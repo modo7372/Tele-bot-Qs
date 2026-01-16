@@ -13,6 +13,21 @@ const Game = {
         }
     },
 
+    shareApp: () => {
+        Game.triggerHaptic('selection');
+        // ⚠️ هام: ضع رابط البوت الخاص بك هنا بدلاً من الرابط الافتراضي
+        const botLink = "https://t.me/اسم_البوت_الخاص_بك/app"; 
+        const msg = "تطبيق ممتاز لأسئلة الجراحة والميدكال، جربه الآن! 🔥👨‍⚕️";
+        
+        const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(botLink)}&text=${encodeURIComponent(msg)}`;
+        
+        if (window.Telegram && window.Telegram.WebApp) {
+            Telegram.WebApp.openTelegramLink(shareUrl);
+        } else {
+            window.open(shareUrl, '_blank');
+        }
+    },
+
     randomizeUI: () => {
         Game.triggerHaptic('selection');
         const rndTheme = THEMES[Math.floor(Math.random() * THEMES.length)];
