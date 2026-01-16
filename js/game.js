@@ -1,13 +1,8 @@
-// js/game.js
-
 let tInt; let cStep = '';
 
 const Game = {
     triggerHaptic: (type) => {
-        // فحص الإصدار + الإعدادات لتجنب الأخطاء
         if(State.localData.settings?.haptic === false) return;
-        
-        // Check if Haptic is supported (Requires v6.1+)
         if (window.Telegram.WebApp.isVersionAtLeast && window.Telegram.WebApp.isVersionAtLeast('6.1')) {
             try {
                 if(type === 'success') Telegram.WebApp.HapticFeedback.notificationOccurred('success');
@@ -17,30 +12,25 @@ const Game = {
         }
     },
 
-    // --- Randomizer Feature ---
-    randomizeExperience: () => {
+    // --- New: UI Only Randomizer ---
+    randomizeUI: () => {
         Game.triggerHaptic('selection');
-        
-        // 1. Random Theme
         const rndTheme = THEMES[Math.floor(Math.random() * THEMES.length)];
         UI.setTheme(rndTheme.id);
-        
-        // 2. Random Font
         const fonts = ["'Cairo', sans-serif", "'Segoe UI', Tahoma, sans-serif", "'Courier New', monospace"];
         UI.updateStyleVar('--font-fam', fonts[Math.floor(Math.random() * fonts.length)]);
+    },
 
-        // 3. Random Mode Selection
-        const modes = ['normal', 'survival', 'timeAttack'];
-        const rndMode = modes[Math.floor(Math.random() * modes.length)];
-        
-        // ❌ تم حذف الـ Alert المزعج من هنا
-        // alert(`🎲 Chaos Mode!\nTheme: ${rndTheme.name}\nMode: ${rndMode.toUpperCase()}\nSelect a subject now!`);
-        
-        // Prepare to start
-        State.mode = rndMode;
-        
-        // إعادة التوجيه للاختيار فوراً بصمت
-        Game.startFlow(rndMode); 
+    // --- New: Global Random Exam ---
+    startGlobalRandom: () => {
+        if(!State.allQ.length) return alert('جار التحميل...');
+        State.mode = 'normal';
+        let mix = [...State.allQ];
+        mix.sort(() => 0.5 - Math.random());
+        State.quiz = mix.slice(0, 40); // 40 Random Qs
+        State.qIdx = 0; State.score = 0;
+        UI.showView('v-quiz');
+        Game.renderQ();
     },
 
     startFlow: (m) => {
@@ -51,14 +41,39 @@ const Game = {
         Game.renderSel('term');
     },
 
+    // --- Updated: Random inside selection ---
+    startRandomInMode: () => {
+        // Based on what is currently selected (Term or Subj), pick random questions
+        let sub = State.pool;
+        if(State.sel.term) sub = sub.filter(q => q.term === State.sel.term);
+        if(State.sel.subj) sub = sub.filter(q => q.subject === State.sel.subj);
+        
+        if(!sub.length) return alert('لا توجد أسئلة هنا');
+        sub.sort(() => 0.5 - Math.random());
+        State.quiz = sub.slice(0, 30); // Random 30
+        State.qIdx = 0; State.score = 0;
+        UI.showView('v-quiz');
+        if(State.mode==='timeAttack') Game.startTimer();
+        Game.renderQ();
+    },
+
     renderSel: (step) => {
         cStep = step; UI.showView('v-select');
         const list = document.getElementById('sel-body'); list.innerHTML='';
-        document.getElementById('sel-head').innerText = `Select ${step}`;
+        const titleMap = {'term':'الترم','subj':'المادة','lesson':'المحاضرة','chapter':'الفصل','limit':'العدد'};
+        document.getElementById('sel-head').innerText = `اختر ${titleMap[step] || step}`;
+        
         document.getElementById('btn-all').classList.add('hidden');
-        Game.triggerHaptic('selection');
+        document.getElementById('btn-mode-random').classList.add('hidden');
 
+        // Filter pool based on previous selections
         const sub = State.pool.filter(q => (!State.sel.term||q.term===State.sel.term) && (!State.sel.subj||q.subject===State.sel.subj));
+        
+        // Show Random Button inside Term or Subject selection
+        if(step === 'term' || step === 'subj') {
+            document.getElementById('btn-mode-random').classList.remove('hidden');
+        }
+
         let items=[], isMulti=false;
 
         if(step==='term') items=[...new Set(sub.map(q=>q.term))];
@@ -76,9 +91,13 @@ const Game = {
             return;
         }
         else if(step==='limit') {
-            ['10','20','30','All'].forEach(l => {
+            ['10','20','30','50','All'].forEach(l => {
                 const b = document.createElement('div'); b.className='chip'; b.innerText=l;
-                b.onclick = () => { State.sel.limit=l; Game.initQuiz(); };
+                b.onclick = () => { 
+                    document.querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));
+                    b.classList.add('selected');
+                    State.sel.limit=l; 
+                };
                 list.appendChild(b);
             });
             return;
@@ -96,21 +115,49 @@ const Game = {
             Game.triggerHaptic('selection');
             if(multi) c.classList.toggle('selected');
             else {
+                document.querySelectorAll('.chip').forEach(ch=>ch.classList.remove('selected'));
+                c.classList.add('selected');
                 if(cStep==='term') State.sel.term=val;
                 else if(cStep==='subj') State.sel.subj=val;
-                Game.nextSel();
+                Game.nextSel(); // Auto advance for single select
             }
         };
         return c;
     },
 
+    // --- New: Validation in Next ---
     nextSel: () => {
-        const picked = Array.from(document.querySelectorAll('.chip.selected')).map(c=>c.dataset.val);
+        // Validation logic
+        if(cStep === 'term' && !State.sel.term) return alert('الرجاء اختيار الترم');
+        if(cStep === 'subj' && !State.sel.subj) return alert('الرجاء اختيار المادة');
+        
         if(cStep==='term') Game.renderSel('subj');
         else if(cStep==='subj') Game.renderSel('lesson');
-        else if(cStep==='lesson') { if(!picked.length) return alert('Select one'); State.sel.lessons=picked; Game.renderSel('chapter'); }
-        else if(cStep==='chapter') { if(!picked.length) return alert('Select one'); State.sel.chapters=picked; Game.renderSel('limit'); }
+        else if(cStep==='lesson') { 
+            const picked = Array.from(document.querySelectorAll('.chip.selected')).map(c=>c.dataset.val);
+            if(!picked.length) return alert('اختر محاضرة واحدة على الأقل'); 
+            State.sel.lessons=picked; Game.renderSel('chapter'); 
+        }
+        else if(cStep==='chapter') { 
+            const picked = Array.from(document.querySelectorAll('.chip.selected')).map(c=>c.dataset.val);
+            if(!picked.length) return alert('اختر فصلاً واحداً على الأقل'); 
+            State.sel.chapters=picked; Game.renderSel('limit'); 
+        }
+        else if(cStep==='limit') {
+            if(!State.sel.limit) State.sel.limit = 'All'; // Default
+            Game.initQuiz();
+        }
     },
+
+    // --- New: Back Button Logic ---
+    prevSel: () => {
+        if(cStep === 'term') UI.goHome();
+        else if(cStep === 'subj') Game.renderSel('term');
+        else if(cStep === 'lesson') Game.renderSel('subj');
+        else if(cStep === 'chapter') Game.renderSel('lesson');
+        else if(cStep === 'limit') Game.renderSel('chapter');
+    },
+
     toggleAll: () => document.querySelectorAll('.chip').forEach(c => c.classList.toggle('selected')),
 
     initQuiz: () => {
@@ -126,22 +173,25 @@ const Game = {
     },
 
     luckyShot: () => { State.mode='normal'; State.quiz=[State.allQ[Math.floor(Math.random()*State.allQ.length)]]; State.qIdx=0; UI.showView('v-quiz'); Game.renderQ(); },
+    
     startArchive: (type) => { 
         const p = State.allQ.filter(q=>State.localData.archive.includes(q.id));
-        if(!p.length) return alert('Archive empty');
+        if(!p.length) return alert('الأرشيف فارغ');
         UI.closeModal('m-archive'); State.mode=(type==='view'?'view_mode':'normal');
         State.quiz=p; State.qIdx=0; UI.showView('v-quiz'); Game.renderQ();
     },
+    
     startFavMode: () => {
         const p = State.allQ.filter(q=>State.localData.fav.includes(q.id));
-        if(!p.length) return alert('Favorites empty');
+        if(!p.length) return alert('المفضلة فارغة');
         State.mode='normal'; State.quiz=p; State.qIdx=0; UI.showView('v-quiz'); Game.renderQ();
     },
+    
     execSearch: () => {
         const id = parseInt(document.getElementById('inp-search').value);
         const q = State.allQ.find(x=>x.id===id);
         if(q) { State.mode='normal'; State.quiz=[q]; State.qIdx=0; UI.showView('v-quiz'); UI.closeModal('m-search'); Game.renderQ(); }
-        else alert('Not found');
+        else alert('غير موجود');
     },
 
     answered: false,
@@ -193,7 +243,7 @@ const Game = {
             if(State.mode==='survival') { setTimeout(()=>alert('🔥 Game Over'), 500); return UI.goHome(); }
         }
         
-        Data.saveData(); // Auto Save
+        Data.saveData();
 
         if(q.explanation) {
             const expBox = document.getElementById('q-exp');
@@ -223,7 +273,7 @@ const Game = {
     finishQuiz: () => {
         Game.stopTimer();
         Data.saveLeaderboard(State.score);
-        AudioSys.playSuccess(); // Fanfare
+        AudioSys.playSuccess();
         const pct = Math.round((State.score/State.quiz.length)*100);
         document.getElementById('sc-val').innerText = `${pct}%`;
         document.getElementById('sc-txt').innerText = `${State.score} / ${State.quiz.length}`;
@@ -239,10 +289,11 @@ const Game = {
         Game.triggerHaptic('selection');
     },
     updateFavUI: () => {
-        const el = document.getElementById('fav-icon');
+        const el = document.getElementById('btn-fav-big');
         const isFav = State.localData.fav.includes(State.quiz[State.qIdx].id);
-        el.innerText = isFav ? "★" : "☆";
-        el.style.color = isFav ? "#f1c40f" : "var(--txt-sec)";
+        el.innerText = isFav ? "★ في المفضلة (S)" : "☆ أضف للمفضلة (S)";
+        el.style.backgroundColor = isFav ? "var(--primary)" : "transparent";
+        el.style.color = isFav ? "#fff" : "var(--txt-sec)";
     },
 
     showRank: () => {
