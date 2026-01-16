@@ -1,6 +1,3 @@
-// js/ui.js
-
-// Audio Context (Synthesizer to avoid external files)
 const AudioSys = {
     ctx: null,
     enabled: false,
@@ -31,15 +28,19 @@ const UI = {
         const s = State.localData.settings || {};
         UI.setTheme(s.theme || 'light');
         if(s.fontFam) UI.updateStyleVar('--font-fam', s.fontFam);
+        if(s.fontSize) UI.updateStyleVar('--font-size', s.fontSize);
         
         document.getElementById('chk-sound').checked = s.sound !== false;
         document.getElementById('chk-haptic').checked = s.haptic !== false;
+        document.getElementById('chk-anim').checked = s.anim !== false;
+        
         AudioSys.enabled = s.sound !== false;
 
-        // Init Anim
+        // Init Anim (Bubbles)
         UI.initAnim();
+        if(s.anim === false) UI.toggleAnim(false);
 
-        // Unlock Audio Context on first click
+        // Unlock Audio
         document.body.addEventListener('click', () => {
             if(AudioSys.ctx && AudioSys.ctx.state === 'suspended') AudioSys.ctx.resume();
             if(!AudioSys.ctx) AudioSys.init();
@@ -74,31 +75,66 @@ const UI = {
         document.querySelectorAll('.theme-preview').forEach(e => e.classList.remove('active'));
         const active = document.querySelector(`.theme-preview[style*="${THEMES.find(x=>x.id==t)?.color}"]`);
         if(active) active.classList.add('active');
-        // Update Canvas Color logic
         UI.saveSetting('theme', t);
     },
 
     toggleSound: (v) => { AudioSys.enabled = v; UI.saveSetting('sound', v); },
     toggleHaptic: (v) => { UI.saveSetting('haptic', v); },
+    toggleAnim: (v) => { 
+        const cvs = document.getElementById('bg-canvas');
+        if(v) cvs.classList.remove('hidden'); else cvs.classList.add('hidden');
+        UI.saveSetting('anim', v); 
+    },
 
     updateStyleVar: (key, val) => {
         document.documentElement.style.setProperty(key, val);
         if(key === '--font-fam') UI.saveSetting('fontFam', val);
+        if(key === '--font-size') UI.saveSetting('fontSize', val);
     },
 
     saveSetting: (key, val) => {
         State.localData.settings = State.localData.settings || {};
         State.localData.settings[key] = val;
-        Data.saveData(); // Save to cloud/local
+        Data.saveData(); 
     },
 
     shareApp: () => window.open("https://t.me/share/url?url=" + encodeURIComponent("Join me on MedQuiz Master!"), '_blank'),
 
+    // Floating Bubbles Animation
     initAnim: () => {
         const c=document.getElementById('bg-canvas'), x=c.getContext('2d');
-        let w,h,p=[]; const r=()=>{w=c.width=window.innerWidth;h=c.height=window.innerHeight;}; window.onresize=r; r();
-        class P{constructor(){this.i();} i(){this.x=Math.random()*w;this.y=Math.random()*h;this.r=Math.random()*3;this.vx=(Math.random()-.5)*.5;this.vy=(Math.random()-.5)*.5;} u(){this.x+=this.vx;this.y+=this.vy;if(this.x<0||this.x>w||this.y<0||this.y>h)this.i();} d(){x.beginPath();x.arc(this.x,this.y,this.r,0,Math.PI*2);x.fillStyle='rgba(120,120,120,0.1)';x.fill();}}
-        p=Array(40).fill().map(()=>new P());
-        function a(){x.clearRect(0,0,w,h); p.forEach(n=>{n.u();n.d()}); requestAnimationFrame(a);} a();
+        let w,h,p=[]; 
+        const r=()=>{w=c.width=window.innerWidth;h=c.height=window.innerHeight;}; 
+        window.onresize=r; r();
+        
+        class P{
+            constructor(){this.i();} 
+            i(){
+                this.x=Math.random()*w;
+                this.y=h+Math.random()*100; // Start below screen
+                this.r=Math.random()*15 + 5; // Size 5-20
+                this.vx=(Math.random()-.5)*1; 
+                this.vy=-(Math.random()*1 + 0.5); // Always up
+                this.a = Math.random() * 0.3; // Alpha
+            } 
+            u(){
+                this.x+=this.vx; this.y+=this.vy; 
+                if(this.y < -50) this.i(); // Reset if off top
+            } 
+            d(){
+                x.beginPath();
+                x.arc(this.x,this.y,this.r,0,Math.PI*2);
+                x.fillStyle=`rgba(120,120,120,${this.a})`;
+                x.fill();
+            }
+        }
+        
+        p=Array(25).fill().map(()=>new P()); // 25 Bubbles
+        function a(){
+            x.clearRect(0,0,w,h); 
+            p.forEach(n=>{n.u();n.d()}); 
+            requestAnimationFrame(a);
+        } 
+        a();
     }
 };
