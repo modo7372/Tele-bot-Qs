@@ -11,7 +11,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=2.3">
 </head>
 <body data-theme="light">
 
@@ -157,11 +157,20 @@
             </div>
 
             <div class="set-group">
-                <label>تفضيلات العرض</label>
+                <label>تفضيلات التطبيق</label>
                 <div class="toggle-row">
+                    <span>🔊 الصوت</span>
+                    <input type="checkbox" id="chk-sound" onchange="UI.toggleSound(this.checked)">
+                </div>
+                <div class="toggle-row" style="margin-top:8px;">
+                    <span>📳 الاهتزاز (Haptic)</span>
+                    <input type="checkbox" id="chk-haptic" onchange="UI.toggleHaptic(this.checked)">
+                </div>
+                <div class="toggle-row" style="margin-top:8px;">
                     <span>🫧 فقاعات وخلفيات</span>
                     <input type="checkbox" id="chk-anim" onchange="UI.toggleAnim(this.checked)">
                 </div>
+                
                 <div class="toggle-row" style="margin-top:8px;">
                      <span>🔠 حجم الخط</span>
                      <select id="set-size" onchange="UI.updateStyleVar('--font-size', this.value)">
@@ -249,10 +258,10 @@
         </div>
     </div>
 
-    <script src="js/config.js"></script>
-    <script src="js/data.js"></script>
-    <script src="js/ui.js"></script>
-    <script src="js/game.js"></script>
-    <script src="js/main.js"></script>
+    <script src="js/config.js?v=2.3"></script>
+    <script src="js/data.js?v=2.3"></script>
+    <script src="js/ui.js?v=2.3"></script>
+    <script src="js/game.js?v=2.3"></script>
+    <script src="js/main.js?v=2.3"></script>
 </body>
 </html>
