@@ -1,5 +1,3 @@
-// js/main.js
-
 window.onload = async () => {
     // 1. Data & Sync
     await Data.initSync();
@@ -10,6 +8,14 @@ window.onload = async () => {
     // 3. Telegram & Security
     const tg = window.Telegram.WebApp; 
     tg.ready(); tg.expand();
+    
+    // Set colors based on theme if possible
+    try {
+        if(tg.isVersionAtLeast('6.1')) {
+           tg.setHeaderColor(getComputedStyle(document.body).getPropertyValue('--primary'));
+        }
+    } catch(e){}
+
     State.user = tg.initDataUnsafe.user || {id: 0, first_name: "Guest"};
 
     if(ENABLE_SECURITY) {
@@ -39,5 +45,6 @@ window.onload = async () => {
         const k = e.key.toLowerCase(), m = {'a':0,'b':1,'c':2,'d':3,'e':4}; 
         if(m[k]!==undefined) Game.answer(m[k]);
         if((k===' '||k==='enter') && Game.answered) { e.preventDefault(); Game.nextQ(); }
+        if(k==='s') Game.toggleFav();
     });
 };
