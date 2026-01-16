@@ -1,4 +1,4 @@
-let tInt; let cStep = '';
+let tInt; let cStep = ''; let autoNavTimer = null;
 
 const Game = {
     triggerHaptic: (type) => {
@@ -12,47 +12,81 @@ const Game = {
         }
     },
 
-    // --- New: UI Only Randomizer ---
     randomizeUI: () => {
         Game.triggerHaptic('selection');
         const rndTheme = THEMES[Math.floor(Math.random() * THEMES.length)];
         UI.setTheme(rndTheme.id);
         const fonts = ["'Cairo', sans-serif", "'Segoe UI', Tahoma, sans-serif", "'Courier New', monospace"];
         UI.updateStyleVar('--font-fam', fonts[Math.floor(Math.random() * fonts.length)]);
+        // Randomize Bubble Shapes
+        UI.initAnim(true); 
     },
 
-    // --- New: Global Random Exam ---
+    setFilter: (f, el) => {
+        State.filter = f;
+        document.querySelectorAll('#filter-opts .chip').forEach(c => c.classList.remove('selected'));
+        el.classList.add('selected');
+    },
+
+    getFilteredPool: () => {
+        let p = [...State.allQ];
+        const mist = State.localData.mistakes;
+        const arch = State.localData.archive;
+        
+        if(State.filter === 'new') p = p.filter(q => !arch.includes(q.id));
+        else if(State.filter === 'wrong') p = p.filter(q => mist.includes(q.id));
+        else if(State.filter === 'answered') p = p.filter(q => arch.includes(q.id));
+        
+        return p;
+    },
+
     startGlobalRandom: () => {
-        if(!State.allQ.length) return alert('جار التحميل...');
+        let sub = Game.getFilteredPool();
+        if(!sub.length) return alert('القائمة فارغة حسب الفلتر المختار.');
+        
         State.mode = 'normal';
-        let mix = [...State.allQ];
-        mix.sort(() => 0.5 - Math.random());
-        State.quiz = mix.slice(0, 40); // 40 Random Qs
+        sub.sort(() => 0.5 - Math.random());
+        
+        // Random count between 1 and 50
+        const count = Math.floor(Math.random() * 50) + 1;
+        
+        State.quiz = sub.slice(0, count);
         State.qIdx = 0; State.score = 0;
         UI.showView('v-quiz');
+        UI.initAnim(true); // Random bubbles
         Game.renderQ();
     },
 
     startFlow: (m) => {
         State.mode = m;
-        State.pool = (m === 'mistakes') ? State.allQ.filter(q => State.localData.mistakes.includes(q.id)) : State.allQ;
-        if(!State.pool.length) return alert('القائمة فارغة.');
+        State.pool = Game.getFilteredPool();
+        
+        if(m === 'mistakes') {
+            State.pool = State.pool.filter(q => State.localData.mistakes.includes(q.id));
+        }
+
+        if(!State.pool.length) return alert('لا توجد أسئلة متاحة في هذا الوضع/الفلتر.');
+        
         State.sel = {term:null, subj:null, lessons:[], chapters:[], limit:'All'};
         Game.renderSel('term');
     },
 
-    // --- Updated: Random inside selection ---
     startRandomInMode: () => {
-        // Based on what is currently selected (Term or Subj), pick random questions
+        // Filter based on current selection stage
         let sub = State.pool;
         if(State.sel.term) sub = sub.filter(q => q.term === State.sel.term);
         if(State.sel.subj) sub = sub.filter(q => q.subject === State.sel.subj);
+        if(State.sel.lessons.length) sub = sub.filter(q => State.sel.lessons.includes(q.lesson));
         
         if(!sub.length) return alert('لا توجد أسئلة هنا');
         sub.sort(() => 0.5 - Math.random());
-        State.quiz = sub.slice(0, 30); // Random 30
+        
+        const count = Math.floor(Math.random() * 50) + 1;
+        State.quiz = sub.slice(0, count);
+        
         State.qIdx = 0; State.score = 0;
         UI.showView('v-quiz');
+        UI.initAnim(true);
         if(State.mode==='timeAttack') Game.startTimer();
         Game.renderQ();
     },
@@ -63,15 +97,17 @@ const Game = {
         const titleMap = {'term':'الترم','subj':'المادة','lesson':'المحاضرة','chapter':'الفصل','limit':'العدد'};
         document.getElementById('sel-head').innerText = `اختر ${titleMap[step] || step}`;
         
+        const btnRnd = document.getElementById('btn-mode-random');
+        btnRnd.classList.add('hidden');
         document.getElementById('btn-all').classList.add('hidden');
-        document.getElementById('btn-mode-random').classList.add('hidden');
 
-        // Filter pool based on previous selections
+        // Filter pool logic
         const sub = State.pool.filter(q => (!State.sel.term||q.term===State.sel.term) && (!State.sel.subj||q.subject===State.sel.subj));
         
-        // Show Random Button inside Term or Subject selection
-        if(step === 'term' || step === 'subj') {
-            document.getElementById('btn-mode-random').classList.remove('hidden');
+        // Show Random Button in all steps except limit
+        if(step !== 'limit' && step !== 'term') {
+             btnRnd.classList.remove('hidden');
+             btnRnd.innerText = `🎲 امتحان عشوائي من الـ ${titleMap[step] || step} الحالية`;
         }
 
         let items=[], isMulti=false;
@@ -81,11 +117,14 @@ const Game = {
         else if(step==='lesson') { items=[...new Set(sub.map(q=>q.lesson))]; isMulti=true; }
         else if(step==='chapter') {
             isMulti=true;
+            // Group by Lesson
             State.sel.lessons.forEach(l => {
-                list.innerHTML += `<div style="font-weight:bold; color:var(--primary); margin:10px 0;">📂 ${l}</div>`;
-                const g = document.createElement('div'); g.className='chip-grid';
+                const lDiv = document.createElement('div');
+                lDiv.innerHTML = `<div style="position:sticky; top:0; background:var(--glass-bg); padding:5px; z-index:2; font-weight:bold; color:var(--primary); border-bottom:1px solid #ccc;">📂 ${l}</div>`;
+                const g = document.createElement('div'); g.className='chip-grid'; g.style.padding='5px';
                 [...new Set(sub.filter(q=>q.lesson===l).map(q=>q.chapter))].forEach(ch => g.appendChild(Game.createChip(ch, true)));
-                list.appendChild(g);
+                lDiv.appendChild(g);
+                list.appendChild(lDiv);
             });
             document.getElementById('btn-all').classList.remove('hidden');
             return;
@@ -119,15 +158,13 @@ const Game = {
                 c.classList.add('selected');
                 if(cStep==='term') State.sel.term=val;
                 else if(cStep==='subj') State.sel.subj=val;
-                Game.nextSel(); // Auto advance for single select
+                Game.nextSel();
             }
         };
         return c;
     },
 
-    // --- New: Validation in Next ---
     nextSel: () => {
-        // Validation logic
         if(cStep === 'term' && !State.sel.term) return alert('الرجاء اختيار الترم');
         if(cStep === 'subj' && !State.sel.subj) return alert('الرجاء اختيار المادة');
         
@@ -144,17 +181,25 @@ const Game = {
             State.sel.chapters=picked; Game.renderSel('limit'); 
         }
         else if(cStep==='limit') {
-            if(!State.sel.limit) State.sel.limit = 'All'; // Default
+            if(!State.sel.limit) State.sel.limit = 'All';
             Game.initQuiz();
         }
     },
 
-    // --- New: Back Button Logic ---
     prevSel: () => {
         if(cStep === 'term') UI.goHome();
-        else if(cStep === 'subj') Game.renderSel('term');
-        else if(cStep === 'lesson') Game.renderSel('subj');
-        else if(cStep === 'chapter') Game.renderSel('lesson');
+        else if(cStep === 'subj') { 
+            State.sel.term = null; // Clear term selection logic if needed, but mainly re-render
+            Game.renderSel('term'); 
+        }
+        else if(cStep === 'lesson') {
+            State.sel.subj = null; // FIX: Clear Subject to allow re-selecting another subject
+            Game.renderSel('subj');
+        }
+        else if(cStep === 'chapter') {
+            // Keep Lessons selected, just go back to view
+            Game.renderSel('lesson');
+        }
         else if(cStep === 'limit') Game.renderSel('chapter');
     },
 
@@ -163,6 +208,7 @@ const Game = {
     initQuiz: () => {
         let final = State.pool.filter(q => State.sel.term===q.term && State.sel.subj===q.subject && State.sel.lessons.includes(q.lesson) && State.sel.chapters.includes(q.chapter));
         if(!final.length) return alert('No questions.');
+        
         final.sort(()=>0.5-Math.random());
         if(State.sel.limit!=='All') final = final.slice(0, parseInt(State.sel.limit));
         
@@ -196,8 +242,13 @@ const Game = {
 
     answered: false,
     renderQ: () => {
+        clearTimeout(autoNavTimer);
         Game.answered = false;
         const q = State.quiz[State.qIdx];
+        
+        // Handle Saved Answers in view mode
+        const isAlreadyAnswered = State.localData.archive.includes(q.id) && State.mode === 'view_mode';
+        
         document.getElementById('q-id').innerText = q.id;
         document.getElementById('q-idx').innerText = `${State.qIdx+1}/${State.quiz.length}`;
         document.getElementById('q-path').innerText = `${q.subject} > ${q.lesson}`;
@@ -214,7 +265,10 @@ const Game = {
             d.onclick = () => Game.answer(i);
             opts.appendChild(d);
         });
-        if(State.mode==='view_mode') Game.answer(q.correct_option_id, true);
+        
+        if(isAlreadyAnswered) {
+             Game.answer(q.correct_option_id, true);
+        }
     },
 
     answer: (idx, sim=false) => {
@@ -224,8 +278,9 @@ const Game = {
         const divs = document.querySelectorAll('.opt');
 
         divs[q.correct_option_id].classList.add('correct');
+        const isCorrect = (idx === q.correct_option_id);
 
-        if(idx === q.correct_option_id) {
+        if(isCorrect) {
             if(!sim) {
                 State.score++;
                 AudioSys.playSuccess();
@@ -239,9 +294,11 @@ const Game = {
                 Game.triggerHaptic('error');
             }
             if(!State.localData.mistakes.includes(q.id)) State.localData.mistakes.push(q.id);
-            if(!State.localData.archive.includes(q.id)) State.localData.archive.push(q.id);
             if(State.mode==='survival') { setTimeout(()=>alert('🔥 Game Over'), 500); return UI.goHome(); }
         }
+        
+        // Add to Archive (All attempted questions)
+        if(!State.localData.archive.includes(q.id)) State.localData.archive.push(q.id);
         
         Data.saveData();
 
@@ -251,6 +308,22 @@ const Game = {
             expBox.classList.remove('hidden');
         }
         document.getElementById('btn-next').classList.remove('hidden');
+
+        // Auto Advance Logic (Only if not sim/view mode)
+        if(!sim && State.mode !== 'view_mode') {
+            const delay = isCorrect ? 1000 : 3000;
+            autoNavTimer = setTimeout(() => {
+                if(Game.answered) Game.nextQ();
+            }, delay);
+        }
+    },
+
+    navQ: (dir) => {
+        if(dir === -1 && State.qIdx > 0) {
+             State.qIdx--; Game.renderQ();
+        } else if (dir === 1) {
+             Game.nextQ();
+        }
     },
 
     nextQ: () => { 
@@ -272,6 +345,7 @@ const Game = {
 
     finishQuiz: () => {
         Game.stopTimer();
+        clearTimeout(autoNavTimer);
         Data.saveLeaderboard(State.score);
         AudioSys.playSuccess();
         const pct = Math.round((State.score/State.quiz.length)*100);
