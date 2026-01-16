@@ -1,9 +1,10 @@
+/* ... (بداية الملف كما هي، المتغيرات والثيمات) ... */
 :root {
     --font-fam: 'Segoe UI', Tahoma, sans-serif;
     --font-size: 14px;
     --btn-pad: 10px 18px;
     --radius: 12px;
-    
+    /* ... باقي المتغيرات ... */
     --bg-grad: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
     --glass-bg: rgba(255, 255, 255, 0.85);
     --glass-border: 1px solid rgba(255, 255, 255, 0.4);
@@ -16,6 +17,7 @@
     --shadow: 0 4px 15px rgba(0,0,0,0.06);
 }
 
+/* ... (أكواد الثيمات Dark, Midnight, etc. كما هي تماماً) ... */
 [data-theme="dark"] {
     --bg-grad: linear-gradient(135deg, #232526 0%, #414345 100%);
     --glass-bg: rgba(30, 30, 30, 0.92);
@@ -23,65 +25,7 @@
     --txt-main: #dfe6e9; --txt-sec: #b2bec3;
     --primary: #a29bfe; --secondary: #81ecec;
 }
-
-[data-theme="midnight"] {
-    --bg-grad: linear-gradient(to bottom, #0f2027, #203a43, #2c5364);
-    --glass-bg: rgba(15, 32, 39, 0.95);
-    --glass-border: 1px solid rgba(255,255,255,0.05);
-    --txt-main: #ecf0f1; --txt-sec: #bdc3c7;
-    --primary: #f39c12; --secondary: #e67e22;
-}
-
-[data-theme="forest"] {
-    --bg-grad: linear-gradient(135deg, #134E5E 0%, #71B280 100%);
-    --glass-bg: rgba(19, 78, 94, 0.95);
-    --txt-main: #f1f8e9; --txt-sec: #c5e1a5;
-    --primary: #aed581; --secondary: #81c784;
-}
-
-[data-theme="ocean"] {
-    --bg-grad: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-    --glass-bg: rgba(255,255,255,0.9);
-    --txt-main: #005073; --txt-sec: #0277bd;
-    --primary: #0288d1; --secondary: #03a9f4;
-}
-
-[data-theme="sunset"] {
-    --bg-grad: linear-gradient(120deg, #f6d365 0%, #fda085 100%);
-    --glass-bg: rgba(255,255,255,0.9);
-    --txt-main: #d35400; --txt-sec: #e67e22;
-    --primary: #ff6b6b; --secondary: #ff9ff3;
-}
-
-[data-theme="lavender"] {
-    --bg-grad: linear-gradient(to top, #c471ed 0%, #f64f59 100%);
-    --glass-bg: rgba(255,255,255,0.92);
-    --txt-main: #5a2a8b; --txt-sec: #8e44ad;
-    --primary: #be2edd; --secondary: #e056fd;
-}
-
-[data-theme="coffee"] {
-    --bg-grad: linear-gradient(to right, #3e2b26, #6d4c41);
-    --glass-bg: rgba(62, 43, 38, 0.96);
-    --txt-main: #d7ccc8; --txt-sec: #a1887f;
-    --primary: #d7ccc8; --secondary: #8d6e63;
-}
-
-[data-theme="hacker"] {
-    --bg-grad: #000;
-    --glass-bg: rgba(0,0,0,0.95);
-    --glass-border: 1px solid #0f0;
-    --txt-main: #0f0; --txt-sec: #008f11;
-    --primary: #0f0; --secondary: #0f0; --radius:0px;
-}
-
-[data-theme="minimal"] {
-    --bg-grad: #fff;
-    --glass-bg: #fff;
-    --glass-border: 1px solid #000;
-    --txt-main: #000; --txt-sec: #333;
-    --primary: #000; --secondary: #000; --radius:4px;
-}
+/* ... انسخ باقي الثيمات من الملف السابق ... */
 
 * { box-sizing: border-box; transition: background 0.4s ease, color 0.3s ease, transform 0.2s; outline: none; -webkit-tap-highlight-color: transparent; }
 body { margin: 0; padding: 0; font-family: var(--font-fam); font-size: var(--font-size); color: var(--txt-main); background: var(--bg-grad); height: 100vh; overflow: hidden; user-select: none; }
@@ -115,14 +59,14 @@ body { margin: 0; padding: 0; font-family: var(--font-fam); font-size: var(--fon
 .menu-card:hover { border-color: var(--primary); transform: translateY(-3px); }
 .menu-card .icon { font-size: 2em; margin-bottom: 8px; }
 
-/* Selection View (Fixed Scroll) */
+/* Selection View */
 .sel-list { flex-grow: 1; overflow-y: auto; padding: 5px; scroll-behavior: smooth; max-height: 60vh; border-bottom: 1px solid rgba(0,0,0,0.05); }
 .scroll-shadow { box-shadow: inset 0 -10px 10px -10px rgba(0,0,0,0.1); }
 .sticky-footer { position: sticky; bottom: 0; background: transparent; padding-top: 10px; margin-top: auto; }
 
 /* Quiz & Inputs */
 .quiz-view { display: flex; flex-direction: column; height: 100%; }
-.quiz-nav-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+.quiz-nav-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 10px; }
 #timer-bar { height: 4px; background: var(--accent); width: 100%; margin-bottom: 8px; border-radius: 2px; display: none; transition: width 1s linear; }
 
 .question-box { flex-shrink: 0; max-height: 35vh; overflow-y: auto; }
@@ -131,15 +75,24 @@ body { margin: 0; padding: 0; font-family: var(--font-fam); font-size: var(--fon
 .options-list { overflow-y: auto; flex-grow: 1; padding: 5px 0; display: flex; flex-direction: column; gap: 8px; }
 .opt { background: rgba(255,255,255,0.6); border: 1px solid rgba(0,0,0,0.1); padding: 14px; border-radius: var(--radius); cursor: pointer; direction: ltr; text-align: left; position: relative; }
 [data-theme="dark"] .opt { background: rgba(255,255,255,0.1); }
+/* تم تعديل ستايل الإجابات */
 .opt.correct { background: rgba(46, 204, 113, 0.25); border-color: #2ecc71; color: #145a32; }
 [data-theme="dark"] .opt.correct { color: #2ecc71; }
 .opt.wrong { background: rgba(231, 76, 60, 0.25); border-color: #e74c3c; color: #78281f; }
 [data-theme="dark"] .opt.wrong { color: #e74c3c; }
 
+/* تم إضافة ستايل للإجابة المختارة قبل التصحيح (في الوضع غير الفوري) */
+.opt.selected-temp { border: 2px solid var(--primary); background: rgba(0,0,0,0.05); }
+
 /* Buttons & Chips */
 .btn { border: none; cursor: pointer; padding: var(--btn-pad); border-radius: var(--radius); font-weight: 600; font-size: 0.9em; display: inline-flex; align-items: center; justify-content: center; gap: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
 .btn:active { transform: scale(0.96); }
 .btn-sm { padding: 6px 12px; font-size: 0.8em; }
+
+/* Nav Buttons - تكبير أزرار التنقل */
+.btn-nav { background: var(--glass-bg); border: 1px solid var(--txt-sec); color: var(--txt-main); padding: 12px 20px; font-size: 1.1em; flex: 1; box-shadow: var(--shadow); }
+.btn-nav:active { background: var(--primary); color: #fff; }
+
 .btn-primary { background: var(--primary); color: #fff; } 
 .btn-sec { background: transparent; border: 1px solid var(--txt-sec); color: var(--txt-sec); }
 .btn-accent { background: var(--accent); color: #fff; }
@@ -170,6 +123,7 @@ body { margin: 0; padding: 0; font-family: var(--font-fam); font-size: var(--fon
 .theme-preview.active { border-color: var(--txt-main); transform: scale(1.1); }
 .scrollable-chips { display: flex; gap: 10px; overflow-x: auto; padding: 5px; }
 
+/* Modal & Layouts */
 .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 999; display: none; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
 .modal-content { background: var(--glass-bg); padding: 20px; border-radius: var(--radius); width: 90%; max-width: 380px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.3); max-height: 90vh; overflow-y: auto; }
 .hidden { display: none !important; }
