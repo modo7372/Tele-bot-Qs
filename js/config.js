@@ -1,5 +1,3 @@
-// js/config.js
-
 const ALLOWED_IDS = [ 5814737296, 2004826495 ]; 
 const ENABLE_SECURITY = false; // Set true in production
 
