@@ -1,14 +1,13 @@
 window.onload = async () => {
     // 0. Cache Buster Logic
-    const APP_VER = '2.1'; 
+    const APP_VER = '2.3'; 
     const savedVer = localStorage.getItem('app_version');
     if(savedVer !== APP_VER) {
         localStorage.setItem('app_version', APP_VER);
         console.log('App Updated to ' + APP_VER);
     }
 
-    // 1. Telegram Init & Security Check (PRIORITY 1)
-    // We run this FIRST to ensure Lock Screen is removed even if other things fail.
+    // 1. Telegram Init & Security Check
     const tg = window.Telegram.WebApp; 
     tg.ready(); tg.expand();
     
@@ -24,13 +23,10 @@ window.onload = async () => {
             if(lockScreen) lockScreen.style.display = 'none';
             if(appWrap) appWrap.style.display = 'flex';
         } else {
-            // Access denied
             if(debugId) debugId.innerText = `ID: ${State.user.id}`;
-            // Stop execution here if security is strictly enabled and user not allowed
             return; 
         }
     } else {
-        // Security Disabled - Open App Immediately
         if(lockScreen) lockScreen.style.display = 'none';
         if(appWrap) appWrap.style.display = 'flex';
     }
@@ -43,7 +39,6 @@ window.onload = async () => {
     // 3. UI Init
     try {
         UI.init();
-        // Try to set header color safely
         if(tg.isVersionAtLeast('6.1')) {
            const primary = getComputedStyle(document.body).getPropertyValue('--primary');
            if(primary) tg.setHeaderColor(primary.trim());
@@ -53,9 +48,20 @@ window.onload = async () => {
     // 4. Load Questions
     Data.loadQuestions();
 
-    // 5. PWA
+    // 5. PWA Registration with Update Handling
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js').then(()=>console.log('SW Ready')).catch(e=>console.log('SW Fail', e));
+        navigator.serviceWorker.register('sw.js').then(reg => {
+            console.log('SW Ready');
+            // Check for updates
+            reg.onupdatefound = () => {
+                const installingWorker = reg.installing;
+                installingWorker.onstatechange = () => {
+                    if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                        console.log('New update installed');
+                    }
+                };
+            };
+        }).catch(e=>console.log('SW Fail', e));
     }
 
     // 6. Keys
