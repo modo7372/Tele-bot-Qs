@@ -28,18 +28,19 @@ const Data = {
         };
         State.localData = local;
 
-        // Try Cloud Storage (Async)
-        try {
-            Telegram.WebApp.CloudStorage.getItem('medquiz_data', (err, val) => {
-                if(!err && val) {
-                    const cloud = JSON.parse(val);
-                    // Merge strategies could be complex, for now, Cloud overwrites Local if exists
-                    State.localData = { ...local, ...cloud };
-                    // Apply loaded settings immediately
-                    if(State.localData.settings.theme) UI.setTheme(State.localData.settings.theme);
-                }
-            });
-        } catch(e) { console.log("Cloud storage not available"); }
+        // Try Cloud Storage only if supported (v6.9+)
+        if (window.Telegram.WebApp.isVersionAtLeast && window.Telegram.WebApp.isVersionAtLeast('6.9')) {
+            try {
+                Telegram.WebApp.CloudStorage.getItem('medquiz_data', (err, val) => {
+                    if(!err && val) {
+                        const cloud = JSON.parse(val);
+                        State.localData = { ...local, ...cloud };
+                        // Apply loaded settings immediately
+                        if(State.localData.settings.theme) UI.setTheme(State.localData.settings.theme);
+                    }
+                });
+            } catch(e) { console.log("Cloud unavailable"); }
+        }
     },
 
     saveData: () => {
@@ -49,10 +50,12 @@ const Data = {
         localStorage.setItem('fav', JSON.stringify(State.localData.fav));
         localStorage.setItem('settings', JSON.stringify(State.localData.settings));
         
-        // Sync to Cloud
-        try {
-            Telegram.WebApp.CloudStorage.setItem('medquiz_data', str);
-        } catch(e){}
+        // Sync to Cloud only if supported (v6.9+)
+        if (window.Telegram.WebApp.isVersionAtLeast && window.Telegram.WebApp.isVersionAtLeast('6.9')) {
+            try {
+                Telegram.WebApp.CloudStorage.setItem('medquiz_data', str);
+            } catch(e){}
+        }
     },
 
     saveLeaderboard: (score) => {
