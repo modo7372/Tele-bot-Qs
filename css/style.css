@@ -2,7 +2,7 @@
     /* --- Base Settings --- */
     --font-fam: 'Segoe UI', Tahoma, sans-serif;
     --font-size: 14px;
-    --btn-pad: 8px 16px;
+    --btn-pad: 10px 18px;
     --radius: 12px;
     
     /* --- Default (Light) --- */
@@ -26,73 +26,28 @@
     --txt-main: #dfe6e9; --txt-sec: #b2bec3;
     --primary: #a29bfe; --secondary: #81ecec;
 }
-/* 2. Midnight (Deep Blue) */
+/* 2. Midnight */
 [data-theme="midnight"] {
     --bg-grad: linear-gradient(to bottom, #0f2027, #203a43, #2c5364);
     --glass-bg: rgba(15, 32, 39, 0.95);
     --txt-main: #ecf0f1; --txt-sec: #bdc3c7;
     --primary: #f1c40f; --secondary: #e67e22;
 }
-/* 3. Forest (Green) */
-[data-theme="forest"] {
-    --bg-grad: linear-gradient(135deg, #134E5E 0%, #71B280 100%);
-    --glass-bg: rgba(20, 50, 30, 0.9);
-    --txt-main: #f1f8e9; --txt-sec: #c5e1a5;
-    --primary: #66bb6a; --secondary: #9ccc65;
-}
-/* 4. Ocean (Blue/Aqua) */
-[data-theme="ocean"] {
-    --bg-grad: linear-gradient(to top, #4facfe 0%, #00f2fe 100%);
-    --glass-bg: rgba(255, 255, 255, 0.9);
-    --txt-main: #01579b; --txt-sec: #0277bd;
-    --primary: #0288d1; --secondary: #29b6f6;
-}
-/* 5. Sunset (Orange/Purple) */
-[data-theme="sunset"] {
-    --bg-grad: linear-gradient(120deg, #f6d365 0%, #fda085 100%);
-    --glass-bg: rgba(255, 255, 255, 0.8);
-    --txt-main: #d35400; --txt-sec: #e67e22;
-    --primary: #d35400; --secondary: #e74c3c;
-}
-/* 6. Lavender (Soft Purple) */
-[data-theme="lavender"] {
-    --bg-grad: linear-gradient(to top, #cd9cf2 0%, #f6f3ff 100%);
-    --glass-bg: rgba(255, 255, 255, 0.9);
-    --txt-main: #4a148c; --txt-sec: #7b1fa2;
-    --primary: #9c27b0; --secondary: #ab47bc;
-}
-/* 7. Coffee (Warm Brown) */
-[data-theme="coffee"] {
-    --bg-grad: linear-gradient(to right, #acb6e5, #86fde8); /* Placeholder, actually doing Mocha */
-    --bg-grad: linear-gradient(135deg, #3e2b26 0%, #6d4c41 100%);
-    --glass-bg: rgba(62, 39, 35, 0.95);
-    --txt-main: #d7ccc8; --txt-sec: #a1887f;
-    --primary: #d7ccc8; --secondary: #8d6e63;
-}
-/* 8. Hacker (Matrix) */
-[data-theme="hacker"] {
-    --bg-grad: #000;
-    --glass-bg: rgba(0, 20, 0, 0.95);
-    --glass-border: 1px solid #0f0;
-    --txt-main: #0f0; --txt-sec: #008000;
-    --primary: #0f0; --secondary: #0f0; --accent: #0f0;
-    --radius: 0px; /* Sharp edges */
-}
-/* 9. Minimal (B&W) */
-[data-theme="minimal"] {
-    --bg-grad: #fff;
-    --glass-bg: #fff;
-    --glass-border: 2px solid #000;
-    --txt-main: #000; --txt-sec: #333;
-    --primary: #000; --secondary: #000;
-    --shadow: none;
-}
+/* Other themes... */
+[data-theme="forest"] { --bg-grad: linear-gradient(135deg, #134E5E 0%, #71B280 100%); --glass-bg: rgba(20, 50, 30, 0.9); --txt-main: #f1f8e9; --txt-sec: #c5e1a5; --primary: #66bb6a; --secondary: #9ccc65; }
+[data-theme="ocean"] { --bg-grad: linear-gradient(to top, #4facfe 0%, #00f2fe 100%); --glass-bg: rgba(255, 255, 255, 0.9); --txt-main: #01579b; --txt-sec: #0277bd; --primary: #0288d1; --secondary: #29b6f6; }
+[data-theme="sunset"] { --bg-grad: linear-gradient(120deg, #f6d365 0%, #fda085 100%); --glass-bg: rgba(255, 255, 255, 0.8); --txt-main: #d35400; --txt-sec: #e67e22; --primary: #d35400; --secondary: #e74c3c; }
+[data-theme="lavender"] { --bg-grad: linear-gradient(to top, #cd9cf2 0%, #f6f3ff 100%); --glass-bg: rgba(255, 255, 255, 0.9); --txt-main: #4a148c; --txt-sec: #7b1fa2; --primary: #9c27b0; --secondary: #ab47bc; }
+[data-theme="coffee"] { --bg-grad: linear-gradient(135deg, #3e2b26 0%, #6d4c41 100%); --glass-bg: rgba(62, 39, 35, 0.95); --txt-main: #d7ccc8; --txt-sec: #a1887f; --primary: #d7ccc8; --secondary: #8d6e63; }
+[data-theme="hacker"] { --bg-grad: #000; --glass-bg: rgba(0, 20, 0, 0.95); --glass-border: 1px solid #0f0; --txt-main: #0f0; --txt-sec: #008000; --primary: #0f0; --secondary: #0f0; --accent: #0f0; --radius: 0px; }
+[data-theme="minimal"] { --bg-grad: #fff; --glass-bg: #fff; --glass-border: 2px solid #000; --txt-main: #000; --txt-sec: #333; --primary: #000; --secondary: #000; --shadow: none; }
 
 /* Global & Utility */
 * { box-sizing: border-box; transition: background 0.4s ease, color 0.3s ease, transform 0.2s; outline: none; -webkit-tap-highlight-color: transparent; }
 body { margin: 0; padding: 0; font-family: var(--font-fam); font-size: var(--font-size); color: var(--txt-main); background: var(--bg-grad); height: 100vh; overflow: hidden; user-select: none; }
 
-#bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+#bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; opacity: 1; transition: opacity 0.5s; }
+#bg-canvas.hidden { opacity: 0; }
 #lock-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1e1e1e; color: #fff; z-index: 99999; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
 
 .container { position: relative; z-index: 1; width: 100%; height: 100%; max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; padding: 10px; }
@@ -105,14 +60,20 @@ body { margin: 0; padding: 0; font-family: var(--font-fam); font-size: var(--fon
 
 .btn { border: none; cursor: pointer; padding: var(--btn-pad); border-radius: var(--radius); font-weight: 600; font-size: 0.9em; display: inline-flex; align-items: center; justify-content: center; gap: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
 .btn:active { transform: scale(0.96); }
-.btn-primary { background: var(--primary); color: #fff; } /* For Hacker theme override text color */
+.btn-sm { padding: 6px 12px; font-size: 0.8em; }
+.btn-primary { background: var(--primary); color: #fff; } 
 [data-theme="hacker"] .btn-primary { color: #000; font-weight: bold; }
 .btn-sec { background: transparent; border: 1px solid var(--txt-sec); color: var(--txt-sec); }
-.btn-ghost { background: rgba(0,0,0,0.05); color: var(--txt-main); padding: 8px; border-radius: 50%; aspect-ratio: 1; }
-.full-width { width: 100%; margin-top: 10px; }
+.btn-accent { background: var(--accent); color: #fff; }
+.btn-ghost { background: rgba(0,0,0,0.05); color: var(--txt-main); }
+.full-width { width: 100%; }
 
 /* Menu Grid */
 .grid-menu { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; flex-grow: 1; overflow-y: auto; padding: 5px; }
+.full-span-card { grid-column: 1 / -1; background: var(--primary) !important; color: #fff !important; border-color: transparent !important; }
+.full-span-card .icon { color: #fff; }
+.full-span-card h3, .full-span-card small { color: #fff !important; }
+
 .menu-card { background: var(--glass-bg); border-radius: var(--radius); border: var(--glass-border); box-shadow: var(--shadow); padding: 15px; text-align: center; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 110px; }
 .menu-card:hover { border-color: var(--primary); transform: translateY(-3px); }
 .menu-card .icon { font-size: 2em; margin-bottom: 8px; }
@@ -125,7 +86,7 @@ body { margin: 0; padding: 0; font-family: var(--font-fam); font-size: var(--fon
 .q-text { font-size: 1.2em; line-height: 1.5; direction: ltr; text-align: left; }
 
 .options-list { overflow-y: auto; flex-grow: 1; padding: 5px 0; display: flex; flex-direction: column; gap: 8px; }
-.opt { background: rgba(255,255,255,0.6); border: 1px solid rgba(0,0,0,0.1); padding: 12px; border-radius: var(--radius); cursor: pointer; direction: ltr; text-align: left; position: relative; }
+.opt { background: rgba(255,255,255,0.6); border: 1px solid rgba(0,0,0,0.1); padding: 14px; border-radius: var(--radius); cursor: pointer; direction: ltr; text-align: left; position: relative; }
 [data-theme="dark"] .opt, [data-theme="hacker"] .opt, [data-theme="midnight"] .opt { background: rgba(255,255,255,0.1); }
 .opt.correct { background: rgba(46, 204, 113, 0.25); border-color: #2ecc71; color: #145a32; }
 [data-theme="dark"] .opt.correct { color: #2ecc71; }
@@ -134,7 +95,7 @@ body { margin: 0; padding: 0; font-family: var(--font-fam); font-size: var(--fon
 
 /* UI Elements */
 .chip-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
-.chip { background: rgba(128,128,128,0.1); padding: 6px 12px; border-radius: 20px; cursor: pointer; font-size: 0.9em; border: 1px solid transparent; }
+.chip { background: rgba(128,128,128,0.1); padding: 8px 14px; border-radius: 20px; cursor: pointer; font-size: 0.95em; border: 1px solid transparent; user-select: none; }
 .chip.selected { background: var(--primary); color: #fff; }
 
 .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 999; display: none; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
@@ -142,10 +103,13 @@ body { margin: 0; padding: 0; font-family: var(--font-fam); font-size: var(--fon
 
 /* Settings Chips */
 .scrollable-chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px; flex-wrap: nowrap !important; }
-.theme-preview { width: 30px; height: 30px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; flex-shrink: 0; }
-.theme-preview.active { border-color: var(--txt-main); transform: scale(1.1); }
+.theme-preview { width: 35px; height: 35px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; flex-shrink: 0; }
+.theme-preview.active { border-color: var(--txt-main); transform: scale(1.1); box-shadow: 0 0 10px rgba(0,0,0,0.2); }
 
-.toggle-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.9em; }
+.toggle-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.95em; }
 .hidden { display: none !important; }
 .column-flex { display: flex; flex-direction: column; height: 100%; }
+.view-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
 .view-footer { margin-top: auto; padding-top: 10px; display: flex; justify-content: space-between; }
+.vertical { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+.inp-box { width: 100%; padding: 12px; border-radius: var(--radius); border: 1px solid var(--txt-sec); background: rgba(255,255,255,0.5); margin-bottom: 10px; }
