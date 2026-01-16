@@ -8,13 +8,15 @@ const AudioSys = {
     },
     playTone: (freq, type, duration) => {
         if (!AudioSys.enabled || !AudioSys.ctx) return;
-        const osc = AudioSys.ctx.createOscillator();
-        const gain = AudioSys.ctx.createGain();
-        osc.type = type; osc.frequency.value = freq;
-        osc.connect(gain); gain.connect(AudioSys.ctx.destination);
-        osc.start();
-        gain.gain.exponentialRampToValueAtTime(0.00001, AudioSys.ctx.currentTime + duration);
-        osc.stop(AudioSys.ctx.currentTime + duration);
+        try {
+            const osc = AudioSys.ctx.createOscillator();
+            const gain = AudioSys.ctx.createGain();
+            osc.type = type; osc.frequency.value = freq;
+            osc.connect(gain); gain.connect(AudioSys.ctx.destination);
+            osc.start();
+            gain.gain.exponentialRampToValueAtTime(0.00001, AudioSys.ctx.currentTime + duration);
+            osc.stop(AudioSys.ctx.currentTime + duration);
+        } catch(e) {}
     },
     playSuccess: () => { AudioSys.playTone(600, 'sine', 0.1); setTimeout(()=>AudioSys.playTone(800, 'sine', 0.2), 100); },
     playError: () => { AudioSys.playTone(300, 'sawtooth', 0.1); setTimeout(()=>AudioSys.playTone(200, 'sawtooth', 0.2), 100); },
@@ -55,6 +57,7 @@ const UI = {
         UI.initAnim();
         if(s.anim === false) UI.toggleAnim(false);
 
+        // Resume Audio Context on interaction
         document.body.addEventListener('click', () => {
             if(AudioSys.ctx && AudioSys.ctx.state === 'suspended') AudioSys.ctx.resume();
             if(!AudioSys.ctx) AudioSys.init();
