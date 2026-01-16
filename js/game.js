@@ -23,6 +23,13 @@ const Game = {
     },
 
     toggleInstant: (val) => { State.instantFeedback = val; },
+    
+    // تأكيد الخروج من الاختبار
+    confirmExit: () => {
+        if(confirm('هل تريد الخروج والعودة للقائمة الرئيسية؟')) {
+            UI.goHome();
+        }
+    },
 
     // --- الفلاتر ---
     setFilter: (f, el) => {
@@ -44,7 +51,7 @@ const Game = {
     },
 
     // --- أوضاع اللعب ---
-    // 1. ضربة حظ (سؤال واحد عشوائي مع احترام الفلتر)
+    // 1. ضربة حظ
     luckyShot: () => {
         let pool = Game.getFilteredPool();
         if(!pool.length) return alert('لا توجد أسئلة متاحة حسب الفلتر المختار.');
@@ -62,17 +69,26 @@ const Game = {
         Game.startQuizSession(sub.slice(0, count), 'normal');
     },
 
-    // 3. بدء تدفق الاختيار (مذاكرة / بقاء / هجوم وقت)
+    // 3. بدء تدفق الاختيار
     startFlow: (m) => {
-        State.tempMode = m; // تخزين الوضع مؤقتاً لحين اختيار الأسئلة
+        State.tempMode = m; 
+        State.isRankMode = false; // نتأكد أننا في وضع اللعب
         State.pool = Game.getFilteredPool();
         
-        if(m === 'mistakes') { // legacy check
+        if(m === 'mistakes') {
             State.pool = State.pool.filter(q => State.localData.mistakes.includes(q.id));
         }
 
         if(!State.pool.length) return alert('لا توجد أسئلة متاحة في هذا الوضع/الفلتر.');
         
+        State.sel = {term:null, subj:null, lessons:[], chapters:[], limit:'All'};
+        Game.renderSel('term');
+    },
+    
+    // بدء وضع الترتيب (يختار المادة ثم يعرض الترتيب)
+    startRankMode: () => {
+        State.isRankMode = true; // تفعيل وضع الترتيب
+        State.pool = State.allQ; // نحتاج كل الأسئلة لبناء القائمة
         State.sel = {term:null, subj:null, lessons:[], chapters:[], limit:'All'};
         Game.renderSel('term');
     },
@@ -96,15 +112,20 @@ const Game = {
         cStep = step; UI.showView('v-select');
         const list = document.getElementById('sel-body'); list.innerHTML='';
         const titleMap = {'term':'الترم','subj':'المادة','lesson':'المحاضرة','chapter':'الفصل','limit':'العدد'};
-        document.getElementById('sel-head').innerText = `اختر ${titleMap[step] || step}`;
+        
+        // إذا كنا في وضع الترتيب، نغير العناوين قليلاً
+        const prefix = State.isRankMode ? "ترتيب: " : "اختر ";
+        document.getElementById('sel-head').innerText = `${prefix} ${titleMap[step] || step}`;
         
         const btnRnd = document.getElementById('btn-mode-random');
         btnRnd.classList.add('hidden');
         document.getElementById('btn-all').classList.add('hidden');
 
+        // فلترة القائمة بناء على الاختيارات السابقة
         const sub = State.pool.filter(q => (!State.sel.term||q.term===State.sel.term) && (!State.sel.subj||q.subject===State.sel.subj));
         
-        if(step !== 'limit' && step !== 'term') {
+        // زر عشوائي (يظهر فقط في وضع اللعب وليس الترتيب)
+        if(!State.isRankMode && step !== 'limit' && step !== 'term') {
              btnRnd.classList.remove('hidden');
              btnRnd.innerText = `🎲 امتحان عشوائي من الـ ${titleMap[step] || step} الحالية`;
         }
@@ -113,7 +134,11 @@ const Game = {
 
         if(step==='term') items=[...new Set(sub.map(q=>q.term))];
         else if(step==='subj') items=[...new Set(sub.map(q=>q.subject))];
-        else if(step==='lesson') { items=[...new Set(sub.map(q=>q.lesson))]; isMulti=true; }
+        else if(step==='lesson') { 
+            // إذا كنا في وضع الترتيب، نتوقف عند اختيار المادة
+            if(State.isRankMode) return Game.showRank(); 
+            items=[...new Set(sub.map(q=>q.lesson))]; isMulti=true; 
+        }
         else if(step==='chapter') {
             isMulti=true;
             State.sel.lessons.forEach(l => {
@@ -194,7 +219,7 @@ const Game = {
     
     toggleAll: () => document.querySelectorAll('.chip').forEach(c => c.classList.toggle('selected')),
 
-    // --- بدء جلسة الاختبار (Quiz Session Initialization) ---
+    // --- بدء جلسة الاختبار ---
     initQuiz: () => {
         let final = State.pool.filter(q => State.sel.term===q.term && State.sel.subj===q.subject && State.sel.lessons.includes(q.lesson) && State.sel.chapters.includes(q.chapter));
         if(!final.length) return alert('No questions.');
@@ -211,21 +236,15 @@ const Game = {
         State.qIdx = 0;
         State.score = 0;
         
-        // **هام: مصفوفة لحفظ حالة الإجابات لكل سؤال**
-        // كل عنصر سيكون: { answered: false, selectedIdx: null, isCorrect: false }
         State.answers = new Array(questions.length).fill(null).map(() => ({ answered: false, selectedIdx: null, isCorrect: false }));
-        
-        // إعدادات الوضع الفوري
         State.instantFeedback = document.getElementById('chk-instant').checked;
 
         UI.showView('v-quiz');
         UI.initAnim(true);
 
-        // إعدادات المؤقت
         if(mode === 'timeAttack') Game.startTimer();
         else document.getElementById('timer-bar').style.display='none';
 
-        // إخفاء/إظهار أزرار التحكم
         const isSearchOrView = (mode === 'view_mode' || mode === 'search_mode');
         document.getElementById('btn-finish').style.display = isSearchOrView ? 'none' : 'inline-block';
         document.getElementById('archive-controls').classList.toggle('hidden', !isSearchOrView);
@@ -235,7 +254,6 @@ const Game = {
 
     // --- الأرشيف والبحث ---
     startArchive: (type) => { 
-        // type: 'quiz' (إعادة حل), 'view' (تصفح)
         const p = State.allQ.filter(q=>State.localData.archive.includes(q.id));
         if(!p.length) return alert('الأرشيف فارغ');
         UI.closeModal('m-archive');
@@ -256,7 +274,6 @@ const Game = {
 
         if(found.length) {
             UI.closeModal('m-search');
-            // وضع 'search_mode' لا يخرج المستخدم بنتيجة نهائية
             Game.startQuizSession(found, 'search_mode');
         } else {
             alert('لم يتم العثور على نتائج.');
@@ -272,25 +289,22 @@ const Game = {
     },
 
     toggleAnswerView: () => {
-        // خاص بوضع الأرشيف لإظهار/إخفاء الحل
         const qState = State.answers[State.qIdx];
         const q = State.quiz[State.qIdx];
         
         if(qState.answered) {
-            // إذا كانت ظاهرة، نخفيها (Reset visually)
             qState.answered = false; 
             Game.renderQ();
         } else {
-            // نظهر الحل
-            Game.answer(q.correct_option_id, true); // True = simulation mode
+            Game.answer(q.correct_option_id, true); 
         }
     },
 
-    // --- عرض السؤال (Rendering) ---
+    // --- عرض السؤال ---
     renderQ: () => {
         clearTimeout(autoNavTimer);
         const q = State.quiz[State.qIdx];
-        const qState = State.answers[State.qIdx]; // استرجاع الحالة المحفوظة
+        const qState = State.answers[State.qIdx]; 
 
         document.getElementById('q-id').innerText = q.id;
         document.getElementById('q-idx').innerText = `${State.qIdx+1}/${State.quiz.length}`;
@@ -306,18 +320,15 @@ const Game = {
         expBox.classList.add('hidden');
         btnCheck.classList.add('hidden');
 
-        // بناء الخيارات
         q.options.forEach((o, i) => {
             const d = document.createElement('div'); d.className='opt';
             d.innerHTML = `<span>${o}</span>`;
             
-            // استرجاع الستايل إذا كان مجاباً
             if(qState.answered) {
                 if(i === q.correct_option_id) d.classList.add('correct');
                 else if(i === qState.selectedIdx) d.classList.add('wrong');
-                d.style.pointerEvents = 'none'; // منع التغيير بعد الإجابة النهائية
+                d.style.pointerEvents = 'none'; 
             } else if (qState.selectedIdx === i) {
-                // تم الاختيار لكن لم يتم التصحيح بعد (في الوضع غير الفوري)
                 d.classList.add('selected-temp');
             }
 
@@ -325,31 +336,25 @@ const Game = {
             opts.appendChild(d);
         });
 
-        // إذا كان مجاباً، نظهر التفسير
         if(qState.answered && q.explanation) {
             expBox.innerHTML = `<b>توضيح:</b> ${q.explanation}`;
             expBox.classList.remove('hidden');
         }
 
-        // زر التحقق اليدوي (يظهر فقط إذا تم اختيار إجابة ولم يتم اعتمادها، والوضع غير فوري)
         if(!State.instantFeedback && qState.selectedIdx !== null && !qState.answered) {
             btnCheck.classList.remove('hidden');
         }
     },
 
-    // --- معالجة الإجابة ---
     handleOptionClick: (idx, el) => {
         const qState = State.answers[State.qIdx];
-        if(qState.answered) return; // لا يمكن التغيير بعد التصحيح النهائي
+        if(qState.answered) return; 
 
-        // تحديد الاختيار
         qState.selectedIdx = idx;
 
         if(State.instantFeedback || State.mode === 'lucky') {
-            // تصحيح فوري
             Game.confirmAnswer(idx);
         } else {
-            // وضع غير فوري: فقط نعلم الاختيار وننتظر زر التحقق
             document.querySelectorAll('.opt').forEach(o => o.classList.remove('selected-temp'));
             el.classList.add('selected-temp');
             document.getElementById('btn-check').classList.remove('hidden');
@@ -367,15 +372,13 @@ const Game = {
         const q = State.quiz[State.qIdx];
         const qState = State.answers[State.qIdx];
         
-        qState.answered = true; // تم الاعتماد
+        qState.answered = true; 
         qState.selectedIdx = idx;
         
         const isCorrect = (idx === q.correct_option_id);
         qState.isCorrect = isCorrect;
 
-        // تحديث الواجهة
         const divs = document.querySelectorAll('.opt');
-        // إزالة التحديد المؤقت
         divs.forEach(d => d.classList.remove('selected-temp')); 
         
         divs[q.correct_option_id].classList.add('correct');
@@ -385,7 +388,6 @@ const Game = {
                 State.score++;
                 AudioSys.playSuccess();
                 Game.triggerHaptic('success');
-                // إزالة من الأخطاء
                 State.localData.mistakes = State.localData.mistakes.filter(x=>x!==q.id);
             }
         } else {
@@ -393,9 +395,7 @@ const Game = {
             if(!isSim) {
                 AudioSys.playError();
                 Game.triggerHaptic('error');
-                // إضافة للأخطاء
                 if(!State.localData.mistakes.includes(q.id)) State.localData.mistakes.push(q.id);
-                // وضع البقاء
                 if(State.mode==='survival') { 
                     setTimeout(()=>alert('🔥 Game Over'), 500); 
                     return UI.goHome(); 
@@ -403,20 +403,17 @@ const Game = {
             }
         }
 
-        // إضافة للأرشيف
         if(!State.localData.archive.includes(q.id)) State.localData.archive.push(q.id);
         Data.saveData();
 
-        // إظهار التفسير
         if(q.explanation) {
             const expBox = document.getElementById('q-exp');
             expBox.innerHTML = `<b>توضيح:</b> ${q.explanation}`;
             expBox.classList.remove('hidden');
         }
 
-        document.getElementById('btn-check').classList.add('hidden'); // إخفاء زر التحقق
+        document.getElementById('btn-check').classList.add('hidden'); 
 
-        // الانتقال التلقائي (فقط إذا كان التصحيح فورياً ولم يكن محاكاة)
         if(State.instantFeedback && !isSim && State.mode !== 'view_mode' && State.mode !== 'search_mode') {
             const delay = isCorrect ? 1000 : 3000;
             autoNavTimer = setTimeout(() => {
@@ -425,16 +422,12 @@ const Game = {
         }
     },
 
-    // --- دالة محاكاة (للعرض فقط في الأرشيف) ---
     answer: (idx, sim=true) => {
-        // هذه الدالة الآن تستخدم ConfirmAnswer منطقياً
-        // ولكن تم الإبقاء عليها للتوافق مع استدعاءات الأرشيف القديمة
         const qState = State.answers[State.qIdx];
-        qState.selectedIdx = idx; // نفترض أن المستخدم اختار الصحيح للعرض
+        qState.selectedIdx = idx; 
         Game.confirmAnswer(idx, sim);
     },
 
-    // --- التنقل ---
     navQ: (dir) => {
         const newIdx = State.qIdx + dir;
         if(newIdx >= 0 && newIdx < State.quiz.length) {
@@ -442,17 +435,14 @@ const Game = {
             Game.renderQ();
             Game.triggerHaptic('selection');
         } else if (newIdx >= State.quiz.length && State.mode !== 'view_mode' && State.mode !== 'search_mode') {
-            // الوصول للنهاية في وضع الاختبار
             Game.finishQuiz();
         } else {
-            // أطراف القائمة في وضع التصفح
-            Game.triggerHaptic('error'); // نبضة خفيفة للوصول للحد
+            Game.triggerHaptic('error');
         }
     },
 
     nextQ: () => Game.navQ(1),
 
-    // --- المؤقت والإنهاء ---
     startTimer: () => {
         let t = 60; const b = document.getElementById('timer-bar'); b.style.display='block';
         clearInterval(tInt);
@@ -467,7 +457,6 @@ const Game = {
         Game.stopTimer();
         clearTimeout(autoNavTimer);
         
-        // حساب النتيجة من مصفوفة الإجابات
         let finalScore = State.answers.filter(a => a.isCorrect).length;
         State.score = finalScore;
 
@@ -479,7 +468,6 @@ const Game = {
         UI.openModal('m-score');
     },
 
-    // --- المفضلة والترتيب ---
     toggleFav: () => {
         const id = State.quiz[State.qIdx].id;
         if(State.localData.fav.includes(id)) State.localData.fav = State.localData.fav.filter(x=>x!==id);
@@ -497,8 +485,11 @@ const Game = {
     },
 
     showRank: () => {
-        // الترتيب الآن زر منفصل
-        if(!State.sel || !State.sel.term || !State.sel.subj) return alert('الترتيب متاح عند اختيار مادة محددة.');
+        // إذا كنا في وضع الترتيب وتم اختيار مادة
+        if(!State.sel || !State.sel.term || !State.sel.subj) {
+             return alert('يجب اختيار مادة لعرض ترتيبها');
+        }
+
         const ctx = `${State.sel.term}_${State.sel.subj}`.replace(/[.#$/\[\]]/g, "_");
         document.getElementById('rank-topic').innerText = ctx.replace('_', ' > ');
         document.getElementById('rank-val').innerText = '...';
