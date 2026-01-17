@@ -248,3 +248,51 @@ body {
 [data-theme="dark"] ::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.2); 
 }
+
+/* --- Home Stats Card --- */
+.home-stats-card {
+    display: flex !important; /* Overwrite grid display */
+    flex-direction: row !important;
+    align-items: center;
+    justify-content: space-around;
+    padding: 15px;
+    background: var(--glass-bg) !important; /* Light background */
+    color: var(--txt-main) !important;
+    min-height: auto !important;
+}
+
+.home-stats-card h3 {
+    margin: 5px 0;
+    color: var(--primary);
+}
+
+.home-stats-card small {
+    color: var(--txt-sec) !important;
+}
+
+/* دائرة التقدم */
+.progress-ring {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: conic-gradient(var(--success) 0deg, rgba(0,0,0,0.1) 0deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transition: background 1s ease;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.progress-inner {
+    width: 55px;
+    height: 55px;
+    background: var(--glass-bg);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 0.9em;
+    color: var(--success);
+}
