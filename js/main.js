@@ -30,6 +30,7 @@ window.onload = async () => {
         if(lockScreen) lockScreen.style.display = 'none';
         if(appWrap) appWrap.style.display = 'flex';
     }
+    
 
     // 2. Data & Sync
     try {
