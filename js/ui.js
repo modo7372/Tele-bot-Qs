@@ -64,6 +64,35 @@ const UI = {
         }, {once:true});
     },
 
+    updateHomeStats: () => {
+        // 1. حساب الأرقام
+        const total = State.allQ.length;
+        if (total === 0) return; // لم يتم التحميل بعد
+
+        const solved = State.localData.archive.length;
+        // الأسئلة المحلولة ولكن موجودة في قائمة الأخطاء تعتبر خطأ
+        const mistakesCnt = State.localData.archive.filter(id => State.localData.mistakes.includes(id)).length;
+        const correct = solved - mistakesCnt;
+
+        const pct = Math.round((correct / total) * 100) || 0;
+        const degrees = (pct / 100) * 360;
+
+        // 2. تحديث الواجهة
+        const elTotal = document.getElementById('home-total');
+        const elCorrect = document.getElementById('home-correct');
+        const elPct = document.getElementById('home-pct');
+        const elRing = document.getElementById('home-progress-ring');
+
+        if(elTotal) elTotal.innerText = total;
+        if(elCorrect) elCorrect.innerText = correct;
+        if(elPct) elPct.innerText = `${pct}%`;
+
+        // 3. تحديث رسم الدائرة
+        if(elRing) {
+            elRing.style.background = `conic-gradient(var(--success) ${degrees}deg, rgba(0,0,0,0.1) 0deg)`;
+        }
+    },
+
     renderThemes: () => {
         const c = document.getElementById('theme-list');
         if(!c) return;
@@ -154,7 +183,7 @@ const UI = {
         }
     },
 
-    goHome: () => { Game.stopTimer(); UI.showView('v-home'); UI.closeModal('m-score'); },
+    goHome: () => { Game.stopTimer(); UI.showView('v-home'); UI.closeModal('m-score'); UI.updateHomeStats(); },
     openModal: (id) => { const el = document.getElementById(id); if(el) el.style.display = 'flex'; },
     closeModal: (id) => { const el = document.getElementById(id); if(el) el.style.display = 'none'; },
 
