@@ -1,5 +1,5 @@
 const Data = {
-    loadQuestions: async () => {
+loadQuestions: async () => {
         try {
             const list = await (await fetch('questions_list.json')).json();
             for(let f of list) {
@@ -11,10 +11,17 @@ const Data = {
                     })));
                 } catch(e){}
             }
+            
+            // تحديث العداد النصي في الهيدر
             document.getElementById('db-status').innerText = `${State.allQ.length} سؤال`;
+            
+            // --- الإضافة الجديدة ---
+            // تحديث دائرة الإنجاز (Progress Ring) في الصفحة الرئيسية فور انتهاء التحميل
+            if(UI && UI.updateHomeStats) UI.updateHomeStats();
+
         } catch(e){ document.getElementById('db-status').innerText = "خطأ في التحميل"; }
     },
-
+    
     initSync: async () => {
         const local = {
             mistakes: JSON.parse(localStorage.getItem('mistakes')||'[]'),
