@@ -43,6 +43,18 @@
         <main id="main-content">
             
             <div id="v-home" class="grid-menu">
+                <div class="full-span-card glass-box home-stats-card" onclick="UI.showTotalStats()">
+                    <div class="progress-ring" id="home-progress-ring">
+                        <div class="progress-inner">
+                            <span id="home-pct">0%</span>
+                        </div>
+                    </div>
+                    <div class="stats-text">
+                        <small>الإنجاز الكلي</small>
+                        <h3><span id="home-correct">0</span> / <span id="home-total">0</span></h3>
+                        <small>إجابة صحيحة</small>
+                    </div>
+                </div>
                 <div class="full-span-card glass-box filters-box">
                     <label>🔍 تصفية الأسئلة:</label>
                     <div class="chip-group" id="filter-opts">
@@ -267,5 +279,6 @@
     <script src="js/main.js?v=2.99"></script>
 </body>
 </html>
+
 
 
