@@ -123,8 +123,27 @@ body {
 .filters-box label { font-size: 0.8em; color: var(--txt-sec); font-weight: bold; }
 
 /* --- Menu Grid (Home) --- */
-.grid-menu { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; flex-grow: 1; overflow-y: auto; padding: 5px; align-content: start; }
-
+.grid-menu { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); 
+    gap: 10px; 
+    /* هذا السطر هام جداً: يحدد ارتفاع القائمة لتفعيل التمرير الداخلي */
+    height: 100%; 
+    overflow-y: auto; 
+    padding: 10px; 
+    padding-bottom: 80px; /* مسافة إضافية في الأسفل عشان الزر العائم */
+    align-content: start;
+    
+    /* تفعيل التمرير الناعم */
+    -webkit-overflow-scrolling: touch; 
+}
+#main-content {
+    flex-grow: 1;
+    overflow: hidden; /* يمنع التمرير المزدوج */
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
 .full-span-card { grid-column: 1 / -1; background: var(--primary) !important; color: #fff !important; border-color: transparent !important; }
 .full-span-card h3, .full-span-card small, .full-span-card .icon, .full-span-card label { color: #fff !important; }
 .filters-box.full-span-card { background: var(--glass-bg) !important; color: var(--txt-main) !important; }
@@ -202,7 +221,7 @@ body {
 
 /* --- Modals & Helpers --- */
 .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 999; display: none; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
-.modal-content { background: var(--glass-bg); padding: 20px; border-radius: var(--radius); width: 90%; max-width: 380px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.3); max-height: 90vh; overflow-y: auto; }
+.modal-content { background: var(--glass-bg); padding: 10px; border-radius: var(--radius); width: 80%; max-width: 280px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.3); max-height: 90vh; overflow-y: auto; }
 .hidden { display: none !important; }
 .column-flex { display: flex; flex-direction: column; height: 100%; }
 .view-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-shrink: 0; }
