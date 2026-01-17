@@ -209,3 +209,42 @@ body {
 .vertical { display: flex; flex-direction: column; gap: 10px; width: 100%; }
 .inp-box { width: 100%; padding: 12px; border-radius: var(--radius); border: 1px solid var(--txt-sec); background: rgba(255,255,255,0.5); margin-bottom: 10px; }
 .toggle-row { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 5px; }
+
+
+/* --- تفعيل التمرير السلس (Native Mobile Scrolling) --- */
+
+/* تطبيق التمرير الناعم على كل القوائم القابلة للسحب */
+.grid-menu, 
+.sel-list, 
+.options-list, 
+.question-box, 
+.modal-content {
+    /* هذه الخاصية هي السر في جعل التمرير ناعم ومستمر مثل تطبيقات الآيفون والأندرويد */
+    -webkit-overflow-scrolling: touch !important; 
+    
+    /* منع تأثير سحب الصفحة بالكامل (Pull-to-refresh) الذي قد يفسد التجربة */
+    overscroll-behavior-y: contain; 
+    
+    /* جعل الحركة انسيابية */
+    scroll-behavior: smooth;
+}
+
+/* تحسين شكل شريط التمرير (Scrollbar) ليكون رفيعاً وغير مزعج */
+::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent; 
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2); 
+    border-radius: 10px;
+}
+
+/* إخفاء الشريط في الوضع المظلم ليكون أجمل */
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2); 
+}
