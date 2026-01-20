@@ -1,42 +1,26 @@
-// --- CONFIGURATION & STATE ---
-
-// Whitelist IDs (UI Gate)
-const ALLOWED_IDS = [ 5814737296, 2004826495 ]; 
-const ENABLE_SECURITY = false; 
-
-// Firebase
-const FB_CONF = { apiKey: "AIzaSyDEZFJmcXK2LxYAZ-Yjv_M1HbC6zi_qilg", authDomain: "exambotdb.firebaseapp.com", databaseURL: "https://exambotdb-default-rtdb.firebaseio.com", projectId: "exambotdb", storageBucket: "exambotdb.firebasestorage.app", messagingSenderId: "950600562980", appId: "1:950600562980:web:f993c22d45e5cfdd3d9bb1" };
-if (!firebase.apps.length) firebase.initializeApp(FB_CONF);
-const db = firebase.database();
+const ALLOWED_IDS = [ 5814737296 ];
+const ENABLE_SECURITY = false; // Set true to enable ID lock
 
 const State = {
     user: { id: 0, first_name: "Guest", full_name: "Guest" },
     
-    allQ: [], // Restored: Load all questions here so Search works
+    // Core Database (All questions loaded here)
+    allQ: [], 
     
-    // Quiz Session
+    // Quiz Runtime State
     quiz: { 
         questions: [], currentIndex: 0, answers: [], mode: 'normal', topic: '' 
     },
     
-    // Local Data
+    // Persisted Data (Saved to storage)
     localData: {
         mistakes: [], archive: [], fav: [], settings: {}
     },
 
-    selection: { term:null, subject:null, lessons:[], limit: 50 },
-    filters: 'all' 
+    // UI Helper State
+    selection: { term:null, subj:null, lessons:[], limit:50 },
+    filters: 'all' // all, new, wrong, answered
 };
 
-// Theme Definitions for the "Random Color" feature
-const THEMES = [
-    { id: 'light', name: 'Light', color: '#f5f7fa' },
-    { id: 'dark', name: 'Dark', color: '#232526' },
-    { id: 'midnight', name: 'Midnight', color: '#0f2027' },
-    { id: 'forest', name: 'Forest', color: '#134E5E' },
-    { id: 'ocean', name: 'Ocean', color: '#4facfe' },
-    { id: 'sunset', name: 'Sunset', color: '#f6d365' },
-    { id: 'lavender', name: 'Lavender', color: '#cd9cf2' },
-    { id: 'coffee', name: 'Coffee', color: '#3e2b26' },
-    { id: 'minimal', name: 'Minimal', color: '#ffffff' }
-];
+// Available CSS Themes
+const THEMES = ['light', 'dark', 'midnight', 'forest', 'sunset', 'ocean'];
