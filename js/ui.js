@@ -1,154 +1,266 @@
-const UI = {
+const AVATARS = ["👨‍⚕️","👩‍⚕️","👨‍🔬","👩‍🔬","🦸‍♂️","🦸‍♀️","🧠","🦁","🦊","🐸","👻","🤖"];
+
+const AudioSys = {
+    ctx: null, enabled: false,
     init: () => {
-        // Init happens in applySettings logic called by Data
-        UI.renderSettingChips();
+        window.AudioContext = window.AudioContext || window.webkitAudioContext;
+        AudioSys.ctx = new AudioContext();
     },
-
-    applySettings: () => {
-        const s = State.localData.settings || {};
-        
-        // 1. Theme
-        document.body.setAttribute('data-theme', s.theme || 'light');
-        
-        // 2. Avatar/Name
-        const g = s.gender || 'male';
-        const char = s.char || (g==='female' ? '👩‍⚕️' : '👨‍⚕️');
-        document.getElementById('u-avatar').innerText = char;
-        if(document.getElementById('u-name')) document.getElementById('u-name').innerText = State.user.full_name;
-
-        // 3. Inputs
-        const setCheck = (id, k) => { if(document.getElementById(id)) document.getElementById(id).checked = (s[k]!==false); };
-        setCheck('chk-anim', 'anim');
-        setCheck('chk-sound', 'sound');
-        setCheck('chk-haptic', 'haptic');
-        
-        // 4. Anim
-        UI.toggleAnim(s.anim !== false);
-    },
-
-    renderSettingChips: () => {
-        const avBox = document.getElementById('avatar-list');
-        const thBox = document.getElementById('theme-list');
-        
-        // Avatars
-        avBox.innerHTML = '';
-        ['👨‍⚕️','👩‍⚕️','🧑‍🔬','🧙‍♂️','🤖','🦊','👻','👽','🌚','🌞','😎'].forEach(c => {
-             const d = document.createElement('div'); d.className='chip'; d.innerText=c;
-             d.onclick = () => { UI.saveSetting('char', c); UI.applySettings(); };
-             avBox.appendChild(d);
-        });
-        
-        // Themes
-        thBox.innerHTML = '';
-        THEMES.forEach(t => {
-            const d = document.createElement('div'); d.className='chip';
-            // Simple logic: we don't need JS hex colors. CSS variables handle visual logic.
-            // But for preview in settings, we set attribute so CSS can color it.
-            d.innerText = t;
-            d.setAttribute('data-theme', t); // Let CSS color it based on attribute logic
-            d.onclick = () => { UI.saveSetting('theme', t); UI.applySettings(); };
-            thBox.appendChild(d);
-        });
-    },
-
-    // Navigation
-    showView: (v) => {
-        ['v-home','v-select','v-quiz'].forEach(x=>document.getElementById(x).classList.add('hidden'));
-        document.getElementById(v).classList.remove('hidden');
-        if(v==='v-home') UI.updateHomeStats();
-        // Reset scroll
-        document.getElementById(v).scrollTop = 0;
-    },
-    
-    openModal: (id) => document.getElementById(id).style.display = 'flex',
-    closeModal: (id) => document.getElementById(id).style.display = 'none',
-    toggleFullScreen: () => { if(!document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{}); else document.exitFullscreen(); },
-
-    // Visuals
-    updateHomeStats: () => {
-        const solved = State.localData.archive.length;
-        const total = State.allQ.length || 1;
-        // Calc Correct: Archive minus Matches in Mistakes
-        const mist = State.localData.mistakes;
-        const wrongCnt = State.localData.archive.filter(id => mist.includes(id)).length;
-        const correct = solved - wrongCnt;
-        
-        const pct = solved > 0 ? Math.round((correct/solved)*100) : 0;
-
-        document.getElementById('home-correct').innerText = correct;
-        document.getElementById('home-pct').innerText = pct + "%";
-        
-        const ring = document.getElementById('home-ring');
-        ring.style.background = `conic-gradient(var(--success) ${pct*3.6}deg, transparent 0)`;
-        
-        // Modal Data
-        document.getElementById('st-total').innerText = total;
-        document.getElementById('st-solved').innerText = solved;
-        document.getElementById('st-correct').innerText = correct;
-        document.getElementById('st-wrong').innerText = wrongCnt;
-    },
-
-    saveSetting: (k,v) => {
-        State.localData.settings[k] = v;
-        Data.save();
-    },
-    
-    saveProfile: () => {
-        UI.saveSetting('gender', document.getElementById('set-gender').value);
-        UI.applySettings();
-    },
-
-    playSound: (isCorrect) => {
-        if(State.localData.settings.sound===false) return;
+    playTone: (freq, type, duration) => {
+        if (!AudioSys.enabled || !AudioSys.ctx) return;
         try {
-            const ctx = new (window.AudioContext || window.webkitAudioContext)();
-            const o = ctx.createOscillator();
-            const g = ctx.createGain();
-            o.connect(g); g.connect(ctx.destination);
-            o.type = isCorrect ? 'sine' : 'square';
-            o.frequency.value = isCorrect ? 600 : 150;
-            o.start(); g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.1); o.stop(ctx.currentTime+0.15);
-        } catch(e){}
+            const osc = AudioSys.ctx.createOscillator();
+            const gain = AudioSys.ctx.createGain();
+            osc.type = type; osc.frequency.value = freq;
+            osc.connect(gain); gain.connect(AudioSys.ctx.destination);
+            osc.start();
+            gain.gain.exponentialRampToValueAtTime(0.00001, AudioSys.ctx.currentTime + duration);
+            osc.stop(AudioSys.ctx.currentTime + duration);
+        } catch(e) {}
     },
-
-    // --- ANIMATION SYSTEM ---
-    toggleAnim: (active) => {
-        const cvs = document.getElementById('bg-canvas');
-        if(active) { 
-            cvs.style.display='block'; 
-            AnimSys.start(); 
-        } else { 
-            cvs.style.display='none'; 
-            AnimSys.stop(); 
-        }
-        if(active !== State.localData.settings.anim) UI.saveSetting('anim', active);
-    },
+    playSuccess: () => { AudioSys.playTone(600, 'sine', 0.1); setTimeout(()=>AudioSys.playTone(800, 'sine', 0.2), 100); },
+    playError: () => { AudioSys.playTone(300, 'sawtooth', 0.1); setTimeout(()=>AudioSys.playTone(200, 'sawtooth', 0.2), 100); },
+    playClick: () => { AudioSys.playTone(1200, 'triangle', 0.05); }
 };
 
-const AnimSys = {
-    running: false,
-    start: () => {
-        if(AnimSys.running) return;
-        AnimSys.running = true;
-        const c = document.getElementById('bg-canvas');
-        const ctx = c.getContext('2d');
-        let w, h, p=[];
-        const rs=()=>{w=c.width=window.innerWidth; h=c.height=window.innerHeight;}; window.onresize=rs; rs();
+const UI = {
+    init: () => {
+        // Safe Init: Render elements if containers exist
+        if(document.getElementById('theme-list')) UI.renderThemes();
+        if(document.getElementById('avatar-list')) UI.renderAvatars();
         
-        for(let i=0; i<20; i++) p.push({x:Math.random()*w, y:Math.random()*h, s:Math.random()+0.5, r:Math.random()*10});
+        // Load Settings
+        const s = State.localData.settings || {};
+        UI.setTheme(s.theme || 'light');
+        if(s.fontFam) UI.updateStyleVar('--font-fam', s.fontFam);
+        if(s.fontSize) UI.updateStyleVar('--font-size', s.fontSize);
         
-        const loop = () => {
-            if(!AnimSys.running) return;
-            ctx.clearRect(0,0,w,h);
-            // Particle Color based on Theme CSS var for consistency
-            ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--particle-col');
-            p.forEach(d => {
-                d.y -= d.s; if(d.y < -20) d.y = h+20;
-                ctx.beginPath(); ctx.arc(d.x, d.y, d.r, 0, 6.28); ctx.fill();
-            });
-            requestAnimationFrame(loop);
+        // --- SAFE CHECK: Prevent crash if elements missing ---
+        const setCheck = (id, val) => {
+            const el = document.getElementById(id);
+            if(el) el.checked = val;
         };
-        loop();
+        
+        setCheck('chk-sound', s.sound !== false);
+        setCheck('chk-haptic', s.haptic !== false);
+        setCheck('chk-anim', s.anim !== false);
+
+        // Profile
+        const genderEl = document.getElementById('set-gender');
+        if(genderEl) genderEl.value = s.gender || 'male';
+        
+        UI.updateProfileDisplay();
+        
+        AudioSys.enabled = s.sound !== false;
+
+        // Init Anim (Bubbles)
+        UI.initAnim();
+        if(s.anim === false) UI.toggleAnim(false);
+
+        // Resume Audio Context on interaction
+        document.body.addEventListener('click', () => {
+            if(AudioSys.ctx && AudioSys.ctx.state === 'suspended') AudioSys.ctx.resume();
+            if(!AudioSys.ctx) AudioSys.init();
+        }, {once:true});
     },
-    stop: () => { AnimSys.running = false; }
+
+    updateHomeStats: () => {
+        // 1. حساب الأرقام
+        const total = State.allQ.length;
+        if (total === 0) return; // لم يتم التحميل بعد
+
+        const solved = State.localData.archive.length;
+        // الأسئلة المحلولة ولكن موجودة في قائمة الأخطاء تعتبر خطأ
+        const mistakesCnt = State.localData.archive.filter(id => State.localData.mistakes.includes(id)).length;
+        const correct = solved - mistakesCnt;
+
+        const pct = Math.round((correct / total) * 100) || 0;
+        const degrees = (pct / 100) * 360;
+
+        // 2. تحديث الواجهة
+        const elTotal = document.getElementById('home-total');
+        const elCorrect = document.getElementById('home-correct');
+        const elPct = document.getElementById('home-pct');
+        const elRing = document.getElementById('home-progress-ring');
+
+        if(elTotal) elTotal.innerText = total;
+        if(elCorrect) elCorrect.innerText = correct;
+        if(elPct) elPct.innerText = `${pct}%`;
+
+        // 3. تحديث رسم الدائرة
+        if(elRing) {
+            elRing.style.background = `conic-gradient(var(--success) ${degrees}deg, rgba(0,0,0,0.1) 0deg)`;
+        }
+    },
+
+    renderThemes: () => {
+        const c = document.getElementById('theme-list');
+        if(!c) return;
+        c.innerHTML = '';
+        THEMES.forEach(t => {
+            const d = document.createElement('div');
+            d.className = 'theme-preview';
+            d.style.background = t.color;
+            d.onclick = () => UI.setTheme(t.id);
+            c.appendChild(d);
+        });
+    },
+
+    renderAvatars: () => {
+        const c = document.getElementById('avatar-list');
+        if(!c) return;
+        c.innerHTML = ''; // clear old
+        AVATARS.forEach(a => {
+            const d = document.createElement('div');
+            d.className = 'avatar-opt';
+            d.innerText = a;
+            d.onclick = () => {
+                document.querySelectorAll('.avatar-opt').forEach(x=>x.classList.remove('selected'));
+                d.classList.add('selected');
+                UI.saveSetting('avatar', a);
+                UI.updateProfileDisplay();
+            };
+            c.appendChild(d);
+        });
+    },
+
+    updateProfileDisplay: () => {
+        const s = State.localData.settings || {};
+        const av = s.avatar || (s.gender === 'female' ? "👩‍⚕️" : "👨‍⚕️");
+        
+        const elAv = document.getElementById('u-avatar');
+        const elName = document.getElementById('u-name');
+        
+        if(elAv) elAv.innerText = av;
+        if(elName) elName.innerText = State.user.first_name || "Guest";
+    },
+
+    saveProfile: () => {
+        const genderEl = document.getElementById('set-gender');
+        if(genderEl) {
+            UI.saveSetting('gender', genderEl.value);
+            UI.updateProfileDisplay();
+        }
+    },
+
+    showTotalStats: () => {
+        const total = State.allQ.length;
+        if(total === 0) return alert('البيانات غير محملة');
+        
+        const solved = State.localData.archive.length;
+        const mistakes = State.localData.mistakes.length;
+        const wrongCnt = State.localData.archive.filter(id => State.localData.mistakes.includes(id)).length;
+        const correctCnt = solved - wrongCnt;
+        
+        const setText = (id, txt) => {
+            const el = document.getElementById(id);
+            if(el) el.innerText = txt;
+        };
+
+        setText('st-total', total);
+        setText('st-solved', Math.round((solved/total)*100) + '%');
+        setText('st-correct', correctCnt);
+        setText('st-wrong', wrongCnt);
+        
+        const acc = solved > 0 ? Math.round((correctCnt/solved)*100) : 0;
+        setText('st-acc', acc + '%');
+        
+        const bar = document.getElementById('st-bar');
+        if(bar) bar.style.width = acc + '%';
+        
+        UI.openModal('m-stats');
+    },
+
+    showView: (id) => {
+        ['v-home','v-select','v-quiz'].forEach(v => {
+            const el = document.getElementById(v);
+            if(el) el.classList.add('hidden');
+        });
+        const el = document.getElementById(id);
+        if(el) {
+            el.classList.remove('hidden');
+            el.style.display = (id === 'v-home') ? 'grid' : 'flex';
+        }
+    },
+
+    goHome: () => { Game.stopTimer(); UI.showView('v-home'); UI.closeModal('m-score'); UI.updateHomeStats(); },
+    openModal: (id) => { const el = document.getElementById(id); if(el) el.style.display = 'flex'; },
+    closeModal: (id) => { const el = document.getElementById(id); if(el) el.style.display = 'none'; },
+
+    setTheme: (t) => {
+        document.body.setAttribute('data-theme', t);
+        document.querySelectorAll('.theme-preview').forEach(e => e.classList.remove('active'));
+        const active = document.querySelector(`.theme-preview[style*="${THEMES.find(x=>x.id==t)?.color}"]`);
+        if(active) active.classList.add('active');
+        UI.saveSetting('theme', t);
+    },
+
+    toggleSound: (v) => { AudioSys.enabled = v; UI.saveSetting('sound', v); },
+    toggleHaptic: (v) => { UI.saveSetting('haptic', v); },
+    toggleAnim: (v) => { 
+        const cvs = document.getElementById('bg-canvas');
+        if(v && cvs) cvs.classList.remove('hidden'); 
+        else if(cvs) cvs.classList.add('hidden');
+        UI.saveSetting('anim', v); 
+    },
+
+    updateStyleVar: (key, val) => {
+        document.documentElement.style.setProperty(key, val);
+        if(key === '--font-fam') UI.saveSetting('fontFam', val);
+        if(key === '--font-size') UI.saveSetting('fontSize', val);
+    },
+
+    saveSetting: (key, val) => {
+        State.localData.settings = State.localData.settings || {};
+        State.localData.settings[key] = val;
+        Data.saveData(); 
+    },
+
+    initAnim: (randomize = false) => {
+        const c=document.getElementById('bg-canvas');
+        if(!c) return;
+        const x=c.getContext('2d');
+        let w,h,p=[]; 
+        const r=()=>{w=c.width=window.innerWidth;h=c.height=window.innerHeight;}; 
+        window.onresize=r; r();
+        
+        class P{
+            constructor(){this.i();} 
+            i(){
+                this.x=Math.random()*w;
+                this.y=h+Math.random()*100; 
+                this.r=Math.random()*15 + 5; 
+                this.vx=(Math.random()-.5)*1; 
+                this.vy=-(Math.random()*1 + 0.5); 
+                this.a = Math.random() * 0.3;
+                this.type = randomize ? Math.floor(Math.random()*3) : 0; 
+            } 
+            u(){
+                this.x+=this.vx; this.y+=this.vy; 
+                if(this.y < -50) this.i(); 
+            } 
+            d(){
+                x.fillStyle=`rgba(120,120,120,${this.a})`;
+                x.beginPath();
+                if(this.type === 0) {
+                     x.arc(this.x,this.y,this.r,0,Math.PI*2);
+                } else if (this.type === 1) {
+                    x.fillRect(this.x, this.y, this.r*1.5, this.r*1.5);
+                } else {
+                    x.moveTo(this.x, this.y);
+                    x.lineTo(this.x+this.r, this.y+this.r*2);
+                    x.lineTo(this.x-this.r, this.y+this.r*2);
+                }
+                x.fill();
+            }
+        }
+        
+        p=Array(25).fill().map(()=>new P()); 
+        function a(){
+            x.clearRect(0,0,w,h); 
+            p.forEach(n=>{n.u();n.d()}); 
+            requestAnimationFrame(a);
+        } 
+        a();
+    }
 };
