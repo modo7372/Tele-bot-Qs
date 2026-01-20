@@ -164,24 +164,7 @@
         "None of the above"
       ],
       "correct_option_id": 3,
-      "explanation": "we must distinguish between the Pharyngeal Arches (mesodermal/neural crest) and the Pharyngeal Pouches/Floor (endodermal).
-
-1. The Thyroid is Endodermal, Not "Arch-Derived"
-The thyroid gland is primarily an endodermal outgrowth.
-
-The 1st Arch (Mandibular) and 2nd Arch (Hyoid) are structural building blocks that form bone, muscle, and nerves.
-
-The thyroid begins as a diverticulum in the midline floor of the pharynx, specifically at the foramen cecum. While this location sits between the first and second arches, the gland itself is a product of the internal lining (endoderm), not the structural arch tissue.
-
-2. Arch vs. Pouch Distinction
-In embryology, "Arch" and "Pouch" refer to different layers:
-
-Option A (1st Arch): Forms the jaw and muscles of mastication. It does not form the thyroid.
-
-Option B (4th Arch): Forms the Thyroid Cartilage (the "Adam's Apple"), which is a skeletal structure. Students often confuse the Thyroid Cartilage (4th Arch) with the Thyroid Gland (Pharyngeal Floor/4th Pouch).
-
-3. The Origin of C-Cells
-Even the secondary component of the thyroid (Parafollicular C-cells) comes from the 4th Pharyngeal Pouch (the internal pocket) via the ultimobranchial body, not the 4th Branchial Arch (the external structural bar).",
+      "explanation": "The thyroid gland develops from an endodermal diverticulum arising from the midline floor of the primitive pharynx at the foramen cecum. It is not derived from any branchial (pharyngeal) arch. Branchial arches form skeletal and muscular structures (e.g., the 4th arch forms thyroid cartilage), while the thyroid gland itself originates from endoderm. Parafollicular C-cells are derived from the ultimobranchial body of the 4th pharyngeal pouch, not from the 4th branchial arch.",
       "term": "Term 7",
       "subject": "General Surgery",
       "lesson": "Thyroid",
