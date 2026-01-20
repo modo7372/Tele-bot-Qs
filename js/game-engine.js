@@ -145,11 +145,11 @@ const GameEngine = {
         document.getElementById('btn-check').classList.add('hidden');
 
         // Auto Move (if normal mode)
-        if (GameEngine.instant && State.quiz.mode !== 'review') {
-            const delay = isCorrect ? 800 : 2500; // Longer delay on error to see right answer
+        if (GameEngine.instant && State.quiz.mode !== 'review' && isCorrect) {
             setTimeout(() => {
+                // Only move if user hasn't moved manually yet
                 if (State.quiz.currentIndex === i) GameEngine.navQ(1);
-            }, delay);
+            }, 1000); // 1 second delay for correct answers
         }
     },
 
