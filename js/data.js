@@ -1,90 +1,74 @@
 const Data = {
-    init: async () => {
-        // 1. Sync User Config
-        await Data.initSync();
-        // 2. Load Content
-        await Data.loadQuestions();
-        return true;
-    },
-
-    loadQuestions: async () => {
-        const statusEl = document.getElementById('db-status');
-        statusEl.innerText = "Loading data...";
-        
+loadQuestions: async () => {
         try {
-            // Get Index
             const list = await (await fetch('questions_list.json')).json();
-            
-            // Bulk Fetch (Using Promises for parallel load)
-            const tasks = list.map(async (file) => {
+            for(let f of list) {
                 try {
-                    // Cache-First strategy via SW handles this
-                    const res = await fetch(`Questions/${file}`);
-                    const json = await res.json();
-                    
-                    // Attach context to every question so it's searchable and filterable independently
-                    return json.questions.map(q => ({
-                         id: q.id,
-                         question: q.question,
-                         options: q.options,
-                         correct_option_id: q.correct_option_id,
-                         explanation: q.explanation || "",
-                         // Meta tags for selection
-                         term: q.term || json.meta.source, 
-                         subject: q.subject || json.meta.subject, 
-                         lesson: q.lesson || json.meta.lesson, 
-                         chapter: q.chapter || "General"
-                    }));
-                } catch(e) { 
-                    console.warn(`File load failed: ${file}`);
-                    return []; 
-                }
-            });
-
-            const loadedArrays = await Promise.all(tasks);
-            State.allQ = loadedArrays.flat(); // Merge all into one giant array
+                    let d = await (await fetch(`Questions/${f}`)).json();
+                    State.allQ.push(...d.questions.map(q => ({
+                        ...q, term: q.term || d.meta.source, subject: q.subject || d.meta.subject, 
+                        lesson: q.lesson || d.meta.lesson, chapter: q.chapter || "General"
+                    })));
+                } catch(e){}
+            }
             
-            statusEl.innerText = "Ready";
-            UI.updateHomeStats(); // Init Stats now that we know total count
+            // تحديث العداد النصي في الهيدر
+            document.getElementById('db-status').innerText = `${State.allQ.length} سؤال`;
+            
+            // --- الإضافة الجديدة ---
+            // تحديث دائرة الإنجاز (Progress Ring) في الصفحة الرئيسية فور انتهاء التحميل
+            if(UI && UI.updateHomeStats) UI.updateHomeStats();
 
-        } catch(e) {
-            console.error(e);
-            statusEl.innerText = "Offline/Err";
-        }
+        } catch(e){ document.getElementById('db-status').innerText = "خطأ في التحميل"; }
     },
-
+    
     initSync: async () => {
-        // A. Load Local (Instant)
-        const local = localStorage.getItem('medquiz_data');
-        if(local) State.localData = { ...State.localData, ...JSON.parse(local) };
-        UI.applySettings();
+        const local = {
+            mistakes: JSON.parse(localStorage.getItem('mistakes')||'[]'),
+            archive: JSON.parse(localStorage.getItem('archive')||'[]'),
+            fav: JSON.parse(localStorage.getItem('fav')||'[]'),
+            settings: JSON.parse(localStorage.getItem('settings')||'{}')
+        };
+        State.localData = local;
 
-        // B. Cloud (Telegram > 6.9 Only) - Prevents Version 6.0 crash
-        if (window.Telegram && window.Telegram.WebApp) {
-            const tg = window.Telegram.WebApp;
-            if (tg.isVersionAtLeast && tg.isVersionAtLeast('6.9')) {
-                try {
-                    tg.CloudStorage.getItem('medquiz_data', (err, val) => {
-                        if (!err && val) {
-                            State.localData = { ...State.localData, ...JSON.parse(val) };
-                            UI.applySettings();
-                        }
-                    });
-                } catch(e) { /* Old version, ignore */ }
-            }
+        if (window.Telegram.WebApp.isVersionAtLeast && window.Telegram.WebApp.isVersionAtLeast('6.9')) {
+            try {
+                Telegram.WebApp.CloudStorage.getItem('medquiz_data', (err, val) => {
+                    if(!err && val) {
+                        const cloud = JSON.parse(val);
+                        State.localData = { ...local, ...cloud };
+                        if(State.localData.settings.theme) UI.setTheme(State.localData.settings.theme);
+                        if(State.localData.settings.anim === false) UI.toggleAnim(false);
+                        if(State.localData.settings.fontSize) UI.updateStyleVar('--font-size', State.localData.settings.fontSize);
+                    }
+                });
+            } catch(e) { console.log("Cloud init skipped: ", e); }
+        } else {
+             if(State.localData.settings.theme) UI.setTheme(State.localData.settings.theme);
         }
     },
 
-    save: () => {
+    saveData: () => {
         const str = JSON.stringify(State.localData);
-        localStorage.setItem('medquiz_data', str);
+        localStorage.setItem('mistakes', JSON.stringify(State.localData.mistakes));
+        localStorage.setItem('archive', JSON.stringify(State.localData.archive));
+        localStorage.setItem('fav', JSON.stringify(State.localData.fav));
+        localStorage.setItem('settings', JSON.stringify(State.localData.settings));
         
-        // Cloud Save Safe-Check
-        if (window.Telegram && window.Telegram.WebApp) {
-            const tg = window.Telegram.WebApp;
-            if(tg.isVersionAtLeast && tg.isVersionAtLeast('6.9')) {
-                try { tg.CloudStorage.setItem('medquiz_data', str); } catch(e){}
-            }
+        if (window.Telegram.WebApp.isVersionAtLeast && window.Telegram.WebApp.isVersionAtLeast('6.9')) {
+            try {
+                Telegram.WebApp.CloudStorage.setItem('medquiz_data', str);
+            } catch(e){ console.log("Cloud save skipped"); }
+        }
+    },
+
+    saveLeaderboard: (score) => {
+        if(State.sel.term && State.sel.subj) {
+            const ctx = `${State.sel.term}_${State.sel.subj}`.replace(/[.#$/\[\]]/g, "_");
+            db.ref(`ranks/${ctx}/${State.user.id}`).transaction((curr) => {
+                let old = (curr && typeof curr==='object') ? curr.score : (curr||0);
+                return { score: old + score, name: State.user.first_name };
+            });
         }
     }
 };
