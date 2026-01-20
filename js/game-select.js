@@ -1,264 +1,169 @@
-// Handles Categories, Filtering, and preparing the questions
 const GameSelect = {
-    
-    step: '', // term -> subject -> lesson -> chapter
-    
-    // Quick Launchers
-    startGlobalRandom: async () => {
-        UI.haptic('selection');
-        alert("جاري تجهيز الاختبار..."); // Simple Loader
-        
-        // Randomize: Fetch all headers (Lazy simulation: fetch specific indexes if we had them)
-        // Strategy: Fetch ALL first, since Global means global. 
-        const allQ = await Data.fetchQuestionsByCriteria({ mode: 'global' });
-        
-        if(!allQ.length) return alert('خطأ في تحميل الأسئلة');
-        
-        // Filter based on dropdown
-        const pool = GameSelect.applyUserFilters(allQ);
-        if(!pool.length) return alert('لا توجد أسئلة بهذا الفلتر');
+    step: 'term',
 
-        // Shuffle & Slice
-        pool.sort(() => Math.random() - 0.5);
-        const sub = pool.slice(0, 30);
-        
-        GameEngine.start(sub, 'normal', 'Global Random');
+    startGlobalRandom: () => {
+        // Fix: Removed "Always takes 30" logic -> Random 10 to 50
+        const sub = GameSelect.filterPool(State.allQ);
+        if(!sub.length) return alert('لا يوجد أسئلة (تأكد من الفلتر)');
+        sub.sort(()=>Math.random()-0.5);
+        const limit = Math.floor(Math.random() * 40) + 10;
+        GameEngine.start(sub.slice(0, limit), 'normal', 'Global Random');
     },
 
     startFlow: (mode) => {
-        State.quiz.mode = mode; // 'normal', 'survival', 'timeAttack'
-        State.selection = {term:null, subject:null, lessons:[], limit:50};
-        
-        // Prepare Selection Screen (Term)
-        GameSelect.renderStep('term');
+        State.quiz.mode = mode;
+        State.selection = {term:null, subj:null, lessons:[], chapters:[], limit:'All'};
+        GameSelect.renderSel('term');
         UI.showView('v-select');
     },
 
-    // Step Rendering Logic
-    renderStep: async (step) => {
+    renderSel: (step) => {
         GameSelect.step = step;
-        const cont = document.getElementById('sel-body');
-        cont.innerHTML = 'Thinking...';
-        
-        const head = document.getElementById('sel-head');
-        const titleMap = {term:'الترم/المصدر', subject:'المادة', lesson:'الدرس', chapter:'الفصل'};
-        head.innerText = `اختر ${titleMap[step]}`;
+        const map = {term:'الترم/المصدر',subj:'المادة',lesson:'الدرس',chapter:'الفصل',limit:'العدد'};
+        document.getElementById('sel-head').innerText = `اختر ${map[step]}`;
+        const body = document.getElementById('sel-body'); body.innerHTML='';
         
         // Buttons
-        document.getElementById('btn-all').classList.add('hidden');
         document.getElementById('btn-mode-random').classList.add('hidden');
+        document.getElementById('btn-all').classList.add('hidden');
         
-        // 1. Get Pool needed to decide options
-        // Ideally we query the Index only, not full Questions
-        let options = new Set();
-        let questionsForContext = []; 
+        // 1. Get subset
+        let subset = GameSelect.filterPool(State.allQ); // Respects filters
+        if(State.selection.term) subset = subset.filter(q=>q.term==State.selection.term);
+        if(State.selection.subj) subset = subset.filter(q=>q.subject==State.selection.subj);
+        if(State.selection.lessons.length) subset = subset.filter(q=>State.selection.lessons.includes(q.lesson));
+        
+        if(!subset.length) { body.innerHTML='<p style="padding:10px">لا يوجد بيانات</p>'; return; }
 
-        if (step === 'term') {
-            State.questionsIndex.forEach(f => {
-                // Heuristic: Extract Term from filename e.g. "7_Endocrine_..." -> "Endocrine" or predefined map
-                // Simplifying: Show full filename as Category for robustness
-                const term = f.file.split('_')[1] || "General"; 
-                options.add(term);
-            });
-        } 
-        else if (step === 'subject') {
-            // Filter Index based on selected Term
-            State.questionsIndex.forEach(f => {
-                 if(f.file.includes(State.selection.term) || f.file.includes("Surgery")) { 
-                    const sub = f.file.split('(')[0].replace(/_/g, ' ').replace(State.selection.term, '').trim(); 
-                    options.add(sub || "General"); 
-                 }
-            });
+        if (step !== 'term' && step !== 'limit') document.getElementById('btn-mode-random').classList.remove('hidden');
+
+        // 2. Generate Options
+        let items = [];
+        let isMulti = false;
+
+        if(step==='term') items = [...new Set(subset.map(q=>q.term))];
+        else if(step==='subj') items = [...new Set(subset.map(q=>q.subject))];
+        else if(step==='lesson') { items = [...new Set(subset.map(q=>q.lesson))]; isMulti=true; }
+        else if(step==='chapter') { 
+             items = [...new Set(subset.map(q=>q.chapter))]; isMulti=true; 
         }
-        else {
-             // For Lesson/Chapter we need to fetch the content of specific files
-             // To prevent heavy load, we load ONLY files matching current term+subject
-             questionsForContext = await Data.fetchQuestionsByCriteria({
-                 term: State.selection.term, 
-                 subject: State.selection.subject // Pass subject to refine fetch if we had metadata
-             });
-             
-             State.activeQuizPool = questionsForContext; // Store temporarly
-             
-             questionsForContext.forEach(q => {
-                 if (step === 'lesson') options.add(q.lesson);
-                 if (step === 'chapter') if(State.selection.lessons.includes(q.lesson)) options.add(q.chapter);
-             });
+        else if(step==='limit') {
+            ['10','20','30','50','100','All'].forEach(l => GameSelect.addChip(l, false, body, true));
+            return;
         }
 
-        cont.innerHTML = '';
-        const list = Array.from(options).sort();
-        
-        if(!list.length) cont.innerHTML = '<p>لا توجد بيانات</p>';
-
-        const isMulti = (step === 'lesson' || step === 'chapter');
         if(isMulti) document.getElementById('btn-all').classList.remove('hidden');
-
-        list.forEach(opt => {
-             const chip = document.createElement('div');
-             chip.className = 'opt-chip-item ' + (isMulti ? '' : 'nav-item'); // CSS needs
-             // Using UI.js Chip styles but simpler
-             chip.className = 'chip'; 
-             chip.innerText = opt;
-             chip.dataset.val = opt;
-             
-             chip.onclick = () => {
-                 UI.haptic('selection');
-                 if(isMulti) chip.classList.toggle('selected');
-                 else {
-                     // Single select -> Auto Next
-                     document.querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));
-                     chip.classList.add('selected');
-                     if(step==='term') State.selection.term = opt;
-                     if(step==='subject') State.selection.subject = opt;
-                     GameSelect.nextSel();
-                 }
-             };
-             cont.appendChild(chip);
-        });
-        
-        // Show "Random Exam from Previous" button in steps after Subject
-        if (step === 'lesson' || step === 'chapter') {
-            document.getElementById('btn-mode-random').classList.remove('hidden');
-        }
+        items.sort().forEach(val => GameSelect.addChip(val, isMulti, body));
+    },
+    
+    addChip: (val, multi, parent, isLimit=false) => {
+        const d = document.createElement('div');
+        d.className = 'chip'; d.innerText = val; d.dataset.val=val;
+        d.onclick = () => {
+             if(multi) d.classList.toggle('selected');
+             else {
+                 document.querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));
+                 d.classList.add('selected');
+                 // Auto move
+                 if(GameSelect.step==='term') State.selection.term = val;
+                 if(GameSelect.step==='subj') State.selection.subj = val;
+                 if(isLimit) State.selection.limit = val;
+                 GameSelect.nextSel();
+             }
+        };
+        parent.appendChild(d);
     },
 
     nextSel: () => {
-        const picked = Array.from(document.querySelectorAll('.chip.selected')).map(c=>c.dataset.val);
-        
-        if (GameSelect.step === 'term') GameSelect.renderStep('subject');
-        else if (GameSelect.step === 'subject') GameSelect.renderStep('lesson');
-        else if (GameSelect.step === 'lesson') {
-            if(!picked.length) return alert("اختر درساً واحداً على الأقل");
+        const picked = Array.from(document.querySelectorAll('#sel-body .selected')).map(c=>c.dataset.val);
+        if(GameSelect.step==='term') GameSelect.renderSel('subj');
+        else if(GameSelect.step==='subj') GameSelect.renderSel('lesson');
+        else if(GameSelect.step==='lesson') {
+            if(!picked.length) return alert('اختر درسا واحدا');
             State.selection.lessons = picked;
-            GameSelect.launchQuiz(false); // Launch directly, skipping chapters for simplification in Mobile UX
+            GameSelect.renderSel('chapter');
+        }
+        else if(GameSelect.step==='chapter') {
+            if(!picked.length) return alert('اختر فصلا واحدا');
+            State.selection.chapters = picked;
+            GameSelect.renderSel('limit');
+        }
+        else if(GameSelect.step==='limit') {
+            GameSelect.launch();
         }
     },
     
     prevSel: () => {
-        if (GameSelect.step === 'term') UI.showView('v-home');
-        else if (GameSelect.step === 'subject') GameSelect.renderStep('term');
-        else if (GameSelect.step === 'lesson') GameSelect.renderStep('subject');
+         const s = GameSelect.step;
+         if(s=='term') UI.showView('v-home');
+         if(s=='subj') GameSelect.renderSel('term');
+         if(s=='lesson') GameSelect.renderSel('subj');
+         if(s=='chapter') GameSelect.renderSel('lesson');
+         if(s=='limit') GameSelect.renderSel('chapter');
     },
 
-    toggleAll: () => document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('selected')),
-    
-    // --- Filters ---
-    applyUserFilters: (pool) => {
-        const filter = State.filters; 
-        const mistakes = State.localData.mistakes;
-        const arch = State.localData.archive;
-
-        if (filter === 'new') return pool.filter(q => !arch.includes(q.id));
-        if (filter === 'wrong') return pool.filter(q => mistakes.includes(q.id));
-        if (filter === 'answered') return pool.filter(q => arch.includes(q.id));
-        return pool;
-    },
-
-    // --- Launchers ---
-    launchQuiz: (randomFromCurrent) => {
-        // Filter pool from State.activeQuizPool (already loaded in renderStep)
-        let candidates = State.activeQuizPool;
+    launch: (rndMode=false) => {
+        let pool = GameSelect.filterPool(State.allQ);
+        // Apply Selection Context
+        if(State.selection.term) pool = pool.filter(q=>q.term==State.selection.term);
+        if(State.selection.subj) pool = pool.filter(q=>q.subject==State.selection.subj);
         
-        if (State.selection.lessons.length) {
-            candidates = candidates.filter(q => State.selection.lessons.includes(q.lesson));
+        if(!rndMode) {
+             // Precise
+             pool = pool.filter(q=>State.selection.lessons.includes(q.lesson) && State.selection.chapters.includes(q.chapter));
         }
 
-        candidates = GameSelect.applyUserFilters(candidates);
+        if(!pool.length) return alert('القائمة فارغة');
+        pool.sort(()=>Math.random()-0.5);
 
-        if (!candidates.length) return alert('لا أسئلة في الفئة المختارة/الفلتر.');
-
-        // Shuffle
-        candidates.sort(() => Math.random() - 0.5);
-
-        // Limit for Normal flow (User selectable limit or default)
-        const limit = randomFromCurrent ? 30 : candidates.length > 50 ? 50 : candidates.length;
+        const l = State.selection.limit;
+        if(l && l!=='All') pool = pool.slice(0, parseInt(l));
         
-        GameEngine.start(candidates.slice(0, limit), State.quiz.mode, `${State.selection.subject}`);
+        GameEngine.start(pool, State.quiz.mode, State.selection.subj||'Quiz');
     },
     
-    startRandomInMode: () => {
-         // Collects whatever is currently loaded/selected context and randomizes
-         GameSelect.launchQuiz(true);
-    },
+    startRandomInMode: () => GameSelect.launch(true), // "Test from prev selections"
+    toggleAll: () => document.querySelectorAll('#sel-body .chip').forEach(c=>c.classList.toggle('selected')),
 
-    luckyShot: async () => {
-        const qList = await Data.fetchQuestionsByCriteria({mode: 'global'}); // Fetches all (lazy trade-off)
-        if(qList.length) {
-            const r = qList[Math.floor(Math.random()*qList.length)];
-            GameEngine.start([r], 'lucky', 'Lucky Shot');
-        }
+    // --- Search Logic (Restored) ---
+    searchWrong: () => {
+        const wr = State.allQ.filter(q=>State.localData.mistakes.includes(q.id));
+        if(!wr.length) return alert('لا يوجد أخطاء');
+        UI.closeModal('m-search');
+        GameEngine.start(wr, 'review', 'الأخطاء');
     },
-
-    // Archive / Search Handling
-    searchWrong: async () => {
-        const all = await Data.fetchQuestionsByCriteria({mode: 'global'});
-        const wrongs = all.filter(q => State.localData.mistakes.includes(q.id));
-        if(wrongs.length) {
-             UI.closeModal('m-search');
-             GameEngine.start(wrongs, 'review', 'مراجعة الأخطاء');
-        } else {
-            alert('لا يوجد أخطاء مسجلة');
-        }
-    },
-
-    execSearch: async () => {
+    
+    execSearch: () => {
         const id = document.getElementById('inp-search-id').value;
         const txt = document.getElementById('inp-search-txt').value.toLowerCase();
-        
-        if(!id && txt.length < 3) return alert('أدخل بيانات بحث صحيحة');
-        
-        document.querySelector('#m-search .btn-primary').innerText = 'بحث...';
-        
-        const all = await Data.fetchQuestionsByCriteria({mode: 'global'});
         let res = [];
-
-        if (id) res = all.filter(q => q.id == id);
-        else if (txt) res = all.filter(q => q.question.toLowerCase().includes(txt));
         
-        document.querySelector('#m-search .btn-primary').innerText = 'بحث';
+        if(id) res = State.allQ.filter(q=>q.id==id);
+        else if(txt) res = State.allQ.filter(q=>q.question.toLowerCase().includes(txt));
         
-        if(res.length) {
-             UI.closeModal('m-search');
-             GameEngine.start(res, 'review', `Search: ${res.length}`);
-        } else alert('لا نتائج');
+        if(!res.length) return alert('لم يتم العثور على شيء');
+        UI.closeModal('m-search');
+        GameEngine.start(res, 'review', `بحث: ${txt||id}`);
     },
 
-    startArchive: async (mode) => {
-        // Loads questions from Archive IDs
-        if(!State.localData.archive.length) return alert('الأرشيف فارغ');
-        const all = await Data.fetchQuestionsByCriteria({mode: 'global'});
-        const pool = all.filter(q => State.localData.archive.includes(q.id));
-        UI.closeModal('m-archive');
-        GameEngine.start(pool, mode === 'view' ? 'review' : 'normal', 'الأرشيف');
+    // --- Helpers ---
+    filterPool: (arr) => {
+        const f = State.filters;
+        if(f==='new') return arr.filter(q=>!State.localData.archive.includes(q.id));
+        if(f==='wrong') return arr.filter(q=>State.localData.mistakes.includes(q.id));
+        if(f==='answered') return arr.filter(q=>State.localData.archive.includes(q.id));
+        return arr; // All
     },
     
-    startFavMode: async () => {
-        if(!State.localData.fav.length) return alert('لا يوجد مفضلة');
-        const all = await Data.fetchQuestionsByCriteria({mode: 'global'});
-        const pool = all.filter(q => State.localData.fav.includes(q.id));
-        UI.closeModal('m-archive');
-        GameEngine.start(pool, 'normal', '⭐ المفضلة');
-    },
-
     randomizeUI: () => {
-         const t = THEMES[Math.floor(Math.random()*THEMES.length)];
-         document.body.setAttribute('data-theme', t.id);
-         State.localData.settings.theme = t.id;
-         Data.save();
+        const r = THEMES[Math.floor(Math.random()*THEMES.length)];
+        UI.setTheme(r.id);
     },
-
-    startRankMode: () => {
-        UI.openModal('m-rank');
-        // Calculate Global Score from local
-        document.getElementById('rank-val').innerText = '---';
-        
-        // Show Global Leaderboard
-        db.ref('ranks').limitToLast(10).once('value').then(snap => {
-             // Complex leaderboard UI needs logic per topic
-             // For global simple view, just show text
-             document.getElementById('rank-total').innerText = "نظام الترتيب يحتاج انترنت";
-        });
-        document.getElementById('rank-user-name').innerText = State.user.full_name;
+    
+    luckyShot: () => {
+        const pool = GameSelect.filterPool(State.allQ);
+        if(!pool.length) return;
+        const q = pool[Math.floor(Math.random()*pool.length)];
+        GameEngine.start([q], 'lucky', 'Lucky Shot');
     }
 };
