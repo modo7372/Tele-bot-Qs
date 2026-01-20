@@ -1,130 +1,118 @@
-let timerInt;
+let tInt;
+
 const GameEngine = {
     instant: true,
-    setFilter: (v) => State.filters=v,
-    toggleInstant: (v) => GameEngine.instant=v,
+    setFilter: (v) => State.filters = v,
+    toggleInstant: (v) => GameEngine.instant = v,
 
-    start: (qs, mode, topic) => {
-        State.quiz = { questions:qs, mode:mode, answers:new Array(qs.length), currentIndex:0, topic:topic };
+    start: (pool, mode, title) => {
+        State.quiz = { questions:pool, currentIndex:0, answers: new Array(pool.length), mode:mode, topic:title };
         UI.showView('v-quiz');
-        
+
         const isTime = mode === 'timeAttack';
         document.getElementById('timer-bar').style.display = isTime ? 'block':'none';
+        if(isTime) GameEngine.runTimer(60); else clearInterval(tInt);
+        
+        // Hide review buttons initially
         document.getElementById('btn-show-ans').classList.toggle('hidden', mode!=='review');
         
-        if(isTime) GameEngine.timer(60);
         GameEngine.render();
     },
 
     render: () => {
-        const idx = State.quiz.currentIndex;
-        const q = State.quiz.questions[idx];
-        const ans = State.quiz.answers[idx];
+        const i = State.quiz.currentIndex;
+        const q = State.quiz.questions[i];
+        const ans = State.quiz.answers[i];
 
-        document.getElementById('q-idx').innerText = `${idx+1}/${State.quiz.questions.length}`;
+        document.getElementById('q-idx').innerText = `${i+1} / ${State.quiz.questions.length}`;
         document.getElementById('q-id').innerText = q.id;
-        document.getElementById('q-path').innerText = State.quiz.topic;
         document.getElementById('q-txt').innerText = q.question;
+        document.getElementById('q-path').innerText = State.quiz.topic;
         
-        // Fav Icon update
-        const isFav = State.localData.fav.includes(q.id);
-        document.getElementById('btn-fav-icon').innerText = isFav ? '★' : '☆';
+        // Fav
+        document.getElementById('btn-fav').innerText = State.localData.fav.includes(q.id) ? "★" : "☆";
 
         const box = document.getElementById('q-opts'); box.innerHTML='';
         document.getElementById('q-exp').classList.add('hidden');
         document.getElementById('btn-check').classList.add('hidden');
 
-        q.options.forEach((txt, i) => {
-            const div = document.createElement('div');
-            div.className = 'opt'; div.innerText = txt;
-            
-            // Replay State
-            if(ans) {
-                div.style.pointerEvents = 'none';
-                if(i===q.correct_option_id) div.classList.add('correct');
-                else if(ans.idx===i) div.classList.add('wrong');
-            }
-
-            div.onclick = () => GameEngine.click(i, div);
-            box.appendChild(div);
+        q.options.forEach((txt, optI) => {
+             const d = document.createElement('div'); d.className='opt'; d.innerText=txt;
+             
+             // Answered State
+             if(ans) {
+                 d.style.pointerEvents = 'none';
+                 if(optI === q.correct_option_id) d.classList.add('correct');
+                 else if(ans.choice === optI) d.classList.add('wrong');
+             }
+             
+             d.onclick = () => GameEngine.selOption(optI, d);
+             box.appendChild(d);
         });
-        
+
         if(ans) GameEngine.showExp();
     },
 
-    click: (i, el) => {
+    selOption: (idx, el) => {
         if(State.quiz.answers[State.quiz.currentIndex]) return;
-        document.querySelectorAll('.opt').forEach(d=>d.classList.remove('selected'));
+        
+        document.querySelectorAll('.opt').forEach(x=>x.classList.remove('selected'));
         el.classList.add('selected');
 
         if(GameEngine.instant || State.quiz.mode==='survival' || State.quiz.mode==='timeAttack') {
-            GameEngine.submit(i);
+            GameEngine.submit(idx);
         } else {
             document.getElementById('btn-check').classList.remove('hidden');
         }
     },
     
     checkManual: () => {
-        const sel = document.querySelector('.opt.selected');
-        if(sel) {
-            // Find index
-            const nodes = sel.parentNode.children;
-            const idx = Array.prototype.indexOf.call(nodes, sel);
-            GameEngine.submit(idx);
-        }
+         const s = document.querySelector('.opt.selected');
+         if(s) {
+             const idx = Array.from(s.parentNode.children).indexOf(s);
+             GameEngine.submit(idx);
+         }
     },
 
-    submit: (i) => {
-        const qIdx = State.quiz.currentIndex;
-        const q = State.quiz.questions[qIdx];
-        const isCorr = (i === q.correct_option_id);
+    submit: (choice) => {
+        const cur = State.quiz.currentIndex;
+        const q = State.quiz.questions[cur];
+        const isCorr = (choice === q.correct_option_id);
+
+        State.quiz.answers[cur] = { id:q.id, choice:choice, isCorrect:isCorr };
         
-        State.quiz.answers[qIdx] = { id:q.id, idx:i, isCorr:isCorr };
+        // --- Persistence ---
+        if(!State.localData.archive.includes(q.id)) State.localData.archive.push(q.id);
         
-        // Save Mistake/Success
         if(isCorr) {
-             UI.playSound('correct');
+             UI.playSound(true);
              State.localData.mistakes = State.localData.mistakes.filter(x=>x!=q.id);
         } else {
-             UI.playSound('wrong');
+             UI.playSound(false);
              if(!State.localData.mistakes.includes(q.id)) State.localData.mistakes.push(q.id);
         }
-        
-        if(!State.localData.archive.includes(q.id)) State.localData.archive.push(q.id);
         Data.save();
 
-        // UI
-        GameEngine.render(); // Refreshes to show Correct/Wrong colors via logic
+        // --- Update UI (Colors) ---
+        GameEngine.render(); 
 
-        if(State.quiz.mode==='survival' && !isCorr) { alert('Game Over!'); return GameEngine.finish(); }
+        if(!isCorr && State.quiz.mode==='survival') {
+             setTimeout(()=>{alert('Survival Mode Ended!'); GameEngine.finish();},500);
+             return;
+        }
 
-        // --- Logic you requested: Manual if Wrong, Auto if Correct ---
+        // --- SPECIAL FEATURE: AUTO-NAV ONLY ON SUCCESS ---
         if(GameEngine.instant && State.quiz.mode!=='review') {
-            if(isCorr) {
-                setTimeout(() => { if(State.quiz.currentIndex===qIdx) GameEngine.navQ(1); }, 1000);
-            }
-            // If Wrong: Do nothing (Waiting for user)
+             if(isCorr) {
+                 setTimeout(() => {
+                     // Check user didn't move manually already
+                     if(State.quiz.currentIndex === cur) GameEngine.navQ(1);
+                 }, 1000); 
+             }
+             // Else (Wrong): Wait for manual navigation
         }
     },
-    
-    showExp: () => {
-        const q = State.quiz.questions[State.quiz.currentIndex];
-        if(q.explanation) {
-             const e = document.getElementById('q-exp'); e.innerText = q.explanation; e.classList.remove('hidden');
-        }
-    },
-    
-    toggleAnswerView: () => {
-        // Just show correct answer (cheat peek)
-        const qIdx = State.quiz.currentIndex;
-        const q = State.quiz.questions[qIdx];
-        if(!State.quiz.answers[qIdx]) {
-             const opts = document.getElementById('q-opts').children;
-             if(opts[q.correct_option_id]) opts[q.correct_option_id].classList.add('correct');
-             GameEngine.showExp();
-        }
-    },
-    
+
     navQ: (d) => {
         const nx = State.quiz.currentIndex + d;
         if(nx >= 0 && nx < State.quiz.questions.length) {
@@ -134,36 +122,50 @@ const GameEngine = {
             GameEngine.finish();
         }
     },
-    
-    finish: () => {
-        clearInterval(timerInt);
-        const ans = State.quiz.answers.filter(a=>a);
-        const score = ans.filter(a=>a.isCorr).length;
-        document.getElementById('sc-val').innerText = Math.round((score/State.quiz.questions.length)*100) + '%';
-        document.getElementById('sc-txt').innerText = `${score} / ${State.quiz.questions.length}`;
-        UI.openModal('m-score');
-        
-        // Report
-        if(State.quiz.mode !== 'review') Data.reportScore(State.quiz.topic, score);
+
+    showExp: () => {
+         const e = State.quiz.questions[State.quiz.currentIndex].explanation;
+         if(e) {
+             const div = document.getElementById('q-exp'); div.innerHTML = "<b>Note:</b> " + e; div.classList.remove('hidden');
+         }
     },
     
     toggleFav: () => {
-        const q = State.quiz.questions[State.quiz.currentIndex];
-        if(State.localData.fav.includes(q.id)) State.localData.fav = State.localData.fav.filter(x=>x!=q.id);
-        else State.localData.fav.push(q.id);
-        Data.save();
-        GameEngine.render(); // update star
+         const q = State.quiz.questions[State.quiz.currentIndex];
+         if(State.localData.fav.includes(q.id)) State.localData.fav=State.localData.fav.filter(x=>x!=q.id);
+         else State.localData.fav.push(q.id);
+         Data.save();
+         GameEngine.render();
+    },
+
+    toggleAnswerView: () => {
+        const cur = State.quiz.currentIndex;
+        if(State.quiz.answers[cur]) return;
+        
+        const q = State.quiz.questions[cur];
+        // Visual Reveal
+        const opts = document.getElementById('q-opts').children;
+        opts[q.correct_option_id].classList.add('correct');
+        GameEngine.showExp();
+    },
+
+    runTimer: (sec) => {
+        let t = sec;
+        const b = document.getElementById('timer-bar');
+        clearInterval(tInt);
+        tInt = setInterval(()=>{
+             t--; b.style.width=(t/sec*100)+'%';
+             if(t<=0) GameEngine.finish();
+        }, 1000);
     },
     
-    timer: (s) => {
-        let t = s;
-        const b = document.getElementById('timer-bar');
-        clearInterval(timerInt);
-        timerInt = setInterval(()=>{
-             t--;
-             b.style.width = (t/s*100) + '%';
-             if(t<=0) GameEngine.finish();
-        },1000);
+    finish: () => {
+        clearInterval(tInt);
+        const ans = State.quiz.answers.filter(x=>x);
+        const sc = ans.filter(x=>x.isCorrect).length;
+        document.getElementById('sc-val').innerText = Math.round(sc/State.quiz.questions.length*100) + "%";
+        document.getElementById('sc-txt').innerText = `${sc} / ${State.quiz.questions.length}`;
+        UI.openModal('m-score');
     },
-    confirmExit: () => { if(confirm('إنهاء؟')) { clearInterval(timerInt); UI.goHome(); } }
+    confirmExit: () => { if(confirm("End Quiz?")) UI.goHome(); }
 };
