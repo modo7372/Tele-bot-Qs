@@ -166,4 +166,4 @@ const GameSelect = {
         const q = pool[Math.floor(Math.random()*pool.length)];
         GameEngine.start([q], 'lucky', 'Lucky Shot');
     }
-};
+}; 
