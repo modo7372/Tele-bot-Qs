@@ -1256,8 +1256,8 @@
         "Produces breast nodularity",
         "May cause discharge per nipple"
       ],
-      "correct_option_id": 2,
-      "explanation": "The key identifies 'Is a cause of breast pain' as the exception, contradicting clinical fact (it causes mastalgia). However, usually 'nipple retraction' is the exception for benign disease.",
+      "correct_option_id": 1,
+      "explanation": "'nipple retraction' is the exception for benign disease.",
       "term": "Term 7",
       "subject": "General Surgery",
       "lesson": "Breast",
