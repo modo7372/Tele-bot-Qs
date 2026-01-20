@@ -7,151 +7,137 @@
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#6c5ce7">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
     <!-- External Libs -->
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-    <!-- Styles -->
-    <link rel="stylesheet" href="css/style.css?v=3.0">
+    <!-- Style -->
+    <link rel="stylesheet" href="css/style.css?v=4.0">
 </head>
 <body data-theme="light">
 
-    <!-- Security / Lock Screen -->
-    <div id="lock-screen" style="display:none;">
+    <!-- Security Gate -->
+    <div id="lock-screen">
         <div class="lock-icon">🔒</div>
-        <h3>التطبيق محمي</h3>
-        <p id="debug-id" class="debug-text"></p>
+        <h3>Restricted Access</h3>
+        <p id="debug-id"></p>
     </div>
 
-    <!-- Dynamic Background -->
+    <!-- Animated Background -->
     <canvas id="bg-canvas"></canvas>
 
-    <!-- Main App Container -->
     <div class="container" id="app-wrap" style="display:none;">
         
         <!-- Header -->
         <header class="glass-box app-header">
             <div class="user-profile-header" onclick="UI.openModal('m-set')">
-                <div id="u-avatar" class="u-avatar">👤</div>
+                <div id="u-avatar" class="u-avatar">👨‍⚕️</div>
                 <div class="u-info">
-                    <span id="u-name">Guest</span>
-                    <!-- Lazy Load Indicator -->
-                    <small id="db-status">مستعد</small>
+                    <span id="u-name">Loading...</span>
+                    <small id="db-status">Initialize...</small>
                 </div>
             </div>
             <div class="header-actions">
                 <button class="btn btn-ghost" onclick="GameSelect.randomizeUI()" title="ثيم عشوائي">🎨</button>
-                <button class="btn btn-ghost" onclick="UI.toggleFullScreen()" title="ملء الشاشة">⛶</button>
-                <button class="btn btn-ghost" onclick="UI.openModal('m-set')" title="الإعدادات">⚙️</button>
+                <button class="btn btn-ghost" onclick="UI.toggleFullScreen()">⛶</button>
+                <button class="btn btn-ghost" onclick="UI.openModal('m-set')">⚙️</button>
             </div>
         </header>
 
         <main id="main-content">
             
-            <!-- VIEW: Home (Menu) -->
+            <!-- HOME VIEW -->
             <div id="v-home" class="grid-menu">
-                
-                <!-- Compact Stats & Filter Row -->
-                <div class="glass-box stats-row full-span-card" style="display:flex; justify-content:space-between; align-items:center; padding:10px;">
+                <!-- Compact Stats & Filters -->
+                <div class="full-span-card glass-box compact-row">
                      <div class="mini-stat" onclick="UI.showTotalStats()">
                         <div class="ring-sm" id="home-ring"><span id="home-pct">0%</span></div>
-                        <div class="text">
+                        <div style="margin-right:10px">
                             <strong><span id="home-correct">0</span></strong>
-                            <small>صحيح</small>
+                            <small style="font-size:0.7em; display:block">صحيح</small>
                         </div>
                      </div>
-                     <div class="vertical-divider"></div>
-                     <div class="filter-controls">
-                        <small style="color:var(--txt-sec);">تصفية الأسئلة:</small>
+                     <div style="border-left:1px solid var(--txt-sec); opacity:0.3; height:30px; margin:0 10px;"></div>
+                     <div style="flex:1;">
+                        <small style="font-size:0.7em">تصفية:</small>
                         <select id="filter-select" class="compact-select" onchange="GameEngine.setFilter(this.value)">
                             <option value="all">الكل</option>
                             <option value="new">جديد (لم يحل)</option>
-                            <option value="wrong">أخطائي السابقة</option>
-                            <option value="answered">مجاب (مراجعة)</option>
+                            <option value="wrong">أخطائي</option>
+                            <option value="answered">مراجعة</option>
                         </select>
                      </div>
                 </div>
 
-                <!-- Instant Check Toggle (Now more accessible) -->
+                <!-- Toggle Row -->
                 <div class="full-span-card glass-box compact-row">
                     <input type="checkbox" id="chk-instant" checked onchange="GameEngine.toggleInstant(this.checked)">
-                    <label for="chk-instant">تصحيح فوري بعد الاختيار</label>
+                    <label for="chk-instant" style="font-size:0.85em; cursor:pointer">تصحيح فوري (Next تلقائي للصحيح فقط)</label>
                 </div>
 
-                <!-- Main Actions -->
+                <!-- Menu Cards -->
                 <div class="menu-card full-span-card" onclick="GameSelect.startGlobalRandom()">
                     <div class="icon">🔀</div>
-                    <h3>عشوائي سريع</h3>
+                    <h3>اختبار عشوائي</h3>
                 </div>
 
                 <div class="menu-card" onclick="GameSelect.startFlow('normal')">
                     <div class="icon">🚀</div>
                     <h3>بدء المذاكرة</h3>
                 </div>
-                
-                <div class="menu-card survival" onclick="GameSelect.startFlow('survival')">
+                <div class="menu-card" onclick="GameSelect.startFlow('survival')">
                     <div class="icon">🔥</div>
                     <h3>وضع البقاء</h3>
                 </div>
-
-                <div class="menu-card time-attack" onclick="GameSelect.startFlow('timeAttack')">
+                <div class="menu-card" onclick="GameSelect.startFlow('timeAttack')">
                     <div class="icon">⚡</div>
-                    <h3>هجوم الوقت</h3>
+                    <h3>ضد الوقت</h3>
                 </div>
-
-                <div class="menu-card" onclick="GameSelect.startRankMode()">
-                    <div class="icon">🏆</div>
-                    <h3>لوحة الشرف</h3>
-                </div>
-                
-                <div class="menu-card" onclick="GameSelect.luckyShot()">
+                 <div class="menu-card" onclick="GameSelect.luckyShot()">
                     <div class="icon">🎲</div>
-                    <h3>سؤال حظ</h3>
+                    <h3>حظك اليوم</h3>
                 </div>
-
-                <div class="menu-card" onclick="UI.openModal('m-archive')">
+                 <div class="menu-card" onclick="UI.openModal('m-search')">
+                    <div class="icon">🔍</div>
+                    <h3>بحث شامل</h3>
+                </div>
+                 <div class="menu-card" onclick="UI.openModal('m-archive')">
                     <div class="icon">📚</div>
                     <h3>الأرشيف</h3>
                 </div>
-                 
-                 <div class="menu-card" onclick="UI.openModal('m-search')">
-                    <div class="icon">🔍</div>
-                    <h3>بحث</h3>
+                 <div class="menu-card" onclick="GameSelect.startRankMode()">
+                    <div class="icon">🏆</div>
+                    <h3>المتصدرين</h3>
                 </div>
             </div>
 
-            <!-- VIEW: Selection Hierarchy -->
+            <!-- SELECTION VIEW -->
             <div id="v-select" class="glass-box hidden column-flex">
                 <div class="view-header">
-                    <h3 id="sel-head">اختر</h3>
+                    <h3 id="sel-head">Select</h3>
                     <button class="btn btn-sec btn-sm" onclick="GameSelect.prevSel()">↩️</button>
                 </div>
-                <!-- Selection Container -->
-                <div id="sel-body" class="sel-list scroll-shadow"></div>
+                <div id="sel-body" class="sel-list"></div>
                 
-                <div class="view-footer sticky-footer" style="gap:5px;">
-                     <button id="btn-mode-random" class="btn btn-accent full-width hidden" onclick="GameSelect.startRandomInMode()">🎲 امتحان عشوائي مما سبق</button>
-                    <div style="display:flex; gap:5px; width:100%;">
-                        <button id="btn-all" class="btn btn-sec hidden" onclick="GameSelect.toggleAll()">تحديد الكل</button>
-                        <button class="btn btn-primary" style="flex:2;" onclick="GameSelect.nextSel()">التالي ➡</button>
+                <div class="view-footer sticky-footer">
+                    <button id="btn-mode-rnd" class="btn btn-accent full-width hidden" style="margin-bottom:5px" onclick="GameSelect.startRandomInMode()">🎲 امتحان عشوائي من هذه الفئة</button>
+                    <div style="display:flex; gap:5px; width:100%">
+                        <button id="btn-all" class="btn btn-sec hidden" onclick="GameSelect.toggleAll()">الكل</button>
+                        <button class="btn btn-primary full-width" onclick="GameSelect.nextSel()">التالي ➡</button>
                     </div>
                 </div>
             </div>
 
-            <!-- VIEW: Quiz / Question -->
+            <!-- QUIZ VIEW -->
             <div id="v-quiz" class="quiz-view hidden">
                 <div id="timer-bar"></div>
-                
-                <!-- Quiz Top Bar -->
                 <div class="quiz-nav-top">
                     <button class="btn btn-sm btn-ghost" onclick="GameEngine.confirmExit()">❌</button>
-                    <div class="quiz-meta">
-                        <small>ID:<span id="q-id">--</span></small> | 
-                        <b id="q-idx">0/0</b>
-                    </div>
-                    <button id="btn-fav-icon" class="btn btn-ghost" onclick="GameEngine.toggleFav()">☆</button>
+                    <div class="quiz-meta">ID:<b id="q-id">--</b> | <b id="q-idx">--</b></div>
+                    <button class="btn btn-sm btn-ghost" onclick="GameEngine.toggleFav()" id="btn-fav">☆</button>
                 </div>
 
                 <div class="glass-box question-box">
@@ -159,137 +145,104 @@
                     <div id="q-txt" class="q-text">Loading...</div>
                 </div>
                 
-                <div class="quiz-controls-row">
-                     <button class="btn btn-nav" onclick="GameEngine.navQ(-1)">◀</button>
-                     <button class="btn btn-nav" onclick="GameEngine.navQ(1)">▶</button>
+                <!-- Navigation -->
+                 <div class="quiz-controls-row">
+                     <button class="btn btn-nav" onclick="GameEngine.navQ(-1)">◀ السابق</button>
+                     <button class="btn btn-nav" onclick="GameEngine.navQ(1)">التالي ▶</button>
                 </div>
 
                 <div id="q-opts" class="options-list"></div>
-
                 <div id="q-exp" class="glass-box explanation hidden"></div>
-                
+
                 <div class="quiz-footer">
-                     <!-- "Show Answer" is only for Archive View mode -->
-                    <button id="btn-show-ans" class="btn btn-sec hidden full-width" onclick="GameEngine.toggleAnswerView()">👁️ إظهار الحل</button>
-                    <button id="btn-check" class="btn btn-primary hidden full-width" onclick="GameEngine.checkManual()">✅ تأكيد</button>
-                    <button id="btn-finish" class="btn btn-sec" onclick="GameEngine.finishQuiz()">🏁 إنهاء</button>
+                     <button id="btn-show-ans" class="btn btn-sec hidden full-width" onclick="GameEngine.toggleAnswerView()">👁️ كشف الإجابة</button>
+                     <button id="btn-check" class="btn btn-primary hidden full-width" onclick="GameEngine.checkManual()">✅ تحقق</button>
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- Modals (Popups) -->
-
-    <!-- Search Modal -->
+    <!-- Modals -->
     <div id="m-search" class="modal" onclick="if(event.target==this) UI.closeModal('m-search')">
         <div class="modal-content">
-            <h3>🔍 بحث متقدم</h3>
+            <h3>🔍 بحث في بنك الأسئلة</h3>
             <div class="vertical">
-                <input type="number" id="inp-search-id" class="inp-box" placeholder="رقم السؤال (ID)...">
-                <input type="text" id="inp-search-txt" class="inp-box" placeholder="كلمة من السؤال...">
+                <input type="number" id="inp-search-id" class="inp-box" placeholder="Search by ID...">
+                <input type="text" id="inp-search-txt" class="inp-box" placeholder="Search text...">
                 <button class="btn btn-accent full-width" onclick="GameSelect.searchWrong()">كل أخطائي السابقة</button>
                 <button class="btn btn-primary full-width" onclick="GameSelect.execSearch()">بحث</button>
             </div>
         </div>
     </div>
 
-    <!-- Settings Modal -->
     <div id="m-set" class="modal" onclick="if(event.target==this) UI.closeModal('m-set')">
-        <div class="modal-content settings-modal">
-            <h3>⚙️ الإعدادات</h3>
-            
-            <div class="set-group">
-                <label>تنزيل المحتوى (Offline)</label>
-                <button id="btn-pwa-install" class="btn btn-success full-width" onclick="Data.downloadAllForOffline()">📥 تحميل كافة الأسئلة (PWA)</button>
-                <small style="font-size:0.7em; display:block; margin-top:5px; color:#666">يسمح بالعمل بدون نت داخل وخارج تليجرام</small>
-            </div>
+        <div class="modal-content">
+            <h3>الإعدادات</h3>
+             <div class="vertical" style="text-align:right">
+                 <div class="set-row"><label>Identity</label> <select id="set-gender" class="compact-select" onchange="UI.saveProfile()"><option value="male">Doctor 👨‍⚕️</option><option value="female">Doctor 👩‍⚕️</option></select></div>
+                 
+                 <label>Avatars</label>
+                 <div id="avatar-list" class="scroll-chips"></div>
+                 
+                 <label>Themes</label>
+                 <div id="theme-list" class="scroll-chips"></div>
 
-            <div class="set-group">
-                <div class="toggle-row">
-                    <span>الهوية:</span>
-                     <select id="set-gender" class="compact-select" onchange="UI.saveProfile()">
-                        <option value="male">طبيب 👨‍⚕️</option>
-                        <option value="female">طبيبة 👩‍⚕️</option>
-                     </select>
-                </div>
-                <div class="chip-grid" id="avatar-list"></div>
-            </div>
-            
-            <div class="set-group">
-                <label>الثيمات</label>
-                <div class="chip-group scrollable-chips" id="theme-list"></div>
-            </div>
-
-            <div class="set-group">
-                <div class="toggle-row"><span>🔊 صوت</span><input type="checkbox" id="chk-sound" onchange="UI.toggleSound(this.checked)"></div>
-                <div class="toggle-row"><span>📳 اهتزاز</span><input type="checkbox" id="chk-haptic" onchange="UI.toggleHaptic(this.checked)"></div>
-                <div class="toggle-row"><span>🫧 أنميشن</span><input type="checkbox" id="chk-anim" onchange="UI.toggleAnim(this.checked)"></div>
-            </div>
-
-            <button class="btn btn-primary full-width" onclick="UI.closeModal('m-set')">حفظ</button>
+                 <div class="set-row"><span>Sound 🔊</span> <input type="checkbox" id="chk-sound" onchange="UI.toggleSound(this.checked)"></div>
+                 <div class="set-row"><span>Haptic 📳</span> <input type="checkbox" id="chk-haptic" onchange="UI.toggleHaptic(this.checked)"></div>
+                 <div class="set-row"><span>Particles 🫧</span> <input type="checkbox" id="chk-anim" onchange="UI.toggleAnim(this.checked)"></div>
+             </div>
+             <br>
+             <button class="btn btn-primary full-width" onclick="UI.closeModal('m-set')">تم</button>
         </div>
     </div>
 
-    <!-- Score Modal -->
     <div id="m-score" class="modal">
         <div class="modal-content">
             <h2>النتيجة</h2>
             <h1 id="sc-val">0%</h1>
             <p id="sc-txt">0/0</p>
-            <div class="vertical">
-                 <button class="btn btn-primary full-width" onclick="UI.goHome()">خروج</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Rank Modal -->
-    <div id="m-rank" class="modal" onclick="if(event.target==this) UI.closeModal('m-rank')">
-        <div class="modal-content">
-            <h2 class="text-primary">🏆 المتصدرين</h2>
-            <div class="rank-body">
-                <p id="rank-topic">Topic</p>
-                <h1 id="rank-val">#--</h1>
-                <p id="rank-user-name" style="font-weight:bold; color:var(--primary);"></p>
-                <p id="rank-total">جاري الحساب...</p>
-                <hr>
-                <div id="rank-global-info"></div>
-            </div>
-            <button class="btn btn-primary full-width" onclick="UI.closeModal('m-rank')">إغلاق</button>
+            <button class="btn btn-primary full-width" onclick="UI.goHome()">القائمة الرئيسية</button>
         </div>
     </div>
     
-    <!-- Stats Modal -->
-    <div id="m-stats" class="modal" onclick="if(event.target==this) UI.closeModal('m-stats')">
-        <div class="modal-content">
-            <h3>التقرير التراكمي</h3>
-            <div class="stats-grid">
-                <div class="stat-item"><h6>الكل</h6><p id="st-total">0</p></div>
-                <div class="stat-item"><h6>منجز</h6><p id="st-solved">0%</p></div>
-                <div class="stat-item success"><h6>صح</h6><p id="st-correct">0</p></div>
-                <div class="stat-item error"><h6>خطأ</h6><p id="st-wrong">0</p></div>
-            </div>
-            <button class="btn btn-primary full-width" onclick="UI.closeModal('m-stats')">إغلاق</button>
-        </div>
-    </div>
-    
-    <!-- Archive Select Modal -->
      <div id="m-archive" class="modal" onclick="if(event.target==this) UI.closeModal('m-archive')">
         <div class="modal-content">
-            <h3>📚 الأرشيف</h3>
-            <div class="modal-actions vertical">
-                <button class="btn btn-primary full-width" onclick="GameSelect.startArchive('quiz')">✍️ إعادة حل الأسئلة (امتحان)</button>
-                <button class="btn btn-sec full-width" onclick="GameSelect.startArchive('view')">👁️ تصفح مع الحل (مراجعة)</button>
-                 <button class="btn btn-accent full-width" onclick="GameSelect.startFavMode()">⭐ أسئلة المفضلة</button>
+            <h3>الأرشيف</h3>
+            <div class="vertical">
+                <button class="btn btn-primary full-width" onclick="GameSelect.startArchive('quiz')">✍️ إعادة امتحان (محاولاتي)</button>
+                <button class="btn btn-sec full-width" onclick="GameSelect.startArchive('view')">👁️ وضع المراجعة</button>
+                <button class="btn btn-accent full-width" onclick="GameSelect.startFavMode()">⭐ المفضلة فقط</button>
             </div>
         </div>
     </div>
+    
+    <div id="m-stats" class="modal" onclick="if(event.target==this) UI.closeModal('m-stats')">
+        <div class="modal-content">
+            <h3>إحصائيات</h3>
+            <div class="stats-grid">
+                <div><h6>الكل</h6><span id="st-total">0</span></div>
+                <div><h6>مجاب</h6><span id="st-solved">0</span></div>
+                <div class="t-green"><h6>صح</h6><span id="st-correct">0</span></div>
+                <div class="t-red"><h6>أخطاء</h6><span id="st-wrong">0</span></div>
+            </div>
+            <button class="btn btn-primary full-width" onclick="UI.closeModal('m-stats')">غلق</button>
+        </div>
+    </div>
+    
+     <div id="m-rank" class="modal" onclick="if(event.target==this) UI.closeModal('m-rank')">
+        <div class="modal-content">
+             <h2>قريباً</h2>
+             <p>يحتاج هذا القسم اتصال دائم</p>
+             <button class="btn btn-primary" onclick="UI.closeModal('m-rank')">حسناً</button>
+        </div>
+    </div>
 
-    <!-- JS Sequence -->
-    <script src="js/config.js?v=3.0"></script>
-    <script src="js/data.js?v=3.0"></script>
-    <script src="js/ui.js?v=3.0"></script>
-    <script src="js/game-select.js?v=3.0"></script>
-    <script src="js/game-engine.js?v=3.0"></script>
-    <script src="js/main.js?v=3.0"></script>
+    <!-- Scripts Order IS IMPORTANT -->
+    <script src="js/config.js?v=4.0"></script>
+    <script src="js/ui.js?v=4.0"></script>
+    <script src="js/data.js?v=4.0"></script>
+    <script src="js/game-select.js?v=4.0"></script>
+    <script src="js/game-engine.js?v=4.0"></script>
+    <script src="js/main.js?v=4.0"></script>
 </body>
 </html>
