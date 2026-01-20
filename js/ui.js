@@ -1,160 +1,166 @@
 const UI = {
-    // --- Initial Setup ---
     init: () => {
-        UI.applySettings();
-        UI.renderHomeStats();
+        // Init logic moved to applySettings to ensure safe loading
+        UI.renderAvatars();
+        UI.renderThemes();
     },
 
     applySettings: () => {
         const s = State.localData.settings || {};
-        // Theme
-        if(s.theme) document.body.setAttribute('data-theme', s.theme);
-        // Toggle toggles
-        const setC = (id, k) => { if(document.getElementById(id)) document.getElementById(id).checked = (s[k]!==false); };
-        setC('chk-sound', 'sound');
-        setC('chk-haptic', 'haptic');
-        setC('chk-anim', 'anim');
+        if(s.theme) UI.setTheme(s.theme);
+        if(s.sound !== undefined) document.getElementById('chk-sound').checked = s.sound;
+        if(s.haptic !== undefined) document.getElementById('chk-haptic').checked = s.haptic;
         
-        // Profile
+        // Restore Animation toggle
+        const animState = (s.anim !== false); 
+        document.getElementById('chk-anim').checked = animState;
+        UI.toggleAnim(animState);
+        
         if(document.getElementById('u-name')) document.getElementById('u-name').innerText = State.user.full_name;
-        UI.renderAvatar(s.gender, s.avatarChar);
-        UI.toggleAnim(s.anim !== false);
+        UI.updateAvatar(s.gender, s.avatarChar);
     },
 
-    renderAvatar: (gender, char) => {
-        const def = gender === 'female' ? "👩‍⚕️" : "👨‍⚕️";
-        document.getElementById('u-avatar').innerText = char || def;
-    },
-
-    // --- Navigation ---
-    showView: (vid) => {
-        ['v-home','v-select','v-quiz'].forEach(v => document.getElementById(v).classList.add('hidden'));
-        const el = document.getElementById(vid);
-        el.classList.remove('hidden');
-        el.style.display = (vid==='v-home') ? 'grid' : 'flex';
-        
-        if(vid === 'v-home') UI.renderHomeStats();
-    },
-
-    openModal: (mid) => document.getElementById(mid).style.display = 'flex',
-    closeModal: (mid) => document.getElementById(mid).style.display = 'none',
-
-    toggleFullScreen: () => {
-        if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen().catch(e => {
-                alert("جهازك لا يدعم ملء الشاشة أو تم الرفض.");
+    renderAvatars: () => {
+        const chars = ["👨‍⚕️","👩‍⚕️","👨‍🔬","👩‍🔬","🦸‍♂️","🦸‍♀️","🧠","👽","🦁","🦊","🐸","👻"];
+        const c = document.getElementById('avatar-list');
+        if(c) {
+            c.innerHTML = '';
+            chars.forEach(a => {
+                const d = document.createElement('div');
+                d.className = 'chip';
+                d.innerText = a;
+                d.onclick = () => { UI.saveSetting('avatarChar', a); UI.updateAvatar(null, a); };
+                c.appendChild(d);
             });
-        } else {
-            if (document.exitFullscreen) document.exitFullscreen();
         }
     },
+    
+    updateAvatar: (g, char) => {
+         const def = g === 'female' ? "👩‍⚕️" : "👨‍⚕️";
+         const f = char || State.localData.settings.avatarChar || def;
+         document.getElementById('u-avatar').innerText = f;
+    },
 
-    // --- Stats Rendering ---
-    renderHomeStats: () => {
-        // Calculate based on history
+    renderThemes: () => {
+        const list = document.getElementById('theme-list');
+        if(!list) return;
+        list.innerHTML = '';
+        THEMES.forEach(t => {
+            const d = document.createElement('div');
+            d.className = 'chip';
+            d.style.background = t.color;
+            d.style.width = '30px'; d.style.height = '30px'; d.innerText = '';
+            d.onclick = () => UI.setTheme(t.id);
+            list.appendChild(d);
+        });
+    },
+
+    setTheme: (id) => {
+        document.body.setAttribute('data-theme', id);
+        UI.saveSetting('theme', id);
+    },
+    
+    // --- Key Function: Swimming Particles (Canvas) ---
+    initAnim: (isRandom = false) => {
+        const c = document.getElementById('bg-canvas');
+        if(!c) return;
+        const x = c.getContext('2d');
+        let w, h, particles = [];
+        
+        const rsz = () => { w = c.width = window.innerWidth; h = c.height = window.innerHeight; };
+        window.addEventListener('resize', rsz); rsz();
+        
+        // Create Bubbles
+        for(let i=0; i<20; i++) particles.push({
+            x: Math.random()*w, y: Math.random()*h,
+            r: Math.random()*15 + 5,
+            vx: (Math.random() - 0.5) * 1,
+            vy: -(Math.random() * 1 + 0.5)
+        });
+        
+        function loop() {
+            if(!State.localData.settings.anim && State.localData.settings.anim!==undefined) return; // Stop if disabled
+            x.clearRect(0,0,w,h);
+            x.fillStyle = "rgba(128,128,128,0.1)"; // Default color
+            
+            particles.forEach(p => {
+                p.x += p.vx; p.y += p.vy;
+                if(p.y < -50) p.y = h + 50;
+                if(p.x > w+50) p.x = -50; if(p.x < -50) p.x = w+50;
+                
+                x.beginPath(); x.arc(p.x, p.y, p.r, 0, Math.PI*2); x.fill();
+            });
+            requestAnimationFrame(loop);
+        }
+        loop();
+    },
+    
+    toggleAnim: (v) => {
+        UI.saveSetting('anim', v);
+        const cvs = document.getElementById('bg-canvas');
+        if(cvs) cvs.style.display = v ? 'block' : 'none';
+        if(v) UI.initAnim();
+    },
+
+    // --- Stats & UI Utils ---
+    updateHomeStats: () => {
+        if(!State.allQ.length) return;
+        const total = State.allQ.length;
         const solved = State.localData.archive.length;
-        // Simplified accuracy: Look at mistakes count relative to solved? 
-        // Logic: solved = correct + mistakes(that were logged).
-        // A better stat is: solved_unique. 
-        // Let's use simplified local stats object if available
-        let correct = State.localData.stats.totalCorrect || 0;
-        let total = State.questionsIndex.length * 100; // Est total
+        const wrongCnt = State.localData.archive.filter(id => State.localData.mistakes.includes(id)).length;
+        const correct = solved - wrongCnt;
         
         document.getElementById('home-correct').innerText = correct;
         
-        // Progress ring logic (Abstract representation)
-        // Since total Qs aren't fully loaded, we use ratio of Solved/Correct?
-        // Let's just show accuracy
-        const attempts = State.localData.stats.totalAttempts || 1;
-        const pct = Math.round((correct / attempts) * 100);
+        const pct = Math.round((correct / (solved || 1)) * 100); 
+        document.getElementById('home-pct').innerText = (solved > 0 ? pct : 0) + '%';
         
-        document.getElementById('home-pct').innerText = (pct || 0) + '%';
         const ring = document.getElementById('home-ring');
-        ring.style.background = `conic-gradient(var(--success) ${pct*3.6}deg, rgba(0,0,0,0.1) 0deg)`;
-
-        // Update Modal Stats
-        document.getElementById('st-total').innerText = attempts;
+        if(ring) ring.style.background = `conic-gradient(var(--success) ${pct*3.6}deg, rgba(0,0,0,0.1) 0deg)`;
+        
+        // Modal
+        document.getElementById('st-total').innerText = total;
         document.getElementById('st-solved').innerText = solved;
         document.getElementById('st-correct').innerText = correct;
-        document.getElementById('st-wrong').innerText = attempts - correct;
-    },
-
-    // --- Audio/Haptics ---
-    playSound: (type) => {
-        if(State.localData.settings.sound === false) return;
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = ctx.createOscillator();
-        const g = ctx.createGain();
-        osc.connect(g); g.connect(ctx.destination);
-        
-        if(type==='correct') { osc.type='sine'; osc.frequency.value=600; }
-        else if(type==='wrong') { osc.type='sawtooth'; osc.frequency.value=200; }
-        else { osc.type='triangle'; osc.frequency.value=1200; } // click
-        
-        osc.start();
-        g.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + 0.1);
-        osc.stop(ctx.currentTime + 0.15);
+        document.getElementById('st-wrong').innerText = wrongCnt;
     },
     
-    haptic: (style) => {
-        if(State.localData.settings.haptic === false) return;
-        if(window.Telegram && Telegram.WebApp.HapticFeedback) {
-            if(style === 'success' || style === 'error') Telegram.WebApp.HapticFeedback.notificationOccurred(style);
-            else Telegram.WebApp.HapticFeedback.selectionChanged();
-        }
+    showTotalStats: () => {
+         UI.updateHomeStats();
+         UI.openModal('m-stats');
     },
 
-    // --- Preferences Actions ---
-    toggleSound: (v) => { State.localData.settings.sound = v; Data.save(); },
-    toggleHaptic: (v) => { State.localData.settings.haptic = v; Data.save(); },
-    toggleAnim: (v) => { 
-        const cvs = document.getElementById('bg-canvas');
-        if(cvs) cvs.style.display = v ? 'block' : 'none';
-        State.localData.settings.anim = v; 
-        Data.save(); 
-        if(v) AnimationBG.start(); else AnimationBG.stop();
+    showView: (v) => {
+        ['v-home','v-select','v-quiz'].forEach(id=>document.getElementById(id).classList.add('hidden'));
+        document.getElementById(v).classList.remove('hidden');
+        if(v==='v-home') UI.updateHomeStats();
+        // Scroll top
+        document.getElementById(v).scrollTop = 0;
+    },
+
+    openModal: (id) => document.getElementById(id).style.display='flex',
+    closeModal: (id) => document.getElementById(id).style.display='none',
+    
+    saveSetting: (k,v) => { State.localData.settings[k] = v; Data.save(); },
+    
+    toggleFullScreen: () => {
+        if(!document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{});
+        else if(document.exitFullscreen) document.exitFullscreen();
     },
     
     saveProfile: () => {
-        const g = document.getElementById('set-gender').value;
-        State.localData.settings.gender = g;
-        UI.renderAvatar(g, null);
-        Data.save();
+         UI.saveSetting('gender', document.getElementById('set-gender').value);
+         UI.updateAvatar(document.getElementById('set-gender').value, null);
     },
-    
-    goHome: () => {
-        GameEngine.stop();
-        UI.showView('v-home');
-        UI.closeModal('m-score');
+
+    playSound: (t) => {
+        if(State.localData.settings.sound===false) return;
+        const ctx = new (window.AudioContext||window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.connect(g); g.connect(ctx.destination);
+        if(t=='correct') { osc.type='sine'; osc.frequency.value=600; }
+        else { osc.type='triangle'; osc.frequency.value=200; }
+        osc.start(); g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime+0.2); osc.stop(ctx.currentTime+0.2);
     }
-};
-
-// Canvas Background Logic (Lightweight)
-const AnimationBG = {
-    running: false,
-    start: () => {
-        if(AnimationBG.running) return;
-        AnimationBG.running = true;
-        const canvas = document.getElementById('bg-canvas');
-        const ctx = canvas.getContext('2d');
-        let width, height, particles = [];
-        
-        const resize = () => { width=canvas.width=window.innerWidth; height=canvas.height=window.innerHeight; };
-        window.addEventListener('resize', resize); resize();
-
-        for(let i=0; i<15; i++) particles.push({ x:Math.random()*width, y:Math.random()*height, r:Math.random()*4+1, vy:-Math.random()*0.5-0.1 });
-
-        const draw = () => {
-            if(!AnimationBG.running) return;
-            ctx.clearRect(0,0,width,height);
-            ctx.fillStyle = "rgba(120,120,120,0.15)";
-            particles.forEach(p => {
-                p.y += p.vy; if(p.y < -10) p.y = height + 10;
-                ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
-            });
-            requestAnimationFrame(draw);
-        };
-        draw();
-    },
-    stop: () => { AnimationBG.running = false; }
 };
