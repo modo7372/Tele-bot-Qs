@@ -1,237 +1,169 @@
-// Controls the quiz Flow
-let timerInterval;
-
+let timerInt;
 const GameEngine = {
-    
     instant: true,
-    
-    setFilter: (val) => { State.filters = val; },
-    toggleInstant: (v) => { GameEngine.instant = v; },
+    setFilter: (v) => State.filters=v,
+    toggleInstant: (v) => GameEngine.instant=v,
 
-    start: (questions, mode, topicTitle) => {
-        State.quiz.questions = questions;
-        State.quiz.mode = mode; // review, survival, lucky, timeAttack
-        State.quiz.currentIndex = 0;
-        State.quiz.answers = new Array(questions.length).fill(null); // {id, choice, isCorrect}
-        State.quiz.startTime = Date.now();
-        State.quiz.topic = topicTitle;
-
-        // View Setup
+    start: (qs, mode, topic) => {
+        State.quiz = { questions:qs, mode:mode, answers:new Array(qs.length), currentIndex:0, topic:topic };
         UI.showView('v-quiz');
         
-        // Hiding/Showing relevant buttons
-        const isReview = (mode === 'review');
-        document.getElementById('btn-show-ans').classList.toggle('hidden', !isReview);
-        document.getElementById('btn-check').classList.add('hidden');
+        const isTime = mode === 'timeAttack';
+        document.getElementById('timer-bar').style.display = isTime ? 'block':'none';
+        document.getElementById('btn-show-ans').classList.toggle('hidden', mode!=='review');
         
-        // Timer
-        document.getElementById('timer-bar').style.display = (mode==='timeAttack') ? 'block' : 'none';
-        
-        GameEngine.renderQuestion();
-        
-        if (mode === 'timeAttack') GameEngine.startTimer(60); 
-    },
-    
-    stop: () => {
-        clearInterval(timerInterval);
+        if(isTime) GameEngine.timer(60);
+        GameEngine.render();
     },
 
-    renderQuestion: () => {
-        const i = State.quiz.currentIndex;
-        const q = State.quiz.questions[i];
-        
+    render: () => {
+        const idx = State.quiz.currentIndex;
+        const q = State.quiz.questions[idx];
+        const ans = State.quiz.answers[idx];
+
+        document.getElementById('q-idx').innerText = `${idx+1}/${State.quiz.questions.length}`;
         document.getElementById('q-id').innerText = q.id;
-        document.getElementById('q-idx').innerText = `${i+1}/${State.quiz.questions.length}`;
-        document.getElementById('q-path').innerText = State.quiz.topic || 'General';
-        
-        // Handling Fav Button
-        const btnFav = document.getElementById('btn-fav-icon');
-        btnFav.style.color = State.localData.fav.includes(q.id) ? 'var(--primary)' : 'var(--txt-sec)';
-        btnFav.innerText = State.localData.fav.includes(q.id) ? '★' : '☆';
-
+        document.getElementById('q-path').innerText = State.quiz.topic;
         document.getElementById('q-txt').innerText = q.question;
         
-        const optsDiv = document.getElementById('q-opts');
-        optsDiv.innerHTML = '';
+        // Fav Icon update
+        const isFav = State.localData.fav.includes(q.id);
+        document.getElementById('btn-fav-icon').innerText = isFav ? '★' : '☆';
+
+        const box = document.getElementById('q-opts'); box.innerHTML='';
         document.getElementById('q-exp').classList.add('hidden');
         document.getElementById('btn-check').classList.add('hidden');
 
-        // Render Options
-        q.options.forEach((optText, optIdx) => {
-             const div = document.createElement('div');
-             div.className = 'opt';
-             div.innerText = optText;
-             
-             // Check Previous State
-             const ans = State.quiz.answers[i];
-             if (ans) {
-                 div.style.pointerEvents = 'none';
-                 if (optIdx === q.correct_option_id) div.classList.add('correct');
-                 else if (optIdx === ans.choice) div.classList.add('wrong');
-             }
+        q.options.forEach((txt, i) => {
+            const div = document.createElement('div');
+            div.className = 'opt'; div.innerText = txt;
+            
+            // Replay State
+            if(ans) {
+                div.style.pointerEvents = 'none';
+                if(i===q.correct_option_id) div.classList.add('correct');
+                else if(ans.idx===i) div.classList.add('wrong');
+            }
 
-             div.onclick = () => GameEngine.selectOption(optIdx, div);
-             optsDiv.appendChild(div);
+            div.onclick = () => GameEngine.click(i, div);
+            box.appendChild(div);
         });
-
-        // Review mode automatically shows answer explanation if available and already answered/viewing
-        if (State.quiz.mode === 'review' || State.quiz.answers[i]) {
-            if (State.quiz.answers[i]) GameEngine.showExplanation();
-        }
+        
+        if(ans) GameEngine.showExp();
     },
 
-    selectOption: (optIdx, el) => {
-        if (State.quiz.answers[State.quiz.currentIndex]) return; // Already answered
-
-        // UI Feedback (temp selection)
-        document.querySelectorAll('.opt').forEach(o => o.classList.remove('selected'));
+    click: (i, el) => {
+        if(State.quiz.answers[State.quiz.currentIndex]) return;
+        document.querySelectorAll('.opt').forEach(d=>d.classList.remove('selected'));
         el.classList.add('selected');
-        
-        // Logic
-        if (GameEngine.instant || State.quiz.mode === 'survival' || State.quiz.mode === 'timeAttack') {
-            GameEngine.submitAnswer(optIdx);
+
+        if(GameEngine.instant || State.quiz.mode==='survival' || State.quiz.mode==='timeAttack') {
+            GameEngine.submit(i);
         } else {
-            // Wait for confirmation button
             document.getElementById('btn-check').classList.remove('hidden');
         }
     },
     
     checkManual: () => {
-        const el = document.querySelector('.opt.selected');
-        if(!el) return;
-        // Determine Index
-        const parent = el.parentNode;
-        const idx = Array.prototype.indexOf.call(parent.children, el);
-        GameEngine.submitAnswer(idx);
+        const sel = document.querySelector('.opt.selected');
+        if(sel) {
+            // Find index
+            const nodes = sel.parentNode.children;
+            const idx = Array.prototype.indexOf.call(nodes, sel);
+            GameEngine.submit(idx);
+        }
     },
 
-    submitAnswer: (idx) => {
-        const i = State.quiz.currentIndex;
-        const q = State.quiz.questions[i];
-        const isCorrect = (idx === q.correct_option_id);
+    submit: (i) => {
+        const qIdx = State.quiz.currentIndex;
+        const q = State.quiz.questions[qIdx];
+        const isCorr = (i === q.correct_option_id);
         
-        // Save State
-        State.quiz.answers[i] = { id: q.id, choice: idx, isCorrect: isCorrect };
-
-        // UI Reveal
-        const opts = document.querySelectorAll('.opt');
-        opts[q.correct_option_id].classList.add('correct');
-        opts[idx].classList.remove('selected'); // Remove temp style
-        if(!isCorrect) opts[idx].classList.add('wrong');
-
-        // Logic Consequences
-        if (isCorrect) {
-            UI.playSound('correct');
-            UI.haptic('success');
-            // Remove from mistakes if it was there
-            State.localData.mistakes = State.localData.mistakes.filter(x => x !== q.id);
+        State.quiz.answers[qIdx] = { id:q.id, idx:i, isCorr:isCorr };
+        
+        // Save Mistake/Success
+        if(isCorr) {
+             UI.playSound('correct');
+             State.localData.mistakes = State.localData.mistakes.filter(x=>x!=q.id);
         } else {
-            UI.playSound('wrong');
-            UI.haptic('error');
-            // Add to mistakes
-            if(!State.localData.mistakes.includes(q.id)) State.localData.mistakes.push(q.id);
-            
-            if (State.quiz.mode === 'survival') {
-                setTimeout(()=> { alert('🔥 Game Over!'); GameEngine.finishQuiz(); }, 500);
-                return;
-            }
+             UI.playSound('wrong');
+             if(!State.localData.mistakes.includes(q.id)) State.localData.mistakes.push(q.id);
         }
-
-        // Add to Archive (Solved)
+        
         if(!State.localData.archive.includes(q.id)) State.localData.archive.push(q.id);
         Data.save();
 
-        GameEngine.showExplanation();
-        document.getElementById('btn-check').classList.add('hidden');
+        // UI
+        GameEngine.render(); // Refreshes to show Correct/Wrong colors via logic
 
-        // Auto Move (if normal mode)
-        if (GameEngine.instant && State.quiz.mode !== 'review' && isCorrect) {
-            setTimeout(() => {
-                // Only move if user hasn't moved manually yet
-                if (State.quiz.currentIndex === i) GameEngine.navQ(1);
-            }, 1000); // 1 second delay for correct answers
-        }
-    },
+        if(State.quiz.mode==='survival' && !isCorr) { alert('Game Over!'); return GameEngine.finish(); }
 
-    showExplanation: () => {
-         const q = State.quiz.questions[State.quiz.currentIndex];
-         if(q.explanation) {
-             const div = document.getElementById('q-exp');
-             div.innerText = q.explanation;
-             div.classList.remove('hidden');
-         }
-    },
-
-    // Used in Review Mode to peek without answering
-    toggleAnswerView: () => {
-        const i = State.quiz.currentIndex;
-        if (State.quiz.answers[i]) return; // already done
-        
-        const q = State.quiz.questions[i];
-        // Simulate correct answer simply to show visual
-        const opts = document.querySelectorAll('.opt');
-        opts[q.correct_option_id].classList.add('correct');
-        GameEngine.showExplanation();
-    },
-
-    navQ: (dir) => {
-        const next = State.quiz.currentIndex + dir;
-        if (next >= 0 && next < State.quiz.questions.length) {
-            State.quiz.currentIndex = next;
-            GameEngine.renderQuestion();
-        } else if (next >= State.quiz.questions.length && State.quiz.mode !== 'review') {
-            GameEngine.finishQuiz();
+        // --- Logic you requested: Manual if Wrong, Auto if Correct ---
+        if(GameEngine.instant && State.quiz.mode!=='review') {
+            if(isCorr) {
+                setTimeout(() => { if(State.quiz.currentIndex===qIdx) GameEngine.navQ(1); }, 1000);
+            }
+            // If Wrong: Do nothing (Waiting for user)
         }
     },
     
-    startTimer: (seconds) => {
-        let t = seconds;
-        const bar = document.getElementById('timer-bar');
-        clearInterval(timerInterval);
+    showExp: () => {
+        const q = State.quiz.questions[State.quiz.currentIndex];
+        if(q.explanation) {
+             const e = document.getElementById('q-exp'); e.innerText = q.explanation; e.classList.remove('hidden');
+        }
+    },
+    
+    toggleAnswerView: () => {
+        // Just show correct answer (cheat peek)
+        const qIdx = State.quiz.currentIndex;
+        const q = State.quiz.questions[qIdx];
+        if(!State.quiz.answers[qIdx]) {
+             const opts = document.getElementById('q-opts').children;
+             if(opts[q.correct_option_id]) opts[q.correct_option_id].classList.add('correct');
+             GameEngine.showExp();
+        }
+    },
+    
+    navQ: (d) => {
+        const nx = State.quiz.currentIndex + d;
+        if(nx >= 0 && nx < State.quiz.questions.length) {
+            State.quiz.currentIndex = nx;
+            GameEngine.render();
+        } else if(nx >= State.quiz.questions.length && State.quiz.mode !=='review') {
+            GameEngine.finish();
+        }
+    },
+    
+    finish: () => {
+        clearInterval(timerInt);
+        const ans = State.quiz.answers.filter(a=>a);
+        const score = ans.filter(a=>a.isCorr).length;
+        document.getElementById('sc-val').innerText = Math.round((score/State.quiz.questions.length)*100) + '%';
+        document.getElementById('sc-txt').innerText = `${score} / ${State.quiz.questions.length}`;
+        UI.openModal('m-score');
         
-        timerInterval = setInterval(() => {
-             t--;
-             bar.style.width = (t/seconds*100) + "%";
-             if(t <= 0) {
-                 clearInterval(timerInterval);
-                 alert('⏰ الوقت انتهى');
-                 GameEngine.finishQuiz();
-             }
-        }, 1000);
+        // Report
+        if(State.quiz.mode !== 'review') Data.reportScore(State.quiz.topic, score);
     },
     
     toggleFav: () => {
-         const q = State.quiz.questions[State.quiz.currentIndex];
-         if(State.localData.fav.includes(q.id)) State.localData.fav = State.localData.fav.filter(x=>x!=q.id);
-         else State.localData.fav.push(q.id);
-         Data.save();
-         GameEngine.renderQuestion(); // Re-render button
-         UI.haptic('selection');
-    },
-
-    finishQuiz: () => {
-        GameEngine.stop();
-        const answers = State.quiz.answers.filter(a => a);
-        const score = answers.filter(a => a.isCorrect).length;
-        const total = State.quiz.questions.length; // Count attempted? No count Total quiz size.
-        
-        const pct = Math.round((score/total)*100);
-        
-        // Report to Database
-        // If not review/search
-        if (State.quiz.mode === 'normal' || State.quiz.mode === 'timeAttack' || State.quiz.mode === 'survival') {
-             Data.reportScore(State.quiz.topic, score);
-        }
-
-        // Show Score Modal
-        document.getElementById('sc-val').innerText = `${pct}%`;
-        document.getElementById('sc-txt').innerText = `إجابة صحيحة: ${score} من ${total}`;
-        
-        UI.openModal('m-score');
-        UI.playSound('correct');
+        const q = State.quiz.questions[State.quiz.currentIndex];
+        if(State.localData.fav.includes(q.id)) State.localData.fav = State.localData.fav.filter(x=>x!=q.id);
+        else State.localData.fav.push(q.id);
+        Data.save();
+        GameEngine.render(); // update star
     },
     
-    confirmExit: () => {
-        if(confirm('إنهاء الاختبار والعودة للقائمة؟')) UI.goHome();
-    }
+    timer: (s) => {
+        let t = s;
+        const b = document.getElementById('timer-bar');
+        clearInterval(timerInt);
+        timerInt = setInterval(()=>{
+             t--;
+             b.style.width = (t/s*100) + '%';
+             if(t<=0) GameEngine.finish();
+        },1000);
+    },
+    confirmExit: () => { if(confirm('إنهاء؟')) { clearInterval(timerInt); UI.goHome(); } }
 };
