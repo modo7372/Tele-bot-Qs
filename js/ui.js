@@ -163,4 +163,4 @@ const UI = {
         else { osc.type='triangle'; osc.frequency.value=200; }
         osc.start(); g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime+0.2); osc.stop(ctx.currentTime+0.2);
     }
-};
+};  
