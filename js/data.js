@@ -1,77 +1,90 @@
 const Data = {
-    // 1. Safe Load All Questions (Fixes Search & Random Issues)
+    init: async () => {
+        // 1. Sync User Config
+        await Data.initSync();
+        // 2. Load Content
+        await Data.loadQuestions();
+        return true;
+    },
+
     loadQuestions: async () => {
+        const statusEl = document.getElementById('db-status');
+        statusEl.innerText = "Loading data...";
+        
         try {
-            document.getElementById('db-status').innerText = "جاري التحميل...";
+            // Get Index
             const list = await (await fetch('questions_list.json')).json();
             
-            // Sequential Fetch to prevent network congestion, or Parallel
-            const fetchPromises = list.map(async file => {
+            // Bulk Fetch (Using Promises for parallel load)
+            const tasks = list.map(async (file) => {
                 try {
+                    // Cache-First strategy via SW handles this
                     const res = await fetch(`Questions/${file}`);
-                    const data = await res.json();
+                    const json = await res.json();
                     
-                    // Flatten data structure
-                    return data.questions.map(q => ({
-                        ...q,
-                        term: q.term || data.meta.source, 
-                        subject: q.subject || data.meta.subject, 
-                        lesson: q.lesson || data.meta.lesson, 
-                        chapter: q.chapter || "General"
+                    // Attach context to every question so it's searchable and filterable independently
+                    return json.questions.map(q => ({
+                         id: q.id,
+                         question: q.question,
+                         options: q.options,
+                         correct_option_id: q.correct_option_id,
+                         explanation: q.explanation || "",
+                         // Meta tags for selection
+                         term: q.term || json.meta.source, 
+                         subject: q.subject || json.meta.subject, 
+                         lesson: q.lesson || json.meta.lesson, 
+                         chapter: q.chapter || "General"
                     }));
-                } catch(err) { return []; }
+                } catch(e) { 
+                    console.warn(`File load failed: ${file}`);
+                    return []; 
+                }
             });
 
-            const results = await Promise.all(fetchPromises);
-            State.allQ = results.flat();
-
-            document.getElementById('db-status').innerText = `${State.allQ.length} سؤال جاهز`;
-            UI.updateHomeStats(); // Refresh stats now that data exists
+            const loadedArrays = await Promise.all(tasks);
+            State.allQ = loadedArrays.flat(); // Merge all into one giant array
+            
+            statusEl.innerText = "Ready";
+            UI.updateHomeStats(); // Init Stats now that we know total count
 
         } catch(e) {
-            console.error("Data Load Error", e);
-            document.getElementById('db-status').innerText = "خطأ تحميل";
+            console.error(e);
+            statusEl.innerText = "Offline/Err";
         }
     },
 
-    // 2. Safe User Sync (Fixes 'invokeStorageMethod' Crash)
     initSync: async () => {
-        // Load from LocalStorage first (Fast & Safe)
+        // A. Load Local (Instant)
         const local = localStorage.getItem('medquiz_data');
         if(local) State.localData = { ...State.localData, ...JSON.parse(local) };
+        UI.applySettings();
 
-        // Telegram Cloud - Check version to avoid 6.0 crash
+        // B. Cloud (Telegram > 6.9 Only) - Prevents Version 6.0 crash
         if (window.Telegram && window.Telegram.WebApp) {
-             const tg = window.Telegram.WebApp;
-             if (tg.isVersionAtLeast && tg.isVersionAtLeast('6.9')) {
-                 try {
+            const tg = window.Telegram.WebApp;
+            if (tg.isVersionAtLeast && tg.isVersionAtLeast('6.9')) {
+                try {
                     tg.CloudStorage.getItem('medquiz_data', (err, val) => {
-                        if(!err && val) {
+                        if (!err && val) {
                             State.localData = { ...State.localData, ...JSON.parse(val) };
                             UI.applySettings();
                         }
                     });
-                 } catch(e) { console.log("Cloud check skipped", e); }
-             }
+                } catch(e) { /* Old version, ignore */ }
+            }
         }
-        UI.applySettings();
     },
 
     save: () => {
         const str = JSON.stringify(State.localData);
         localStorage.setItem('medquiz_data', str);
         
-        // Safe Cloud Save
+        // Cloud Save Safe-Check
         if (window.Telegram && window.Telegram.WebApp) {
             const tg = window.Telegram.WebApp;
-            if (tg.isVersionAtLeast && tg.isVersionAtLeast('6.9')) {
-                tg.CloudStorage.setItem('medquiz_data', str);
+            if(tg.isVersionAtLeast && tg.isVersionAtLeast('6.9')) {
+                try { tg.CloudStorage.setItem('medquiz_data', str); } catch(e){}
             }
         }
-    },
-    
-    reportScore: (ctx, score) => {
-        // Update Total Stats locally
-        // (Use proper counting logic if needed)
     }
 };
