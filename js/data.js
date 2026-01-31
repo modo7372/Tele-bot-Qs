@@ -48,38 +48,19 @@ loadQuestions: async () => {
         }
     },
 
-    
     saveData: () => {
         const str = JSON.stringify(State.localData);
-        // Keep existing localStorage logic...
-        localStorage.setItem('mistakes', ...);
-    
-        // ADD THIS: Save to Firebase for current user
-        if (State.user.id) {
-            db.ref(`users/${State.user.id}/data`).set(State.localData)
-              .catch(e => console.error("Firebase save failed:", e));
-        }
-    
-        // Keep Telegram CloudStorage...
-    },
-
-    initSync: async () => {
-        // Keep existing local loading...
-    
-        // ADD THIS: Load from Firebase
-        if (State.user.id) {
-            try {
-                const snapshot = await db.ref(`users/${State.user.id}/data`).once('value');
-                const firebaseData = snapshot.val();
-                if (firebaseData) {
-                    State.localData = { ...State.localData, ...firebaseData };
-                }
-            } catch(e) { console.log("Firebase load skipped", e); }
-        }
-    },
-
-
+        localStorage.setItem('mistakes', JSON.stringify(State.localData.mistakes));
+        localStorage.setItem('archive', JSON.stringify(State.localData.archive));
+        localStorage.setItem('fav', JSON.stringify(State.localData.fav));
+        localStorage.setItem('settings', JSON.stringify(State.localData.settings));
         
+        if (window.Telegram.WebApp.isVersionAtLeast && window.Telegram.WebApp.isVersionAtLeast('6.9')) {
+            try {
+                Telegram.WebApp.CloudStorage.setItem('medquiz_data', str);
+            } catch(e){ console.log("Cloud save skipped"); }
+        }
+    },
 
     saveLeaderboard: (score) => {
         // MODIFICATION 3.2: Use State.sel.terms (assuming first term for rank or user manually ensures single selection for ranking)
