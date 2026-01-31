@@ -54,11 +54,11 @@
 
 /* FIXED: Increased text contrast for better readability */
 [data-theme="sunset"] {
-    --bg-grad: linear-gradient(120deg, #f6d365 0%, #fda085 100%);
+    --bg-grad: linear-gradient(120deg, #2a230e 0%, #fda085 100%);
     --glass-bg: rgba(255,255,255,0.9);
     --txt-main: #8c3b00; /* Darker brown/orange text - Good contrast */
     --txt-sec: #c0392b;
-    --primary: #ff6b6b; --secondary: #ff9ff3;
+    --primary: #265861; --secondary: #ff9ff3;
 }
 
 /* FIXED: Increased text contrast for better readability */
@@ -71,11 +71,11 @@
 }
 
 [data-theme="coffee"] {
-    --bg-grad: linear-gradient(to right, #c54724c3, #b1802cbe);
+    --bg-grad: linear-gradient(to right, #c52431c3, #b1802cc0);
     --glass-bg: rgba(62, 43, 38, 0.96);
-    --txt-main: #f5f5f5; /* FIXED: Increased brightness for better contrast */
-    --txt-sec: #e0e0e0; /* FIXED: Increased brightness for better contrast */
-    --primary: #d7ccc8; --secondary: #8d6e63;
+    --txt-main: #a51a1a; /* FIXED: Increased brightness for better contrast */
+    --txt-sec: #5b239099; /* FIXED: Increased brightness for better contrast */
+    --primary: #753b26; --secondary: #8d6e63;
 }
 
 [data-theme="hacker"] {
@@ -276,6 +276,7 @@ html, body {
 
 /* Question Box: Allow auto-height when options are hidden */
 .question-box { flex-shrink: 0; max-height: 40vh; overflow-y: auto; transition: max-height 0.3s; }
+/* ENFORCE LTR */
 .q-text { font-size: 1.2em; line-height: 1.5; direction: ltr; text-align: left; }
 
 /* Options & Answers */
@@ -291,6 +292,7 @@ html, body {
     gap: 8px; 
 }
 
+/* ENFORCE LTR */
 .opt { background: rgba(255,255,255,0.6); border: 1px solid rgba(0,0,0,0.1); padding: 14px; border-radius: var(--radius); cursor: pointer; direction: ltr; text-align: left; position: relative; }
 [data-theme="dark"] .opt { background: rgba(255,255,255,0.1); }
 
@@ -298,8 +300,8 @@ html, body {
 .opt.irrelevant-hidden { display: none !important; }
 
 /* Correct / Wrong / Selected Styles */
-.opt.correct { background: rgba(46, 204, 113, 0.25); border-color: #2ecc71; color: #145a32; }
-[data-theme="dark"] .opt.correct { color: #2ecc71; }
+.opt.correct { background: rgba(46, 204, 113, 0.25); border-color: #4bcc2e; color: #145a32; }
+[data-theme="dark"] .opt.correct { color: #7e11cc; }
 .opt.wrong { background: rgba(231, 76, 60, 0.25); border-color: #e74c3c; color: #78281f; }
 [data-theme="dark"] .opt.wrong { color: #e74c3c; }
 .opt.selected-temp { border: 2px solid var(--primary); background: rgba(0,0,0,0.05); transform: translateX(5px); }
@@ -311,6 +313,9 @@ html, body {
     margin-bottom: 15px;
     animation: fadeIn 0.5s; 
     flex-shrink: 0; 
+    /* ENFORCE LTR */
+    direction: ltr;
+    text-align: left;
 }
 .quiz-footer {
     margin-top: 10px;
@@ -336,7 +341,8 @@ html, body {
 
 .chip-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
 .chip-group { display: flex; gap: 5px; overflow-x: auto; padding-bottom: 5px; }
-.chip { background: rgba(128,128,128,0.1); padding: 8px 14px; border-radius: 20px; cursor: pointer; font-size: 0.95em; border: 1px solid transparent; user-select: none; flex-shrink: 0; }
+/* ENFORCE LTR for chip content (Term/Subject names) */
+.chip { background: rgba(128,128,128,0.1); padding: 8px 14px; border-radius: 20px; cursor: pointer; font-size: 0.95em; border: 1px solid transparent; user-select: none; flex-shrink: 0; direction: ltr; text-align: left; }
 .chip.selected { background: var(--primary); color: #fff; }
 
 /* --- Stats & Modals --- */
@@ -415,7 +421,8 @@ html, body {
 }
 
 /* --- PDF View Styles --- */
-#v-pdf { overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 20px; }
+/* Removed explicit scrolling here, relying on column-flex and inner div */
+#v-pdf { height: 100%; } 
 .pdf-item { 
     background: var(--glass-bg); 
     border: var(--glass-border);
@@ -423,11 +430,14 @@ html, body {
     padding: 15px; 
     margin-bottom: 15px; 
     break-inside: avoid;
+    /* ENFORCE LTR for PDF container content */
+    direction: ltr;
+    text-align: left;
 }
 .pdf-q-txt { font-weight: bold; margin-bottom: 10px; font-size: 1.1em; }
 .pdf-opt { padding: 5px 10px; border-radius: 5px; margin-bottom: 4px; font-size: 0.95em; border: 1px solid transparent; }
-.pdf-opt.is-correct { background: rgba(46, 204, 113, 0.2); border-color: #2ecc71; color: #145a32; font-weight: bold; }
-[data-theme="dark"] .pdf-opt.is-correct { color: #2ecc71; }
+.pdf-opt.is-correct { background: rgba(153, 188, 12, 0.76); border-color: #36acd7b0; color: #145a32; font-weight: bold; }
+[data-theme="dark"] .pdf-opt.is-correct { color: #c3e625d6; }
 .pdf-exp { margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.03); border-radius: 8px; font-size: 0.9em; }
 
 /* --- Zen Mode Styles (FIXED) --- */
@@ -466,7 +476,8 @@ html, body {
 .options-list, 
 .quiz-view,
 .modal-content,
-.nav-grid-container {
+.nav-grid-container,
+#pdf-list /* Added PDF list to scrolling definition */ {
     -webkit-overflow-scrolling: touch !important; 
     overscroll-behavior-y: contain; 
     scroll-behavior: smooth;
