@@ -1,4 +1,6 @@
-const AVATARS = ["👨‍⚕️","👩‍⚕️","👨‍🔬","👩‍🔬","👨‍💻","👩‍💻","🦸‍♂️","🦸‍♀️","🧑‍🚀","🧑‍🚀","🧙‍♂️","🧙‍♀️",,,"👨‍🎓","👩‍🎓","👨‍⚖️","👩‍⚖️","🧠",,,"🤖","👻","👽","🦁","🦊","🐸","🐺","🐯","🐵","🌞","🌚","🌝","😎","🤓","🕶️","🎮"];
+/* --- START OF FILE ui.js --- */
+
+const AVATARS = ["👨‍⚕️","👩‍⚕️","👨‍🔬","👩‍🔬","👨‍💻","👩‍💻","🦸‍♂️","🦸‍♀️","🧑‍🚀","🧙‍♂️","🧙‍♀️","👨‍🎓","👩‍🎓","👨‍⚖️","👩‍⚖️","🧠","🤖","👻","👽","🦁","🦊","🐸","🐺","🐯","🐵","🌞","🌚","🌝","😎","🤓","🕶️","🎮"];
 
 const AudioSys = {
     ctx: null, enabled: false,
@@ -25,72 +27,62 @@ const AudioSys = {
 
 const UI = {
     init: () => {
-        // Safe Init: Render elements if containers exist
         if(document.getElementById('theme-list')) UI.renderThemes();
         if(document.getElementById('avatar-list')) UI.renderAvatars();
         
-        // Load Settings
         const s = State.localData.settings || {};
         UI.setTheme(s.theme || 'light');
         if(s.fontFam) UI.updateStyleVar('--font-fam', s.fontFam);
         if(s.fontSize) UI.updateStyleVar('--font-size', s.fontSize);
         
-        // --- SAFE CHECK: Prevent crash if elements missing ---
-        const setCheck = (id, val) => {
-            const el = document.getElementById(id);
-            if(el) el.checked = val;
-        };
+        const setCheck = (id, val) => { const el = document.getElementById(id); if(el) el.checked = val; };
         
         setCheck('chk-sound', s.sound !== false);
         setCheck('chk-haptic', s.haptic !== false);
         setCheck('chk-anim', s.anim !== false);
+        
+        // CRITICAL FIX: Handle the default CHECKED state for Auto-Hide if settings are missing.
+        // If s.hideIrrelevant is undefined, we default to TRUE (checked = hide active)
+        const isAutoHideActive = (s.hideIrrelevant === undefined) ? true : s.hideIrrelevant;
 
-        // Profile
+        // Fix: Set the Main Menu checkbox state based on resolved settings
+        setCheck('chk-auto-hide-main', isAutoHideActive);
+        
+        // Sync internal state based on the resolved value
+        // If hide is active (true), showIrrelevantOptions must be false.
+        State.showIrrelevantOptions = !isAutoHideActive;
+
         const genderEl = document.getElementById('set-gender');
         if(genderEl) genderEl.value = s.gender || 'male';
         
         UI.updateProfileDisplay();
-        
         AudioSys.enabled = s.sound !== false;
-
-        // Init Anim (Bubbles)
         UI.initAnim();
         if(s.anim === false) UI.toggleAnim(false);
 
-        // Resume Audio Context on interaction
         document.body.addEventListener('click', () => {
             if(AudioSys.ctx && AudioSys.ctx.state === 'suspended') AudioSys.ctx.resume();
             if(!AudioSys.ctx) AudioSys.init();
         }, {once:true});
     },
 
+    // ... (Keep updateHomeStats, renderThemes, renderAvatars, updateProfileDisplay, saveProfile, showTotalStats as is) ...
     updateHomeStats: () => {
-        // 1. حساب الأرقام
         const total = State.allQ.length;
-        if (total === 0) return; // لم يتم التحميل بعد
-
+        if (total === 0) return;
         const solved = State.localData.archive.length;
-        // الأسئلة المحلولة ولكن موجودة في قائمة الأخطاء تعتبر خطأ
         const mistakesCnt = State.localData.archive.filter(id => State.localData.mistakes.includes(id)).length;
         const correct = solved - mistakesCnt;
-
         const pct = Math.round((correct / total) * 100) || 0;
         const degrees = (pct / 100) * 360;
-
-        // 2. تحديث الواجهة
         const elTotal = document.getElementById('home-total');
         const elCorrect = document.getElementById('home-correct');
         const elPct = document.getElementById('home-pct');
         const elRing = document.getElementById('home-progress-ring');
-
         if(elTotal) elTotal.innerText = total;
         if(elCorrect) elCorrect.innerText = correct;
         if(elPct) elPct.innerText = `${pct}%`;
-
-        // 3. تحديث رسم الدائرة
-        if(elRing) {
-            elRing.style.background = `conic-gradient(var(--success) ${degrees}deg, rgba(0,0,0,0.1) 0deg)`;
-        }
+        if(elRing) elRing.style.background = `conic-gradient(var(--success) ${degrees}deg, rgba(0,0,0,0.1) 0deg)`;
     },
 
     renderThemes: () => {
@@ -109,7 +101,7 @@ const UI = {
     renderAvatars: () => {
         const c = document.getElementById('avatar-list');
         if(!c) return;
-        c.innerHTML = ''; // clear old
+        c.innerHTML = '';
         AVATARS.forEach(a => {
             const d = document.createElement('div');
             d.className = 'avatar-opt';
@@ -127,10 +119,8 @@ const UI = {
     updateProfileDisplay: () => {
         const s = State.localData.settings || {};
         const av = s.avatar || (s.gender === 'female' ? "👩‍⚕️" : "👨‍⚕️");
-        
         const elAv = document.getElementById('u-avatar');
         const elName = document.getElementById('u-name');
-        
         if(elAv) elAv.innerText = av;
         if(elName) elName.innerText = State.user.first_name || "Guest";
     },
@@ -146,33 +136,22 @@ const UI = {
     showTotalStats: () => {
         const total = State.allQ.length;
         if(total === 0) return alert('البيانات غير محملة');
-        
         const solved = State.localData.archive.length;
-        const mistakes = State.localData.mistakes.length;
         const wrongCnt = State.localData.archive.filter(id => State.localData.mistakes.includes(id)).length;
         const correctCnt = solved - wrongCnt;
-        
-        const setText = (id, txt) => {
-            const el = document.getElementById(id);
-            if(el) el.innerText = txt;
-        };
-
-        setText('st-total', total);
-        setText('st-solved', Math.round((solved/total)*100) + '%');
-        setText('st-correct', correctCnt);
-        setText('st-wrong', wrongCnt);
-        
+        document.getElementById('st-total').innerText = total;
+        document.getElementById('st-solved').innerText = Math.round((solved/total)*100) + '%';
+        document.getElementById('st-correct').innerText = correctCnt;
+        document.getElementById('st-wrong').innerText = wrongCnt;
         const acc = solved > 0 ? Math.round((correctCnt/solved)*100) : 0;
-        setText('st-acc', acc + '%');
-        
+        document.getElementById('st-acc').innerText = acc + '%';
         const bar = document.getElementById('st-bar');
         if(bar) bar.style.width = acc + '%';
-        
         UI.openModal('m-stats');
     },
 
     showView: (id) => {
-        ['v-home','v-select','v-quiz'].forEach(v => {
+        ['v-home','v-select','v-quiz','v-pdf'].forEach(v => {
             const el = document.getElementById(v);
             if(el) el.classList.add('hidden');
         });
@@ -197,6 +176,14 @@ const UI = {
 
     toggleSound: (v) => { AudioSys.enabled = v; UI.saveSetting('sound', v); },
     toggleHaptic: (v) => { UI.saveSetting('haptic', v); },
+    
+    // Fix: Toggle Auto Hide from Main Menu
+    toggleAutoHide: (v) => { 
+        UI.saveSetting('hideIrrelevant', v); 
+        // Sync State (If v=true (checked/hide active), then State.showIrrelevantOptions=false)
+        State.showIrrelevantOptions = !v; 
+    },
+    
     toggleAnim: (v) => { 
         const cvs = document.getElementById('bg-canvas');
         if(v && cvs) cvs.classList.remove('hidden'); 
@@ -223,7 +210,6 @@ const UI = {
         let w,h,p=[]; 
         const r=()=>{w=c.width=window.innerWidth;h=c.height=window.innerHeight;}; 
         window.onresize=r; r();
-        
         class P{
             constructor(){this.i();} 
             i(){
@@ -235,32 +221,18 @@ const UI = {
                 this.a = Math.random() * 0.3;
                 this.type = randomize ? Math.floor(Math.random()*3) : 0; 
             } 
-            u(){
-                this.x+=this.vx; this.y+=this.vy; 
-                if(this.y < -50) this.i(); 
-            } 
+            u(){ this.x+=this.vx; this.y+=this.vy; if(this.y < -50) this.i(); } 
             d(){
                 x.fillStyle=`rgba(120,120,120,${this.a})`;
                 x.beginPath();
-                if(this.type === 0) {
-                     x.arc(this.x,this.y,this.r,0,Math.PI*2);
-                } else if (this.type === 1) {
-                    x.fillRect(this.x, this.y, this.r*1.5, this.r*1.5);
-                } else {
-                    x.moveTo(this.x, this.y);
-                    x.lineTo(this.x+this.r, this.y+this.r*2);
-                    x.lineTo(this.x-this.r, this.y+this.r*2);
-                }
+                if(this.type === 0) x.arc(this.x,this.y,this.r,0,Math.PI*2);
+                else if (this.type === 1) x.fillRect(this.x, this.y, this.r*1.5, this.r*1.5);
+                else { x.moveTo(this.x, this.y); x.lineTo(this.x+this.r, this.y+this.r*2); x.lineTo(this.x-this.r, this.y+this.r*2); }
                 x.fill();
             }
         }
-        
         p=Array(25).fill().map(()=>new P()); 
-        function a(){
-            x.clearRect(0,0,w,h); 
-            p.forEach(n=>{n.u();n.d()}); 
-            requestAnimationFrame(a);
-        } 
+        function a(){ x.clearRect(0,0,w,h); p.forEach(n=>{n.u();n.d()}); requestAnimationFrame(a); } 
         a();
     }
 };
