@@ -1,6 +1,8 @@
+--- START OF FILE main.js.txt ---
+
 window.onload = async () => {
     // 0. Cache Buster Logic
-    const APP_VER = '2.3'; 
+    const APP_VER = '2.6'; 
     const savedVer = localStorage.getItem('app_version');
     if(savedVer !== APP_VER) {
         localStorage.setItem('app_version', APP_VER);
