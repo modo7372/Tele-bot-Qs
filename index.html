@@ -1,3 +1,5 @@
+--- START OF FILE index.html ---
+
 
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -12,7 +14,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-    <link rel="stylesheet" href="css/style.css?v=3.6">
+    <link rel="stylesheet" href="css/style.css?v=3.7">
 </head>
 <body data-theme="light">
 
@@ -132,7 +134,9 @@
             <div id="v-select" class="glass-box hidden column-flex">
                 <div class="view-header">
                     <h3 id="sel-head">اختر</h3>
-                    <!-- REMOVED BACK BUTTON (↩️ سابق) -->
+                    <!-- ADDED: Back button logic -->
+                    <button class="btn btn-ghost" onclick="Game.prevSel()">↩️ سابق</button>
+                    <!-- END ADDED -->
                 </div>
                 <button id="btn-mode-random" class="btn btn-accent full-width hidden" style="margin-bottom:10px" onclick="Game.startRandomInMode()">
                     🎲 امتحان عشوائي مما سبق
@@ -326,10 +330,10 @@
         </div>
     </div>
 
-    <script src="js/config.js?v=3.6"></script>
-    <script src="js/data.js?v=3.6"></script>
-    <script src="js/ui.js?v=3.6"></script>
-    <script src="js/game.js?v=3.6"></script>
-    <script src="js/main.js?v=3.6"></script>
+    <script src="js/config.js?v=3.7"></script>
+    <script src="js/data.js?v=3.7"></script>
+    <script src="js/ui.js?v=3.7"></script>
+    <script src="js/game.js?v=3.7"></script>
+    <script src="js/main.js?v=3.7"></script>
 </body>
 </html>
