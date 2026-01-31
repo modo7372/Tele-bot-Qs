@@ -221,15 +221,19 @@ const Game = {
             if (btnAll) btnAll.classList.remove('hidden');
             return;
         }
+        
         else if(step==='limit') {
             ['10','20','30','50','All'].forEach(l => {
-                const b = document.createElement('div'); b.className='chip'; b.innerText=l;
+                const b = document.createElement('div'); 
+                b.className='chip'; 
+                b.innerText=l;
+                b.dataset.val = l;  // <-- ADD THIS LINE
+        
                 b.onclick = () => { 
                     document.querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));
                     b.classList.add('selected');
                     State.sel.limit=l; 
                 };
-                // Pre-select 'All' if nothing is chosen yet
                 if (State.sel.limit === 'All' && l === 'All') b.classList.add('selected');
                 list.appendChild(b);
             });
@@ -308,19 +312,20 @@ const Game = {
             Game.renderSel('limit'); 
             
         } else if(cStep === 'limit') {
-            // --- START FIX: Ensure limit selection is checked correctly ---
-            const limit = document.querySelector('#sel-body .chip.selected')?.dataset.val;
-            
-            if(!limit) {
-                 // Check if the default 'All' was selected previously but wasn't clicked again
-                 if (State.sel.limit === 'All') {
-                     // Allow proceeding if 'All' is implicitly set
-                 } else {
-                     return alert('الرجاء تحديد عدد الأسئلة أو اختيار "الكل"');
-                 }
-            } else {
+            // --- FIX: Check if State.sel.limit was set on click. If not, check if a chip was selected now.
+            let limit = State.sel.limit;
+            if (limit === 'All') {
+                 // Do nothing, default is acceptable
+            } else if (picked.length === 1 && picked[0] !== 'All') {
+                 // This shouldn't happen if chip logic worked, but as a fallback
+                 limit = picked[0];
                  State.sel.limit = limit;
+            } else {
+                 // Failsafe if nothing was explicitly selected (and default isn't 'All' but it should be)
+                 // This condition is now highly unlikely if the chip onclick logic is correct.
+                 return alert('الرجاء تحديد عدد الأسئلة أو اختيار "الكل"');
             }
+            
             Game.initQuiz();
             // --- END FIX: Limit Selection ---
         }
@@ -394,24 +399,41 @@ const Game = {
     toggleAll: () => document.querySelectorAll('.chip').forEach(c => c.classList.toggle('selected')),
 
     initQuiz: () => {
-        // Since term is single select now, we ensure we always target State.sel.terms[0]
         const selectedTerm = State.sel.terms[0]; 
 
-        let final = State.pool.filter(q => 
-            (selectedTerm ? q.term === selectedTerm : true) && // Check term if selected
-            State.sel.subj===q.subject && 
+        // 1. Filter the entire pool based on selections
+        let filteredPool = State.pool.filter(q => 
+            (selectedTerm ? q.term === selectedTerm : true) && 
+            State.sel.subj === q.subject && 
             State.sel.lessons.some(l => q.lesson === l) && 
             State.sel.chapters.some(c => q.chapter === c)
         );
-        if(!final.length) return alert('No questions.');
-        final.sort(()=>0.5-Math.random());
-        if(State.sel.limit!=='All') final = final.slice(0, parseInt(State.sel.limit));
-        Game.startQuizSession(final, State.tempMode || 'normal');
+
+        // 2. Shuffle the resulting pool
+        filteredPool.sort(() => 0.5 - Math.random());
+
+        // 3. Apply the limit if it's not 'All'
+        let quizQuestions;
+        if (State.sel.limit !== 'All') {
+            const limit = parseInt(State.sel.limit, 10);
+            // Slice the array. If there are fewer questions than the limit, it will just take all of them.
+            quizQuestions = filteredPool.slice(0, limit);
+        } else {
+            quizQuestions = filteredPool;
+        }
+
+        // 4. Start the quiz session. The check for an empty array is now reliably handled inside startQuizSession.
+        Game.startQuizSession(quizQuestions, State.tempMode || 'normal');
     },
 
     startQuizSession: (questions, mode) => {
+        // CRITICAL BUG FIX: Add a failsafe check to prevent crash on empty question array
+        if (!questions || questions.length === 0) {
+            alert('لا توجد أسئلة تطابق معايير البحث. ستتم إعادتك للقائمة الرئيسية.');
+            return UI.goHome();
+        }
+
         State.quiz = questions;
-        State.mode = mode;
         State.qIdx = 0;
         State.score = 0;
         State.answers = new Array(questions.length).fill(null).map(() => ({ answered: false, selectedIdx: null, isCorrect: false }));
@@ -480,14 +502,23 @@ const Game = {
         const list = document.getElementById('pdf-list');
         list.innerHTML = '';
         
+        // NEW FEATURE: Check the user's setting for auto-hiding before the loop
+        const shouldHideIrrelevant = State.localData.settings?.hideIrrelevant === true;
+
         questions.forEach((q, i) => {
             const d = document.createElement('div');
             d.className = 'pdf-item';
             let optsHtml = '';
+            
+            // MODIFIED: Loop checks the setting before adding an option
             q.options.forEach((o, idx) => {
                 const isCorrect = (idx === q.correct_option_id);
-                optsHtml += `<div class="pdf-opt ${isCorrect ? 'is-correct' : ''}">${o}</div>`;
+                // Only render if auto-hide is OFF, OR if auto-hide is ON AND it's the correct option
+                if (!shouldHideIrrelevant || (shouldHideIrrelevant && isCorrect)) {
+                    optsHtml += `<div class="pdf-opt ${isCorrect ? 'is-correct' : ''}">${o}</div>`;
+                }
             });
+
             d.innerHTML = `
                 <div class="pdf-q-txt"><small style="color:var(--primary)">#${q.id}</small><br>${q.question}</div>
                 <div>${optsHtml}</div>
@@ -666,7 +697,14 @@ const Game = {
                 AudioSys.playError();
                 Game.triggerHaptic('error');
                 if(!State.localData.mistakes.includes(q.id)) State.localData.mistakes.push(q.id);
-                if(State.mode==='survival') { setTimeout(()=>alert('🔥 Game Over'), 500); return UI.goHome(); }
+                // LEADERBOARD FIX for Survival Mode
+                if (State.mode === 'survival') {
+                    setTimeout(() => {
+                        alert('🔥 Game Over');
+                        Game.finishQuiz(); // Save score before exiting
+                    }, 500);
+                    return; // Prevent further execution like auto-nav
+                }
             }
         }
 
@@ -681,8 +719,6 @@ const Game = {
 
         document.getElementById('btn-check').classList.add('hidden'); 
 
-        // Fix: Auto-scroll (Attach) logic
-        // If irrelevant options are hidden, smooth scroll to reveal explanation/footer
         if(shouldHide || !State.showIrrelevantOptions) {
             setTimeout(() => {
                 const footer = document.querySelector('.quiz-footer');
@@ -690,7 +726,11 @@ const Game = {
             }, 100);
         }
         
-        if(State.mode === 'lucky') return;
+        // LEADERBOARD FIX for Lucky Shot Mode
+        if (State.mode === 'lucky') {
+            setTimeout(() => Game.finishQuiz(), 500);
+            return;
+        }
 
         if(State.instantFeedback && !isSim && isCorrect && State.mode !== 'view_mode' && State.mode !== 'search_mode') {
             const delay = 1000;
@@ -744,9 +784,12 @@ const Game = {
         clearTimeout(autoNavTimer);
         let finalScore = State.answers.filter(a => a.isCorrect).length;
         State.score = finalScore;
-        Data.saveLeaderboard(State.score);
+        // Don't save leaderboard score if the session had no questions to answer competitively
+        if (State.mode !== 'view_mode' && State.mode !== 'search_mode' && State.quiz.length > 0) {
+            Data.saveLeaderboard(State.score);
+        }
         AudioSys.playSuccess();
-        const pct = Math.round((State.score/State.quiz.length)*100);
+        const pct = State.quiz.length > 0 ? Math.round((State.score / State.quiz.length) * 100) : 0;
         document.getElementById('sc-val').innerText = `${pct}%`;
         document.getElementById('sc-txt').innerText = `${State.score} / ${State.quiz.length}`;
         UI.openModal('m-score');
