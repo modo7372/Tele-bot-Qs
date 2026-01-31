@@ -72,7 +72,7 @@ window.onload = async () => {
         
         const k = e.key.toLowerCase(), m = {'a':0,'b':1,'c':2,'d':3,'e':4}; 
         if(m[k]!==undefined) Game.answer(m[k]);
-        if(k===' '||k==='enter') { e.preventDefault(); Game.nextQ(); }
+        if(k===' '||k==='enter') { e.preventDefault(); Game.nextQ(); } // Still allow next on space/enter
         if(k==='arrowright') Game.nextQ();
         if(k==='arrowleft') Game.navQ(-1);
         if(k==='s') Game.toggleFav();
