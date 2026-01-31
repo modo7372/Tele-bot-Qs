@@ -132,7 +132,6 @@
                 <div class="view-header">
                     <h3 id="sel-head">اختر</h3>
                     <!-- ADDED: Back button logic -->
-                    <button class="btn btn-ghost" onclick="Game.prevSel()">↩️ سابق</button>
                     <!-- END ADDED -->
                 </div>
                 <button id="btn-mode-random" class="btn btn-accent full-width hidden" style="margin-bottom:10px" onclick="Game.startRandomInMode()">
@@ -196,14 +195,13 @@
             </div>
 
             <!-- New PDF View -->
-            <div id="v-pdf" class="hidden">
-                 <div class="app-header glass-box">
+            <div id="v-pdf" class="hidden column-flex">
+                 <div class="app-header glass-box" style="margin-bottom: 0;">
                      <h3>📝 وضع القراءة (PDF)</h3>
                      <button class="btn btn-sm btn-sec" onclick="UI.goHome()">🏠 خروج</button>
                  </div>
-                 <div class="container">
-                     <div id="pdf-list"></div>
-                 </div>
+                 <!-- Updated structure: pdf-list now scrolls and takes remaining space -->
+                 <div id="pdf-list" style="flex-grow: 1; overflow-y: auto; padding: 10px;"></div>
             </div>
 
         </main>
