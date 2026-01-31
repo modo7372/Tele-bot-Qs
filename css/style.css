@@ -1,3 +1,5 @@
+/* --- START OF FILE style.css --- */
+
 :root {
     --font-fam: 'Cairo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     --font-size: 14px;
@@ -28,10 +30,11 @@
 }
 
 [data-theme="midnight"] {
-    --bg-grad: linear-gradient(to bottom, #0f2027, #203a43, #2c5364);
+    --bg-grad: linear-gradient(to bottom, #9a519d, #819f26bd, #49a9d3);
     --glass-bg: rgba(15, 32, 39, 0.95);
     --glass-border: 1px solid rgba(255,255,255,0.05);
-    --txt-main: #ecf0f1; --txt-sec: #bdc3c7;
+    --txt-main: #ffffff; /* FIXED for better contrast */
+    --txt-sec: #bdc3c7;
     --primary: #f39c12; --secondary: #e67e22;
 }
 
@@ -49,24 +52,29 @@
     --primary: #0288d1; --secondary: #03a9f4;
 }
 
+/* FIXED: Increased text contrast for better readability */
 [data-theme="sunset"] {
     --bg-grad: linear-gradient(120deg, #f6d365 0%, #fda085 100%);
     --glass-bg: rgba(255,255,255,0.9);
-    --txt-main: #d35400; --txt-sec: #e67e22;
+    --txt-main: #8c3b00; /* Darker brown/orange text - Good contrast */
+    --txt-sec: #c0392b;
     --primary: #ff6b6b; --secondary: #ff9ff3;
 }
 
+/* FIXED: Increased text contrast for better readability */
 [data-theme="lavender"] {
     --bg-grad: linear-gradient(to top, #c471ed 0%, #f64f59 100%);
     --glass-bg: rgba(255,255,255,0.92);
-    --txt-main: #5a2a8b; --txt-sec: #8e44ad;
+    --txt-main: #4a235a; /* Darker purple text */
+    --txt-sec: #6c3483;
     --primary: #be2edd; --secondary: #e056fd;
 }
 
 [data-theme="coffee"] {
-    --bg-grad: linear-gradient(to right, #3e2b26, #6d4c41);
+    --bg-grad: linear-gradient(to right, #c54724c3, #b1802cbe);
     --glass-bg: rgba(62, 43, 38, 0.96);
-    --txt-main: #d7ccc8; --txt-sec: #a1887f;
+    --txt-main: #f5f5f5; /* FIXED: Increased brightness for better contrast */
+    --txt-sec: #e0e0e0; /* FIXED: Increased brightness for better contrast */
     --primary: #d7ccc8; --secondary: #8d6e63;
 }
 
@@ -86,19 +94,82 @@
     --primary: #000; --secondary: #000; --radius:4px;
 }
 
+/* --- NEW THEMES ADDED --- */
+[data-theme="crimson"] {
+    --bg-grad: linear-gradient(135deg, #aea293 0%, #2a238a 100%);
+    --glass-bg: rgba(20, 20, 20, 0.94);
+    --glass-border: 1px solid rgba(255, 255, 255, 0.08);
+    --txt-main: #188e6fd1; /* FIXED: Max Brightness for best contrast */
+    --txt-sec: #b03a3a; /* FIXED: Near Max Brightness for best contrast */
+    --primary: #bde573; --secondary: #00000000;
+}
+
+[data-theme="mint"] {
+    --bg-grad: linear-gradient(120deg, #e0f2f1 0%, #b2dfdb 100%);
+    --glass-bg: rgba(255, 255, 255, 0.95);
+    --glass-border: 1px solid rgba(0, 0, 0, 0.05);
+    --txt-main: #004d40; --txt-sec: #00695c;
+    --primary: #00897b; --secondary: #26a69a;
+}
+
+[data-theme="cyberpunk"] {
+    --bg-grad: linear-gradient(160deg, #0b0213 0%, #200d3d 100%);
+    --glass-bg: rgba(11, 2, 19, 0.85);
+    --glass-border: 1px solid rgba(236, 60, 255, 0.2);
+    --txt-main: #00e5ff; --txt-sec: #8e54e9;
+    --primary: #ec3cff; --secondary: #00e5ff;
+    --radius: 6px;
+    --shadow: 0 0 15px rgba(236, 60, 255, 0.2);
+}
 /* --- Global Resets & Body Structure --- */
-* { box-sizing: border-box; transition: background 0.4s ease, color 0.3s ease, transform 0.2s; outline: none; -webkit-tap-highlight-color: transparent; }
+* { box-sizing: border-box; transition: background 0.4s ease, color 0.3s ease, transform 0.2s, box-shadow 0.3s; outline: none; -webkit-tap-highlight-color: transparent; }
+
+
+/* --- Buttons & Chips --- */
+.btn { border: none; cursor: pointer; padding: var(--btn-pad); border-radius: var(--radius); font-weight: 600; font-size: 0.9em; display: inline-flex; align-items: center; justify-content: center; gap: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: relative; overflow: hidden; /* Added for animations */ }
+.btn:active { transform: scale(0.96); }
+/* Disabled state for buttons */
+.btn:disabled { opacity: 0.5; pointer-events: none; cursor: default; box-shadow: none; filter: grayscale(100%); }
+
+.btn-sm { padding: 6px 12px; font-size: 0.8em; }
+.btn-nav { background: var(--glass-bg); border: 1px solid var(--txt-sec); color: var(--txt-main); padding: 12px 20px; font-size: 1.1em; flex: 1; box-shadow: var(--shadow); }
+.btn-nav:active { background: var(--primary); color: #fff; }
+
+.btn-primary { background: var(--primary); color: #fff; } 
+.btn-sec { background: transparent; border: 1px solid var(--txt-sec); color: var(--txt-sec); }
+.btn-accent { background: var(--accent); color: #fff; }
+.btn-ghost { background: rgba(0,0,0,0.05); color: var(--txt-main); padding: 8px; }
+.full-width { width: 100%; }
+
+/* --- NEW GAMIFIED BUTTON STYLES --- */
+.btn-glow:hover, .btn-primary:hover {
+    box-shadow: 0 0 15px var(--primary);
+}
+
+.btn-animated-grad {
+    background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent), var(--primary));
+    background-size: 250% auto;
+    color: white;
+    animation: gradient-flow 5s linear infinite;
+    border: none;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+@keyframes gradient-flow {
+    to { background-position: -250% center; }
+}
+
 
 html, body { 
     margin: 0; 
     padding: 0; 
-    height: 100%; /* Important for App-like feel */
+    height: 100%; 
     font-family: var(--font-fam); 
     font-size: var(--font-size); 
     color: var(--txt-main); 
     background: var(--bg-grad) no-repeat center center fixed; 
     background-size: cover;
-    overflow: hidden; /* Prevent double scrolling */
+    overflow: hidden; 
     user-select: none; 
 }
 
@@ -152,7 +223,7 @@ html, body {
 
 /* --- Home Stats Card --- */
 .home-stats-card {
-    display: flex !important; /* Overwrite grid item behavior */
+    display: flex !important; 
     flex-direction: row !important;
     align-items: center;
     justify-content: space-around;
@@ -181,7 +252,6 @@ html, body {
 
 /* --- Menu Cards --- */
 .full-span-card { grid-column: 1 / -1; background: var(--primary) !important; color: #fff !important; border-color: transparent !important; }
-/* Exclude stats card and filter box from full-span text color override */
 .full-span-card:not(.home-stats-card):not(.filters-box) h3, 
 .full-span-card:not(.home-stats-card):not(.filters-box) small, 
 .full-span-card:not(.home-stats-card):not(.filters-box) .icon { color: #fff !important; }
@@ -203,13 +273,29 @@ html, body {
 .quiz-view { display: flex; flex-direction: column; height: 100%; overflow-y: auto; padding-bottom: 80px; }
 .quiz-nav-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 10px; flex-shrink: 0; }
 #timer-bar { height: 4px; background: var(--accent); width: 100%; margin-bottom: 8px; border-radius: 2px; display: none; transition: width 1s linear; }
-.question-box { flex-shrink: 0; max-height: 35vh; overflow-y: auto; }
+
+/* Question Box: Allow auto-height when options are hidden */
+.question-box { flex-shrink: 0; max-height: 40vh; overflow-y: auto; transition: max-height 0.3s; }
 .q-text { font-size: 1.2em; line-height: 1.5; direction: ltr; text-align: left; }
 
 /* Options & Answers */
-.options-list { overflow-y: auto; flex-grow: 1; padding: 5px 0; display: flex; flex-direction: column; gap: 8px; }
+
+.options-list { 
+    /* Changed flex-grow from 1 to 0 so it doesn't push content down */
+    flex-grow: 0; 
+    /* Removed overflow-y so the whole page scrolls naturally */
+    overflow-y: visible; 
+    padding: 5px 0; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 8px; 
+}
+
 .opt { background: rgba(255,255,255,0.6); border: 1px solid rgba(0,0,0,0.1); padding: 14px; border-radius: var(--radius); cursor: pointer; direction: ltr; text-align: left; position: relative; }
 [data-theme="dark"] .opt { background: rgba(255,255,255,0.1); }
+
+/* Class to hide irrelevant options */
+.opt.irrelevant-hidden { display: none !important; }
 
 /* Correct / Wrong / Selected Styles */
 .opt.correct { background: rgba(46, 204, 113, 0.25); border-color: #2ecc71; color: #145a32; }
@@ -218,9 +304,26 @@ html, body {
 [data-theme="dark"] .opt.wrong { color: #e74c3c; }
 .opt.selected-temp { border: 2px solid var(--primary); background: rgba(0,0,0,0.05); transform: translateX(5px); }
 
+/* Explanation Box - attach near answer (fadeIn animation) */
+
+.explanation { 
+    margin-top: 15px; 
+    margin-bottom: 15px;
+    animation: fadeIn 0.5s; 
+    flex-shrink: 0; 
+}
+.quiz-footer {
+    margin-top: 10px;
+    flex-shrink: 0;
+}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
 /* --- Buttons & Chips --- */
 .btn { border: none; cursor: pointer; padding: var(--btn-pad); border-radius: var(--radius); font-weight: 600; font-size: 0.9em; display: inline-flex; align-items: center; justify-content: center; gap: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
 .btn:active { transform: scale(0.96); }
+/* Disabled state for buttons */
+.btn:disabled { opacity: 0.5; pointer-events: none; cursor: default; box-shadow: none; filter: grayscale(100%); }
+
 .btn-sm { padding: 6px 12px; font-size: 0.8em; }
 .btn-nav { background: var(--glass-bg); border: 1px solid var(--txt-sec); color: var(--txt-main); padding: 12px 20px; font-size: 1.1em; flex: 1; box-shadow: var(--shadow); }
 .btn-nav:active { background: var(--primary); color: #fff; }
@@ -275,27 +378,104 @@ html, body {
 .theme-preview.active { border-color: var(--txt-main); transform: scale(1.1); }
 .scrollable-chips { display: flex; gap: 10px; overflow-x: auto; padding: 5px; }
 
+/* --- Navigator (Archive/Search List) --- */
+/* Collapsible container for question grid */
+.nav-grid-container {
+    max-height: 0; 
+    overflow: hidden; 
+    transition: max-height 0.4s ease, padding 0.4s ease;
+    background: var(--glass-bg); 
+    border-radius: var(--radius); 
+    margin-bottom: 5px;
+}
+.nav-grid-container.open { 
+    max-height: 200px; 
+    padding: 10px; 
+    overflow-y: auto; 
+    border: var(--glass-border); 
+}
+.nav-grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fill, minmax(50px, 1fr)); 
+    gap: 5px; 
+}
+.nav-btn { 
+    padding: 8px; 
+    font-size: 0.8em; 
+    border: 1px solid var(--txt-sec); 
+    border-radius: 6px; 
+    background: transparent; 
+    color: var(--txt-main); 
+    cursor: pointer; 
+}
+.nav-btn.current { 
+    background: var(--primary); 
+    color: #fff; 
+    border-color: var(--primary); 
+}
+
+/* --- PDF View Styles --- */
+#v-pdf { overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 20px; }
+.pdf-item { 
+    background: var(--glass-bg); 
+    border: var(--glass-border);
+    border-radius: var(--radius);
+    padding: 15px; 
+    margin-bottom: 15px; 
+    break-inside: avoid;
+}
+.pdf-q-txt { font-weight: bold; margin-bottom: 10px; font-size: 1.1em; }
+.pdf-opt { padding: 5px 10px; border-radius: 5px; margin-bottom: 4px; font-size: 0.95em; border: 1px solid transparent; }
+.pdf-opt.is-correct { background: rgba(46, 204, 113, 0.2); border-color: #2ecc71; color: #145a32; font-weight: bold; }
+[data-theme="dark"] .pdf-opt.is-correct { color: #2ecc71; }
+.pdf-exp { margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.03); border-radius: 8px; font-size: 0.9em; }
+
+/* --- Zen Mode Styles (FIXED) --- */
+
+/* 1. Hide the Main App Header (Avatar, Settings, Share) */
+/* The class 'zen-mode-active' will now be applied to the main '.container' div. */
+.container.zen-mode-active > .app-header {
+    display: none !important;
+}
+
+/* 2. Add a little padding to the top so content doesn't touch the phone edge */
+.container.zen-mode-active {
+    padding-top: 15px; /* Use > to target direct children if needed */
+}
+
+/* 3. Style the Zen Button when active */
+.zen-active-btn { 
+    background: var(--primary) !important; 
+    color: white !important; 
+    box-shadow: 0 0 10px var(--primary);
+}
+
+/* Position Zen button specifically */
+#btn-zen-mode { 
+    z-index: 100; 
+}
+
 
 /* =========================================
    SCROLLING & NAVIGATION PHYSICS
-   (The "Zatona" Solution)
    ========================================= */
 
-/* 1. Mobile Native Momentum Scrolling */
+/* Mobile Native Momentum Scrolling */
 .grid-menu, 
 .sel-list, 
 .options-list, 
 .quiz-view,
-.modal-content {
+.modal-content,
+.nav-grid-container {
     -webkit-overflow-scrolling: touch !important; 
     overscroll-behavior-y: contain; 
     scroll-behavior: smooth;
 }
 
-/* 2. Desktop/Laptop Scrollbar Styling */
+/* Desktop/Laptop Scrollbar Styling */
 ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
 }
 ::-webkit-scrollbar-track {
     background: rgba(0, 0, 0, 0.05); 
