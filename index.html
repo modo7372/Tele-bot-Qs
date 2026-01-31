@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -11,7 +12,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-    <link rel="stylesheet" href="css/style.css?v=2.5">
+    <link rel="stylesheet" href="css/style.css?v=3.6">
 </head>
 <body data-theme="light">
 
@@ -66,18 +67,29 @@
                         <div class="chip" onclick="Game.setFilter('wrong', this)">أخطائي</div>
                         <div class="chip" onclick="Game.setFilter('answered', this)">مجاب</div>
                     </div>
-                    <div style="margin-top: 5px; display:flex; align-items:center; gap:5px; font-size:0.9em;">
-                        <input type="checkbox" id="chk-instant" checked onchange="Game.toggleInstant(this.checked)">
-                        <label for="chk-instant" style="cursor:pointer; color:var(--txt-main)">تصحيح فوري (إظهار النتيجة مباشرة)</label>
+                    
+                    <!-- MODIFIED: Combined and set both checkboxes side-by-side and checked by default -->
+                    <div style="margin-top: 5px; display: flex; align-items: center; gap: 15px; font-size: 0.9em;">
+                        <!-- تصحيح فوري -->
+                        <div style="display:flex; align-items:center; gap:5px;">
+                            <input type="checkbox" id="chk-instant" checked onchange="Game.toggleInstant(this.checked)">
+                            <label for="chk-instant" style="cursor:pointer; color:var(--txt-main)">تصحيح فوري</label>
+                        </div>
+                        
+                        <!-- Auto-Hide Checkbox (Checked by default in HTML, relying on JS init fix) -->
+                        <div style="display:flex; align-items:center; gap:5px;">
+                            <input type="checkbox" id="chk-auto-hide-main" checked onchange="UI.toggleAutoHide(this.checked)">
+                            <label for="chk-auto-hide-main" style="cursor:pointer; color:var(--txt-main)">إخفاء الخيارات الخاطئة تلقائياً</label>
+                        </div>
                     </div>
+                    <!-- END MODIFIED BLOCK -->
+
                 </div>
 
-
-                <div class="menu-card full-span-card" onclick="Game.startGlobalRandom()">
-                    <div class="icon">🔀</div>
-                    <h3>اختبار عشوائي سريع</h3>
+                <button class="btn btn-animated-grad full-span-card" onclick="Game.startGlobalRandom()" style="min-height:80px; flex-direction: column;">
+                    <h3>🔀 اختبار عشوائي سريع</h3>
                     <small>1 - 50 سؤال عشوائي</small>
-                </div>
+                </button>
 
                 <div class="menu-card" onclick="Game.startFlow('normal')">
                     <div class="icon">🚀</div>
@@ -96,13 +108,11 @@
                 <div class="menu-card" onclick="Game.startRankMode()">
                     <div class="icon">🏆</div>
                     <h3>لوحة الشرف</h3>
-                    <small>الترتيب العالمي</small>
                 </div>
 
                 <div class="menu-card" onclick="Game.luckyShot()">
                     <div class="icon">🎲</div>
                     <h3>ضربة حظ</h3>
-                    <small>سؤال واحد</small>
                 </div>
                 
                 <div class="menu-card" onclick="UI.openModal('m-archive')">
@@ -122,7 +132,7 @@
             <div id="v-select" class="glass-box hidden column-flex">
                 <div class="view-header">
                     <h3 id="sel-head">اختر</h3>
-                    <button class="btn btn-sec btn-sm" onclick="Game.prevSel()">↩️ سابق</button>
+                    <!-- REMOVED BACK BUTTON (↩️ سابق) -->
                 </div>
                 <button id="btn-mode-random" class="btn btn-accent full-width hidden" style="margin-bottom:10px" onclick="Game.startRandomInMode()">
                     🎲 امتحان عشوائي مما سبق
@@ -130,6 +140,8 @@
                 <div id="sel-body" class="sel-list scroll-shadow"></div>
                 <div class="view-footer sticky-footer">
                     <button id="btn-all" class="btn btn-sec hidden" onclick="Game.toggleAll()">الكل</button>
+                    
+                    <button class="btn btn-sec" onclick="UI.goHome()">🏠 خروج</button>
                     <button class="btn btn-primary" onclick="Game.nextSel()">التالي ➡</button>
                 </div>
             </div>
@@ -139,12 +151,15 @@
                 
                 <div class="quiz-nav-top">
                     <button class="btn btn-sm btn-ghost" onclick="Game.confirmExit()">🏠 خروج</button>
-                    
                     <div class="quiz-meta">
                         <span>ID:<b id="q-id">--</b> | <b id="q-idx">--</b></span>
                     </div>
-                    
-                    <div style="width: 40px;"></div> </div>
+                    <button id="btn-nav-toggle" class="btn btn-sm btn-sec hidden" onclick="Game.toggleNavigator()">🗺️</button>
+                </div>
+
+                <div id="quiz-navigator" class="nav-grid-container">
+                    <div id="nav-grid-content" class="nav-grid"></div>
+                </div>
 
                 <div class="glass-box question-box">
                     <div id="q-path">Term > Subject</div>
@@ -152,8 +167,8 @@
                 </div>
                 
                 <div class="quiz-nav-top" style="margin-top:5px; margin-bottom:5px;">
-                     <button class="btn btn-nav" onclick="Game.navQ(-1)">◀ السابق</button>
-                     <button class="btn btn-nav" onclick="Game.navQ(1)">التالي ▶</button>
+                     <button id="btn-prev" class="btn btn-nav" onclick="Game.navQ(-1)">◀ السابق</button>
+                     <button id="btn-next" class="btn btn-nav" onclick="Game.navQ(1)">التالي ▶</button>
                 </div>
 
                 <div id="q-opts" class="options-list"></div>
@@ -161,6 +176,10 @@
                 <div id="archive-controls" class="hidden" style="display:flex; gap:5px; margin-top:5px;">
                     <button class="btn btn-sec full-width" onclick="Game.toggleAnswerView()">👁️ إظهار/إخفاء الحل</button>
                 </div>
+                
+                <button id="btn-toggle-options" class="btn btn-sec full-width hidden" style="margin-top:5px; border:1px solid var(--secondary);" onclick="Game.toggleIrrelevantOptionsDisplay()">
+                    👇 إخفاء الخيارات الأخرى
+                </button>
 
                 <button id="btn-fav-big" class="btn btn-ghost full-width" style="margin-top:5px; border:1px dashed var(--txt-sec);" onclick="Game.toggleFav()">
                     ☆ أضف للمفضلة (S)
@@ -169,13 +188,27 @@
                 <div id="q-exp" class="glass-box explanation hidden"></div>
 
                 <div class="quiz-footer">
-                    <button id="btn-finish" class="btn btn-sec" onclick="Game.finishQuiz()">🏁 إنهاء وتقييم</button>
+                    <button id="btn-zen-mode" class="btn btn-ghost btn-sm" onclick="Game.toggleZenMode()">🧘 وضع زين</button>
+                    <button id="btn-finish" class="btn btn-sec" onclick="Game.finishQuiz()">🏁 إنهاء</button>
                     <button id="btn-check" class="btn btn-primary hidden" onclick="Game.checkManual()">✅ تحقق</button>
                 </div>
             </div>
+
+            <!-- New PDF View -->
+            <div id="v-pdf" class="hidden">
+                 <div class="app-header glass-box">
+                     <h3>📝 وضع القراءة (PDF)</h3>
+                     <button class="btn btn-sm btn-sec" onclick="UI.goHome()">🏠 خروج</button>
+                 </div>
+                 <div class="container">
+                     <div id="pdf-list"></div>
+                 </div>
+            </div>
+
         </main>
     </div>
 
+    <!-- Modals -->
     <div id="m-search" class="modal" onclick="if(event.target==this) UI.closeModal('m-search')">
         <div class="modal-content">
             <h3>🔍 بحث متقدم</h3>
@@ -183,8 +216,16 @@
                 <input type="number" id="inp-search-id" class="inp-box" placeholder="رقم السؤال (ID)...">
                 <input type="text" id="inp-search-txt" class="inp-box" placeholder="كلمة من نص السؤال...">
                 
-                <button class="btn btn-accent full-width" onclick="Game.searchWrong()">عرض كل أخطائي السابقة</button>
-                <button class="btn btn-primary full-width" onclick="Game.execSearch()">بحث</button>
+                <!-- Updated Buttons for PDF Mode -->
+                <div style="display: flex; gap: 5px;">
+                    <button class="btn btn-accent full-width" onclick="Game.searchWrong('quiz')">✍️ أخطائي (quiz)</button>
+                    <button class="btn btn-sec full-width" onclick="Game.searchWrong('pdf')">📝 أخطائي (PDF)</button>
+                </div>
+
+                <div style="display: flex; gap: 5px;">
+                    <button class="btn btn-primary full-width" onclick="Game.execSearch('quiz')">🔍 بحث</button>
+                    <button class="btn btn-sec full-width" onclick="Game.execSearch('pdf')">📝 بحث (PDF)</button>
+                </div>
             </div>
         </div>
     </div>
@@ -222,6 +263,15 @@
                      </select>
                 </div>
             </div>
+            
+            <!-- NEW FEATURE 2: Reset Progress Button -->
+            <div class="set-group" style="margin-top: 15px;">
+                <label>إدارة البيانات</label>
+                <button class="btn btn-accent full-width" onclick="Game.resetProgress()">
+                    🗑️ مسح التقدم والأخطاء
+                </button>
+            </div>
+            
             <button class="btn btn-primary full-width" onclick="UI.closeModal('m-set')">حفظ وإغلاق</button>
         </div>
     </div>
@@ -257,7 +307,8 @@
             <h3>📚 الأرشيف</h3>
             <div class="modal-actions vertical">
                 <button class="btn btn-primary" onclick="Game.startArchive('quiz')">✍️ إعادة اختبار (أسئلة أجبتها)</button>
-                <button class="btn btn-sec" onclick="Game.startArchive('view')">👁️ تصفح الأرشيف (حلول مخفية)</button>
+                <button class="btn btn-sec" onclick="Game.startArchive('view')">👁️ تصفح (حلول مخفية)</button>
+                <button class="btn btn-accent" onclick="Game.startArchive('pdf')">📝 تصفح كقائمة (PDF Style)</button>
             </div>
         </div>
     </div>
@@ -275,12 +326,10 @@
         </div>
     </div>
 
-    <script src="js/config.js?v=3.1"></script>
-    <script src="js/data.js?v=3.1"></script>
-    <script src="js/ui.js?v=3.1"></script>
-    <script src="js/game.js?v=3.1"></script>
-    <script src="js/main.js?v=3.1"></script>
+    <script src="js/config.js?v=3.6"></script>
+    <script src="js/data.js?v=3.6"></script>
+    <script src="js/ui.js?v=3.6"></script>
+    <script src="js/game.js?v=3.6"></script>
+    <script src="js/main.js?v=3.6"></script>
 </body>
 </html>
-
-
