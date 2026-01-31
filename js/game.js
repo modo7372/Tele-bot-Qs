@@ -1,7 +1,12 @@
+/* --- START OF FILE game.js --- */
+
 let tInt; let cStep = ''; let autoNavTimer = null;
 
+// Track steps to handle smart navigation back (used by prevSel)
+let navHistory = []; // Stores the names of steps already passed (e.g., ['term', 'subj'])
+
 const Game = {
-    // --- أدوات مساعدة ---
+    // ... (Keep triggerHaptic, shareApp, randomizeUI, toggleInstant) ...
     triggerHaptic: (type) => {
         if(State.localData.settings?.haptic === false) return;
         if (window.Telegram.WebApp.isVersionAtLeast && window.Telegram.WebApp.isVersionAtLeast('6.1')) {
@@ -12,41 +17,56 @@ const Game = {
             } catch(e){}
         }
     },
-
     shareApp: () => {
         Game.triggerHaptic('selection');
-        // ⚠️ هام: ضع رابط البوت الخاص بك هنا بدلاً من الرابط الافتراضي
-        const botLink = "https://t.me/اسم_البوت_الخاص_بك/app"; 
+        const botLink = "https://t.me/YourBotName/app"; 
         const msg = "تطبيق ممتاز لأسئلة الجراحة والميدكال، جربه الآن! 🔥👨‍⚕️";
-        
         const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(botLink)}&text=${encodeURIComponent(msg)}`;
-        
-        if (window.Telegram && window.Telegram.WebApp) {
-            Telegram.WebApp.openTelegramLink(shareUrl);
-        } else {
-            window.open(shareUrl, '_blank');
-        }
+        if (window.Telegram && window.Telegram.WebApp) Telegram.WebApp.openTelegramLink(shareUrl);
+        else window.open(shareUrl, '_blank');
     },
-
     randomizeUI: () => {
         Game.triggerHaptic('selection');
         const rndTheme = THEMES[Math.floor(Math.random() * THEMES.length)];
         UI.setTheme(rndTheme.id);
-        const fonts = ["'Cairo', sans-serif", "'Segoe UI', Tahoma, sans-serif", "'Courier New', monospace"];
-        UI.updateStyleVar('--font-fam', fonts[Math.floor(Math.random() * fonts.length)]);
         UI.initAnim(true); 
     },
-
     toggleInstant: (val) => { State.instantFeedback = val; },
     
-    // تأكيد الخروج من الاختبار
-    confirmExit: () => {
-        if(confirm('هل تريد الخروج والعودة للقائمة الرئيسية؟')) {
-            UI.goHome();
+    // Ensure Zen Mode is disabled before confirming exit
+    confirmExit: () => { 
+        if(document.getElementById('app-wrap').classList.contains('zen-mode-active')) {
+            Game.toggleZenMode(false);
+        }
+        if(confirm('هل تريد الخروج والعودة للقائمة الرئيسية؟')) UI.goHome(); 
+    },
+
+    // ### ZEN MODE FIX ###
+    toggleZenMode: (force) => {
+        // Correctly target the main app container which has the .container class
+        const container = document.getElementById('app-wrap'); 
+        const button = document.getElementById('btn-zen-mode');
+        
+        let shouldActivate;
+        if (typeof force === 'boolean') {
+            shouldActivate = force;
+        } else {
+            shouldActivate = !container.classList.contains('zen-mode-active');
+        }
+
+        container.classList.toggle('zen-mode-active', shouldActivate);
+        
+        if (shouldActivate) {
+            button.innerHTML = '🧘‍♀️ الخروج من وضع زين';
+            button.classList.add('zen-active-btn');
+            Game.triggerHaptic('success'); // Use success haptic for entering
+        } else {
+            button.innerHTML = '🧘 وضع زين';
+            button.classList.remove('zen-active-btn');
+            Game.triggerHaptic('selection');
         }
     },
 
-    // --- الفلاتر ---
     setFilter: (f, el) => {
         State.filter = f;
         document.querySelectorAll('#filter-opts .chip').forEach(c => c.classList.remove('selected'));
@@ -57,25 +77,19 @@ const Game = {
         let p = [...State.allQ];
         const mist = State.localData.mistakes;
         const arch = State.localData.archive;
-        
         if(State.filter === 'new') p = p.filter(q => !arch.includes(q.id));
         else if(State.filter === 'wrong') p = p.filter(q => mist.includes(q.id));
         else if(State.filter === 'answered') p = p.filter(q => arch.includes(q.id));
-        
         return p;
     },
 
-    // --- أوضاع اللعب ---
-    // 1. ضربة حظ
+    // ... (Keep luckyShot, startGlobalRandom, startFavMode) ...
     luckyShot: () => {
         let pool = Game.getFilteredPool();
         if(!pool.length) return alert('لا توجد أسئلة متاحة حسب الفلتر المختار.');
-        
         const q = pool[Math.floor(Math.random() * pool.length)];
         Game.startQuizSession([q], 'lucky');
     },
-
-    // 2. اختبار عشوائي سريع
     startGlobalRandom: () => {
         let sub = Game.getFilteredPool();
         if(!sub.length) return alert('القائمة فارغة حسب الفلتر المختار.');
@@ -83,88 +97,128 @@ const Game = {
         const count = Math.floor(Math.random() * 50) + 1;
         Game.startQuizSession(sub.slice(0, count), 'normal');
     },
-
-    // 3. بدء تدفق الاختيار
+    startFavMode: () => {
+        const favs = State.localData.fav;
+        if(!favs.length) return alert('قائمة المفضلة فارغة!');
+        const pool = State.allQ.filter(q => favs.includes(q.id));
+        Game.startQuizSession(pool, 'normal');
+    },
     startFlow: (m) => {
         State.tempMode = m; 
-        State.isRankMode = false; // نتأكد أننا في وضع اللعب
+        State.isRankMode = false;
         State.pool = Game.getFilteredPool();
+        if(m === 'mistakes') State.pool = State.pool.filter(q => State.localData.mistakes.includes(q.id));
+        if(!State.pool.length) return alert('لا توجد أسئلة متاحة.');
         
-        if(m === 'mistakes') {
-            State.pool = State.pool.filter(q => State.localData.mistakes.includes(q.id));
-        }
-
-        if(!State.pool.length) return alert('لا توجد أسئلة متاحة في هذا الوضع/الفلتر.');
+        // Reset state and history
+        State.sel = {terms:[], subj:null, lessons:[], chapters:[], limit:'All'};
+        navHistory = []; 
         
-        State.sel = {term:null, subj:null, lessons:[], chapters:[], limit:'All'};
         Game.renderSel('term');
     },
-    
-    // بدء وضع الترتيب (يختار المادة ثم يعرض الترتيب)
     startRankMode: () => {
-        State.isRankMode = true; // تفعيل وضع الترتيب
-        State.pool = State.allQ; // نحتاج كل الأسئلة لبناء القائمة
-        State.sel = {term:null, subj:null, lessons:[], chapters:[], limit:'All'};
+        State.isRankMode = true; 
+        State.pool = State.allQ; 
+        State.sel = {term:null, subj:null, lessons:[], chapters:[], limit:'All'}; 
+        navHistory = [];
         Game.renderSel('term');
     },
-
-    // داخل وضع الاختيار: بدء عشوائي
     startRandomInMode: () => {
         let sub = State.pool;
-        if(State.sel.term) sub = sub.filter(q => q.term === State.sel.term);
+        if(State.sel.terms.length > 0) sub = sub.filter(q => State.sel.terms.includes(q.term));
         if(State.sel.subj) sub = sub.filter(q => q.subject === State.sel.subj);
         if(State.sel.lessons.length) sub = sub.filter(q => State.sel.lessons.includes(q.lesson));
         
         if(!sub.length) return alert('لا توجد أسئلة هنا');
         sub.sort(() => 0.5 - Math.random());
-        
         const count = Math.floor(Math.random() * 50) + 1;
         Game.startQuizSession(sub.slice(0, count), State.tempMode || 'normal');
     },
 
-    // --- منطق الاختيار (Selection Logic) ---
     renderSel: (step) => {
-        cStep = step; UI.showView('v-select');
+        // --- START FIX: Record History and Handle Errors ---
+        // 1. Record navigation step before changing cStep, only if we came from a different step
+        if (cStep && cStep !== step && !navHistory.includes(cStep)) { 
+             navHistory.push(cStep);
+        }
+        
+        cStep = step; 
+        UI.showView('v-select');
         const list = document.getElementById('sel-body'); list.innerHTML='';
         const titleMap = {'term':'الترم','subj':'المادة','lesson':'المحاضرة','chapter':'الفصل','limit':'العدد'};
         
-        // إذا كنا في وضع الترتيب، نغير العناوين قليلاً
         const prefix = State.isRankMode ? "ترتيب: " : "اختر ";
         document.getElementById('sel-head').innerText = `${prefix} ${titleMap[step] || step}`;
         
         const btnRnd = document.getElementById('btn-mode-random');
-        btnRnd.classList.add('hidden');
-        document.getElementById('btn-all').classList.add('hidden');
+        const btnAll = document.getElementById('btn-all');
 
-        // فلترة القائمة بناء على الاختيارات السابقة
-        const sub = State.pool.filter(q => (!State.sel.term||q.term===State.sel.term) && (!State.sel.subj||q.subject===State.sel.subj));
+        // Safe hiding of buttons (Fixes the Null Error)
+        if (btnRnd) btnRnd.classList.add('hidden');
+        if (btnAll) btnAll.classList.add('hidden');
+        // --- END FIX: Record History and Handle Errors ---
+
+
+        let sub = [...State.pool];
         
-        // زر عشوائي (يظهر فقط في وضع اللعب وليس الترتيب)
-        if(!State.isRankMode && step !== 'limit' && step !== 'term') {
+        // Filter pool based on previous selections
+        const currentTerm = State.sel.terms[0];
+        if (currentTerm) sub = sub.filter(q => q.term === currentTerm);
+        if(State.sel.subj) sub = sub.filter(q => q.subject === State.sel.subj);
+        
+        if(!State.isRankMode && step !== 'limit' && step !== 'term' && btnRnd) {
              btnRnd.classList.remove('hidden');
              btnRnd.innerText = `🎲 امتحان عشوائي من الـ ${titleMap[step] || step} الحالية`;
         }
 
         let items=[], isMulti=false;
 
-        if(step==='term') items=[...new Set(sub.map(q=>q.term))];
-        else if(step==='subj') items=[...new Set(sub.map(q=>q.subject))];
+        if(step==='term') {
+            items=[...new Set(sub.map(q=>q.term))]; 
+            isMulti = false; 
+        }
+        else if(step==='subj') {
+            items=[...new Set(sub.map(q=>q.subject))];
+            isMulti = false; 
+            if(items.length === 1 && !State.isRankMode) { 
+                State.sel.subj = items[0];
+                // Record the automatic step and proceed
+                navHistory.push(cStep);
+                return Game.renderSel('lesson');
+            }
+        }
         else if(step==='lesson') { 
-            // إذا كنا في وضع الترتيب، نتوقف عند اختيار المادة
             if(State.isRankMode) return Game.showRank(); 
-            items=[...new Set(sub.map(q=>q.lesson))]; isMulti=true; 
+            items=[...new Set(sub.map(q=>q.lesson))]; 
+            isMulti=true;
+            if(items.length === 1) {
+                State.sel.lessons = [items[0]];
+                // Record the automatic step and proceed
+                navHistory.push(cStep);
+                return Game.renderSel('chapter');
+            }
+            // Ensure State.sel.lessons is reset if showing options manually
+            State.sel.lessons = []; 
+            if (btnAll) btnAll.classList.remove('hidden');
         }
         else if(step==='chapter') {
             isMulti=true;
-            State.sel.lessons.forEach(l => {
+            
+            const currentLessons = State.sel.lessons;
+            State.sel.chapters = []; 
+            
+            currentLessons.forEach(l => {
                 const lDiv = document.createElement('div');
                 lDiv.innerHTML = `<div style="position:sticky; top:0; background:var(--glass-bg); padding:5px; z-index:2; font-weight:bold; color:var(--primary); border-bottom:1px solid #ccc;">📂 ${l}</div>`;
                 const g = document.createElement('div'); g.className='chip-grid'; g.style.padding='5px';
-                [...new Set(sub.filter(q=>q.lesson===l).map(q=>q.chapter))].forEach(ch => g.appendChild(Game.createChip(ch, true)));
+                [...new Set(sub.filter(q=>q.lesson===l).map(q=>q.chapter))].forEach(ch => {
+                    const c = Game.createChip(ch, true);
+                    g.appendChild(c);
+                });
                 lDiv.appendChild(g);
                 list.appendChild(lDiv);
             });
-            document.getElementById('btn-all').classList.remove('hidden');
+            if (btnAll) btnAll.classList.remove('hidden');
             return;
         }
         else if(step==='limit') {
@@ -175,73 +229,183 @@ const Game = {
                     b.classList.add('selected');
                     State.sel.limit=l; 
                 };
+                // Pre-select 'All' if nothing is chosen yet
+                if (State.sel.limit === 'All' && l === 'All') b.classList.add('selected');
                 list.appendChild(b);
             });
             return;
         }
 
+        // Render generic chips for Term, Subject, Lesson
         const g = document.createElement('div'); g.className='chip-grid';
-        items.sort().forEach(i => g.appendChild(Game.createChip(i, isMulti)));
+        items.sort().forEach(i => {
+            const chip = Game.createChip(i, isMulti);
+            // Re-select previously chosen single item if exists (Term/Subject)
+            if (!isMulti) {
+                if (step === 'term' && State.sel.terms.includes(i)) chip.classList.add('selected');
+                else if (step === 'subj' && State.sel.subj === i) chip.classList.add('selected');
+                else if (State.isRankMode && State.sel.term === i) chip.classList.add('selected');
+            }
+            g.appendChild(chip);
+        });
         list.appendChild(g);
-        if(isMulti) document.getElementById('btn-all').classList.remove('hidden');
     },
 
     createChip: (val, multi) => {
         const c = document.createElement('div'); c.className='chip'; c.innerText=val; c.dataset.val=val;
         c.onclick = () => {
             Game.triggerHaptic('selection');
-            if(multi) c.classList.toggle('selected');
-            else {
+            if(multi) {
+                // Multi-select mode (Lesson, Chapter)
+                c.classList.toggle('selected');
+            } else {
+                // Single-select mode (Term, Subject)
                 document.querySelectorAll('.chip').forEach(ch=>ch.classList.remove('selected'));
                 c.classList.add('selected');
-                if(cStep==='term') State.sel.term=val;
-                else if(cStep==='subj') State.sel.subj=val;
-                Game.nextSel();
+                
+                // Clicking selects, but user must hit 'Next' to proceed
             }
         };
         return c;
     },
 
     nextSel: () => {
-        if(cStep === 'term' && !State.sel.term) return alert('الرجاء اختيار الترم');
-        if(cStep === 'subj' && !State.sel.subj) return alert('الرجاء اختيار المادة');
+        const picked = Array.from(document.querySelectorAll('#sel-body .chip.selected')).map(c=>c.dataset.val);
         
-        if(cStep==='term') Game.renderSel('subj');
-        else if(cStep==='subj') Game.renderSel('lesson');
-        else if(cStep==='lesson') { 
-            const picked = Array.from(document.querySelectorAll('.chip.selected')).map(c=>c.dataset.val);
-            if(!picked.length) return alert('اختر محاضرة واحدة على الأقل'); 
-            State.sel.lessons=picked; Game.renderSel('chapter'); 
-        }
-        else if(cStep==='chapter') { 
-            const picked = Array.from(document.querySelectorAll('.chip.selected')).map(c=>c.dataset.val);
-            if(!picked.length) return alert('اختر فصلاً واحداً على الأقل'); 
-            State.sel.chapters=picked; Game.renderSel('limit'); 
-        }
-        else if(cStep==='limit') {
-            if(!State.sel.limit) State.sel.limit = 'All';
-            Game.initQuiz();
-        }
-    },
+        if(cStep === 'term') {
+             if(picked.length !== 1) return alert('الرجاء اختيار ترم واحد');
+             
+             State.sel.subj = null;
+             State.sel.lessons = [];
+             State.sel.chapters = [];
+             
+             if (State.isRankMode) {
+                 State.sel.term = picked[0];
+             } else {
+                 State.sel.terms = picked;
+             }
+             Game.renderSel('subj');
+             
+        } else if(cStep === 'subj') { 
+             if(picked.length !== 1) return alert('الرجاء اختيار مادة واحدة فقط');
+             
+             State.sel.lessons = [];
+             State.sel.chapters = [];
+             
+             State.sel.subj = picked[0];
+             Game.renderSel('lesson');
 
-    prevSel: () => {
-        if(cStep === 'term') UI.goHome();
-        else if(cStep === 'subj') { State.sel.term = null; Game.renderSel('term'); }
-        else if(cStep === 'lesson') { State.sel.subj = null; Game.renderSel('subj'); }
-        else if(cStep === 'chapter') { Game.renderSel('lesson'); }
-        else if(cStep === 'limit') Game.renderSel('chapter');
+        } else if(cStep === 'lesson') { 
+            if(!picked.length) return alert('اختر محاضرة واحدة على الأقل'); 
+            
+            State.sel.chapters = [];
+            State.sel.lessons=picked; 
+            Game.renderSel('chapter'); 
+            
+        } else if(cStep === 'chapter') { 
+            if(!picked.length) return alert('اختر فصلاً واحداً على الأقل'); 
+            State.sel.chapters=picked; 
+            Game.renderSel('limit'); 
+            
+        } else if(cStep === 'limit') {
+            // --- START FIX: Ensure limit selection is checked correctly ---
+            const limit = document.querySelector('#sel-body .chip.selected')?.dataset.val;
+            
+            if(!limit) {
+                 // Check if the default 'All' was selected previously but wasn't clicked again
+                 if (State.sel.limit === 'All') {
+                     // Allow proceeding if 'All' is implicitly set
+                 } else {
+                     return alert('الرجاء تحديد عدد الأسئلة أو اختيار "الكل"');
+                 }
+            } else {
+                 State.sel.limit = limit;
+            }
+            Game.initQuiz();
+            // --- END FIX: Limit Selection ---
+        }
     },
     
+    // Smart Back Button Logic (Simplified and Fixed)
+    prevSel: () => {
+        if (navHistory.length === 0) {
+            return UI.goHome();
+        }
+
+        const currentStep = cStep; // e.g., 'limit'
+        const previousStepInHistory = navHistory.pop(); // e.g., 'chapter' or 'lesson'
+
+        // Double Back Logic: Check if the previous step we landed on was an AUTO-SKIP.
+        const isSkippedStep = ['subj', 'lesson'].includes(previousStepInHistory);
+
+        let mustDoubleBack = false;
+        
+        if (isSkippedStep) {
+            // If we are backing to a step that was auto-skipped, we must double back
+            
+            if (previousStepInHistory === 'subj') {
+                 // Check if subject was auto-skipped (requires only one subject for the current term)
+                 const currentTerm = State.sel.terms[0];
+                 if (currentTerm) {
+                     const tempPool = State.pool.filter(q => q.term === currentTerm);
+                     const uniqueSubjects = [...new Set(tempPool.map(q => q.subject))];
+                     if (uniqueSubjects.length === 1) {
+                         mustDoubleBack = true;
+                         // Clear state to force rendering the previous step (Term)
+                         State.sel.subj = null; 
+                         State.sel.terms = []; 
+                     }
+                 }
+            } else if (previousStepInHistory === 'lesson') {
+                 // Check if lesson was auto-skipped (requires only one lesson for the current subject)
+                 const currentTerm = State.sel.terms[0];
+                 let tempPool = [...State.pool];
+                 if (currentTerm) tempPool = tempPool.filter(q => q.term === currentTerm);
+                 if(State.sel.subj) tempPool = tempPool.filter(q => q.subject === State.sel.subj);
+
+                 const uniqueLessons = [...new Set(tempPool.map(q => q.lesson))];
+
+                 if (uniqueLessons.length === 1 && State.sel.subj) {
+                     mustDoubleBack = true;
+                     // Clear state to force rendering the previous step (Subject)
+                     State.sel.lessons = []; 
+                     State.sel.subj = null; 
+                 }
+            }
+        }
+        
+        if (mustDoubleBack) {
+            // Remove one more step from history and render
+            const stepToRender = navHistory.pop() || 'term';
+            Game.renderSel(stepToRender);
+        } else {
+            // Single step back: render the explicitly chosen step
+            // We must clear the data for the step we were just on, to allow re-selection
+            if (currentStep === 'limit') State.sel.limit = 'All';
+            else if (currentStep === 'chapter') State.sel.chapters = [];
+            else if (currentStep === 'lesson') State.sel.lessons = [];
+            else if (currentStep === 'subj') State.sel.subj = null;
+            else if (currentStep === 'term') State.sel.terms = [];
+
+            Game.renderSel(previousStepInHistory);
+        }
+    },
+
     toggleAll: () => document.querySelectorAll('.chip').forEach(c => c.classList.toggle('selected')),
 
-    // --- بدء جلسة الاختبار ---
     initQuiz: () => {
-        let final = State.pool.filter(q => State.sel.term===q.term && State.sel.subj===q.subject && State.sel.lessons.includes(q.lesson) && State.sel.chapters.includes(q.chapter));
+        // Since term is single select now, we ensure we always target State.sel.terms[0]
+        const selectedTerm = State.sel.terms[0]; 
+
+        let final = State.pool.filter(q => 
+            (selectedTerm ? q.term === selectedTerm : true) && // Check term if selected
+            State.sel.subj===q.subject && 
+            State.sel.lessons.some(l => q.lesson === l) && 
+            State.sel.chapters.some(c => q.chapter === c)
+        );
         if(!final.length) return alert('No questions.');
-        
         final.sort(()=>0.5-Math.random());
         if(State.sel.limit!=='All') final = final.slice(0, parseInt(State.sel.limit));
-        
         Game.startQuizSession(final, State.tempMode || 'normal');
     },
 
@@ -250,36 +414,95 @@ const Game = {
         State.mode = mode;
         State.qIdx = 0;
         State.score = 0;
-        
         State.answers = new Array(questions.length).fill(null).map(() => ({ answered: false, selectedIdx: null, isCorrect: false }));
         State.instantFeedback = document.getElementById('chk-instant').checked;
+        
+        // Initial state for irrelevant options display based on setting (which is defaulted correctly by UI.init)
+        State.showIrrelevantOptions = !(State.localData.settings?.hideIrrelevant === true);
 
         UI.showView('v-quiz');
         UI.initAnim(true);
-
         if(mode === 'timeAttack') Game.startTimer();
         else document.getElementById('timer-bar').style.display='none';
 
         const isSearchOrView = (mode === 'view_mode' || mode === 'search_mode');
         document.getElementById('btn-finish').style.display = isSearchOrView ? 'none' : 'inline-block';
         document.getElementById('archive-controls').classList.toggle('hidden', !isSearchOrView);
+        document.getElementById('btn-toggle-options').classList.add('hidden');
+        
+        const navContainer = document.getElementById('quiz-navigator');
+        const navToggle = document.getElementById('btn-nav-toggle');
+        if(isSearchOrView) {
+            navToggle.classList.remove('hidden');
+            Game.renderNavigator();
+        } else {
+            navToggle.classList.add('hidden');
+            navContainer.classList.remove('open');
+        }
 
         Game.renderQ();
     },
 
-    // --- الأرشيف والبحث ---
+    renderNavigator: () => {
+        const grid = document.getElementById('nav-grid-content');
+        grid.innerHTML = '';
+        State.quiz.forEach((q, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'nav-btn';
+            btn.innerText = q.id;
+            btn.onclick = () => { State.qIdx = i; Game.renderQ(); Game.toggleNavigator(false); };
+            grid.appendChild(btn);
+        });
+    },
+    toggleNavigator: (force) => {
+        const el = document.getElementById('quiz-navigator');
+        if(typeof force === 'boolean') { if(force) el.classList.add('open'); else el.classList.remove('open'); } 
+        else { el.classList.toggle('open'); }
+        document.querySelectorAll('.nav-btn').forEach((b, i) => {
+             if(i === State.qIdx) b.classList.add('current'); else b.classList.remove('current');
+        });
+    },
+
     startArchive: (type) => { 
         const p = State.allQ.filter(q=>State.localData.archive.includes(q.id));
         if(!p.length) return alert('الأرشيف فارغ');
         UI.closeModal('m-archive');
-        Game.startQuizSession(p, type==='view'?'view_mode':'normal');
+        if (type === 'pdf') {
+             Game.startPDFMode(p);
+        } else {
+             Game.startQuizSession(p, type==='view'?'view_mode':'normal');
+        }
     },
 
-    execSearch: () => {
+    // PDF Mode Logic
+    startPDFMode: (questions) => {
+        UI.showView('v-pdf');
+        const list = document.getElementById('pdf-list');
+        list.innerHTML = '';
+        
+        questions.forEach((q, i) => {
+            const d = document.createElement('div');
+            d.className = 'pdf-item';
+            let optsHtml = '';
+            q.options.forEach((o, idx) => {
+                const isCorrect = (idx === q.correct_option_id);
+                optsHtml += `<div class="pdf-opt ${isCorrect ? 'is-correct' : ''}">${o}</div>`;
+            });
+            d.innerHTML = `
+                <div class="pdf-q-txt"><small style="color:var(--primary)">#${q.id}</small><br>${q.question}</div>
+                <div>${optsHtml}</div>
+                ${q.explanation ? `<div class="pdf-exp"><b>💡 توضيح:</b> ${q.explanation}</div>` : ''}
+            `;
+            list.appendChild(d);
+        });
+    },
+
+    // ... (Keep other functions) ...
+    execSearch: (mode = 'quiz') => {
         const idVal = document.getElementById('inp-search-id').value;
         const txtVal = document.getElementById('inp-search-txt').value.toLowerCase();
-        
         let found = [];
+    
         if(idVal) {
             const q = State.allQ.find(x => x.id == idVal);
             if(q) found.push(q);
@@ -289,33 +512,44 @@ const Game = {
 
         if(found.length) {
             UI.closeModal('m-search');
-            Game.startQuizSession(found, 'search_mode');
-        } else {
-            alert('لم يتم العثور على نتائج.');
+            if(mode === 'pdf') {
+                Game.startPDFMode(found);
+            } else {
+                Game.startQuizSession(found, 'search_mode');
+            }
+        } else { 
+            alert('لم يتم العثور على نتائج.'); 
         }
     },
 
-    searchWrong: () => {
+    searchWrong: (mode = 'quiz') => {
         const mistakes = State.localData.mistakes;
         if(!mistakes.length) return alert('لا يوجد سجل أخطاء.');
         const found = State.allQ.filter(q => mistakes.includes(q.id));
         UI.closeModal('m-search');
-        Game.startQuizSession(found, 'search_mode');
+    
+        if(mode === 'pdf') {
+            Game.startPDFMode(found);
+        } else {
+            Game.startQuizSession(found, 'search_mode');
+        }
     },
-
     toggleAnswerView: () => {
         const qState = State.answers[State.qIdx];
         const q = State.quiz[State.qIdx];
-        
         if(qState.answered) {
             qState.answered = false; 
+            State.showIrrelevantOptions = true;
             Game.renderQ();
         } else {
             Game.answer(q.correct_option_id, true); 
         }
     },
-
-    // --- عرض السؤال ---
+    toggleIrrelevantOptionsDisplay: () => {
+        State.showIrrelevantOptions = !State.showIrrelevantOptions;
+        Game.renderOptions();
+        Game.triggerHaptic('selection');
+    },
     renderQ: () => {
         clearTimeout(autoNavTimer);
         const q = State.quiz[State.qIdx];
@@ -328,28 +562,18 @@ const Game = {
         
         Game.updateFavUI();
 
-        const opts = document.getElementById('q-opts'); opts.innerHTML='';
+        document.getElementById('btn-prev').disabled = (State.qIdx === 0);
+        document.getElementById('btn-next').disabled = (State.qIdx === State.quiz.length - 1);
+
         const expBox = document.getElementById('q-exp');
         const btnCheck = document.getElementById('btn-check');
-        
+        const btnToggleOptions = document.getElementById('btn-toggle-options');
+
         expBox.classList.add('hidden');
         btnCheck.classList.add('hidden');
+        btnToggleOptions.classList.add('hidden');
 
-        q.options.forEach((o, i) => {
-            const d = document.createElement('div'); d.className='opt';
-            d.innerHTML = `<span>${o}</span>`;
-            
-            if(qState.answered) {
-                if(i === q.correct_option_id) d.classList.add('correct');
-                else if(i === qState.selectedIdx) d.classList.add('wrong');
-                d.style.pointerEvents = 'none'; 
-            } else if (qState.selectedIdx === i) {
-                d.classList.add('selected-temp');
-            }
-
-            d.onclick = () => Game.handleOptionClick(i, d);
-            opts.appendChild(d);
-        });
+        Game.renderOptions();
 
         if(qState.answered && q.explanation) {
             expBox.innerHTML = `<b>توضيح:</b> ${q.explanation}`;
@@ -360,42 +584,73 @@ const Game = {
             btnCheck.classList.remove('hidden');
         }
     },
+    renderOptions: () => {
+        const q = State.quiz[State.qIdx];
+        const qState = State.answers[State.qIdx]; 
+        const optsContainer = document.getElementById('q-opts'); 
+        optsContainer.innerHTML='';
+        const btnToggleOptions = document.getElementById('btn-toggle-options');
 
+        q.options.forEach((o, i) => {
+            const d = document.createElement('div'); d.className='opt';
+            d.innerHTML = `<span>${o}</span>`;
+            
+            if(qState.answered) {
+                if(i === q.correct_option_id) d.classList.add('correct');
+                else if(i === qState.selectedIdx) d.classList.add('wrong');
+                d.style.pointerEvents = 'none';
+
+                const isRelevant = (i === q.correct_option_id || i === qState.selectedIdx);
+                if (!isRelevant && !State.showIrrelevantOptions) d.classList.add('irrelevant-hidden');
+                else if (!isRelevant && State.showIrrelevantOptions) d.classList.remove('irrelevant-hidden');
+
+            } else if (qState.selectedIdx === i) {
+                d.classList.add('selected-temp');
+            }
+
+            d.onclick = () => Game.handleOptionClick(i, d);
+            optsContainer.appendChild(d);
+        });
+
+        if (qState.answered && q.options.length > 2) { 
+            btnToggleOptions.classList.remove('hidden');
+            btnToggleOptions.innerText = State.showIrrelevantOptions ? '👇 إخفاء الخيارات الأخرى' : '👆 إظهار الخيارات الأخرى';
+        } else {
+             btnToggleOptions.classList.add('hidden');
+        }
+    },
     handleOptionClick: (idx, el) => {
         const qState = State.answers[State.qIdx];
         if(qState.answered) return; 
-
         qState.selectedIdx = idx;
-
-        if(State.instantFeedback || State.mode === 'lucky') {
-            Game.confirmAnswer(idx);
-        } else {
+        if(State.instantFeedback || State.mode === 'lucky') Game.confirmAnswer(idx);
+        else {
             document.querySelectorAll('.opt').forEach(o => o.classList.remove('selected-temp'));
             el.classList.add('selected-temp');
             document.getElementById('btn-check').classList.remove('hidden');
         }
     },
-
     checkManual: () => {
         const qState = State.answers[State.qIdx];
-        if(qState.selectedIdx !== null) {
-            Game.confirmAnswer(qState.selectedIdx);
-        }
+        if(qState.selectedIdx !== null) Game.confirmAnswer(qState.selectedIdx);
     },
 
     confirmAnswer: (idx, isSim = false) => {
         const q = State.quiz[State.qIdx];
         const qState = State.answers[State.qIdx];
-        
+        if (qState.answered) return;
         qState.answered = true; 
         qState.selectedIdx = idx;
-        
         const isCorrect = (idx === q.correct_option_id);
         qState.isCorrect = isCorrect;
 
+        const shouldHide = State.localData.settings?.hideIrrelevant === true;
+        if(shouldHide) State.showIrrelevantOptions = false;
+
+        Game.renderOptions(); 
+        
         const divs = document.querySelectorAll('.opt');
         divs.forEach(d => d.classList.remove('selected-temp')); 
-        
         divs[q.correct_option_id].classList.add('correct');
 
         if(isCorrect) {
@@ -411,10 +666,7 @@ const Game = {
                 AudioSys.playError();
                 Game.triggerHaptic('error');
                 if(!State.localData.mistakes.includes(q.id)) State.localData.mistakes.push(q.id);
-                if(State.mode==='survival') { 
-                    setTimeout(()=>alert('🔥 Game Over'), 500); 
-                    return UI.goHome(); 
-                }
+                if(State.mode==='survival') { setTimeout(()=>alert('🔥 Game Over'), 500); return UI.goHome(); }
             }
         }
 
@@ -429,16 +681,29 @@ const Game = {
 
         document.getElementById('btn-check').classList.add('hidden'); 
 
-        if(State.instantFeedback && !isSim && State.mode !== 'view_mode' && State.mode !== 'search_mode') {
-            const delay = isCorrect ? 1000 : 3000;
+        // Fix: Auto-scroll (Attach) logic
+        // If irrelevant options are hidden, smooth scroll to reveal explanation/footer
+        if(shouldHide || !State.showIrrelevantOptions) {
+            setTimeout(() => {
+                const footer = document.querySelector('.quiz-footer');
+                if(footer) footer.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            }, 100);
+        }
+        
+        if(State.mode === 'lucky') return;
+
+        if(State.instantFeedback && !isSim && isCorrect && State.mode !== 'view_mode' && State.mode !== 'search_mode') {
+            const delay = 1000;
             autoNavTimer = setTimeout(() => {
                 if(State.qIdx < State.quiz.length - 1) Game.nextQ();
+                else Game.finishQuiz();
             }, delay);
         }
     },
 
     answer: (idx, sim=true) => {
         const qState = State.answers[State.qIdx];
+        if (qState.answered) return;
         qState.selectedIdx = idx; 
         Game.confirmAnswer(idx, sim);
     },
@@ -447,17 +712,16 @@ const Game = {
         const newIdx = State.qIdx + dir;
         if(newIdx >= 0 && newIdx < State.quiz.length) {
             State.qIdx = newIdx;
+            // Reset visibility flags for the new question
+            State.showIrrelevantOptions = !(State.localData.settings?.hideIrrelevant === true);
+            
             Game.renderQ();
             Game.triggerHaptic('selection');
-        } else if (newIdx >= State.quiz.length && State.mode !== 'view_mode' && State.mode !== 'search_mode') {
+        } else if (newIdx >= State.quiz.length && State.mode !== 'view_mode') {
             Game.finishQuiz();
-        } else {
-            Game.triggerHaptic('error');
         }
     },
-
     nextQ: () => Game.navQ(1),
-
     startTimer: () => {
         let t = 60; const b = document.getElementById('timer-bar'); b.style.display='block';
         clearInterval(tInt);
@@ -467,14 +731,19 @@ const Game = {
         },1000);
     },
     stopTimer: () => clearInterval(tInt),
-
+    
+    // Ensure Zen Mode is disabled when finishing the quiz
     finishQuiz: () => {
+        // 1. Disable Zen Mode immediately if active
+        if(document.getElementById('app-wrap').classList.contains('zen-mode-active')) {
+            Game.toggleZenMode(false);
+        }
+
+        // 2. Original finish logic
         Game.stopTimer();
         clearTimeout(autoNavTimer);
-        
         let finalScore = State.answers.filter(a => a.isCorrect).length;
         State.score = finalScore;
-
         Data.saveLeaderboard(State.score);
         AudioSys.playSuccess();
         const pct = Math.round((State.score/State.quiz.length)*100);
@@ -482,7 +751,7 @@ const Game = {
         document.getElementById('sc-txt').innerText = `${State.score} / ${State.quiz.length}`;
         UI.openModal('m-score');
     },
-
+    
     toggleFav: () => {
         const id = State.quiz[State.qIdx].id;
         if(State.localData.fav.includes(id)) State.localData.fav = State.localData.fav.filter(x=>x!==id);
@@ -498,18 +767,12 @@ const Game = {
         el.style.backgroundColor = isFav ? "var(--primary)" : "transparent";
         el.style.color = isFav ? "#fff" : "var(--txt-sec)";
     },
-
     showRank: () => {
-        // إذا كنا في وضع الترتيب وتم اختيار مادة
-        if(!State.sel || !State.sel.term || !State.sel.subj) {
-             return alert('يجب اختيار مادة لعرض ترتيبها');
-        }
-
+        if(!State.sel || !State.sel.term || !State.sel.subj) return alert('يجب اختيار مادة وترم واحد لعرض ترتيبها');
         const ctx = `${State.sel.term}_${State.sel.subj}`.replace(/[.#$/\[\]]/g, "_");
         document.getElementById('rank-topic').innerText = ctx.replace('_', ' > ');
         document.getElementById('rank-val').innerText = '...';
         UI.openModal('m-rank');
-
         db.ref(`ranks/${ctx}`).once('value', snap => {
             const data = snap.val();
             if(!data) { document.getElementById('rank-val').innerText = 'No Data'; return; }
@@ -522,5 +785,19 @@ const Game = {
             document.getElementById('rank-user-name').innerText = State.user.first_name;
             document.getElementById('rank-total').innerText = `${arr.length} Players`;
         });
+    },
+    
+    // NEW FEATURE: Reset Progress
+    resetProgress: () => {
+        Game.triggerHaptic('error');
+        if (confirm('هل أنت متأكد من مسح جميع بيانات تقدمك (الأخطاء، الأرشيف، المفضلة)؟ لا يمكن التراجع عن هذا الإجراء.')) {
+            State.localData.mistakes = [];
+            State.localData.archive = [];
+            State.localData.fav = [];
+            Data.saveData();
+            UI.updateHomeStats();
+            UI.closeModal('m-set');
+            alert('تم مسح التقدم بنجاح.');
+        }
     }
 };
