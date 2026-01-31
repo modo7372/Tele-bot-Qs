@@ -1,0 +1,1871 @@
+{
+  "meta": {
+    "term": "كتاب الكلية",
+    "subject": "General Surgery",
+    "lesson": "Trauma Management and Surgical Specialties"
+  },
+  "questions": [
+    {
+      "id": 11234,
+      "question": "Dobutamine:",
+      "options": [
+        "Increases cardiac output and causes peripheral vaso-dilatation.",
+        "Decreases cardiac output and causes peripheral vaso-dilatation.",
+        "Increases cardiac output and causes peripheral vaso-constriction.",
+        "Decreases cardiac output and causes peripheral vaso-constriction."
+      ],
+      "correct_option_id": 0,
+      "explanation": "Dobutamine is a beta-1 agonist that increases myocardial contractility and cardiac output. It also causes peripheral vasodilation via beta-2 stimulation.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Resuscitation & General Surgical Principles"
+    },
+    {
+      "id": 11235,
+      "question": "Among the physiologic responses to acute injury is:",
+      "options": [
+        "Increased secretion of insulin.",
+        "Increased secretion of thyroxine.",
+        "Decreased secretion of vasopressin.",
+        "Decreased secretion of aldosterone."
+      ],
+      "correct_option_id": 0,
+      "explanation": "Acute injury triggers a stress response leading to increased counter-regulatory hormones like cortisol and insulin secretion to meet high metabolic demands.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Resuscitation & General Surgical Principles"
+    },
+    {
+      "id": 11236,
+      "question": "The response to shock includes which of the following metabolic effects?",
+      "options": [
+        "Increase in renal perfusion.",
+        "Decrease in cortisol level.",
+        "Hyperkalemia.",
+        "Hypoglycemia."
+      ],
+      "correct_option_id": 2,
+      "explanation": "Shock leads to tissue hypoxia and cellular damage, causing potassium efflux from cells, resulting in transient hyperkalemia.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Resuscitation & General Surgical Principles"
+    },
+    {
+      "id": 11237,
+      "question": "Rapid fluid resuscitation of the hypovolemic patient after abdominal trauma is significantly enhanced by which of the following?",
+      "options": [
+        "Placement of long 18-gauge sub-clavian vein catheters.",
+        "Placement of percutaneous femoral vein catheters.",
+        "Placement of short, large-bore percutaneous peripheral intravenous catheters.",
+        "Infusion of cold whole blood."
+      ],
+      "correct_option_id": 2,
+      "explanation": "Short, large-bore peripheral IVs offer the lowest resistance, allowing for the highest flow rates necessary for rapid resuscitation.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Resuscitation & General Surgical Principles"
+    },
+    {
+      "id": 11238,
+      "question": "Scar formation is part of the normal healing process following injury. Which of the following tissues has the ability to heal without scar formation?",
+      "options": [
+        "Liver.",
+        "Skin.",
+        "Bone.",
+        "Muscle."
+      ],
+      "correct_option_id": 2,
+      "explanation": "Bone heals via regeneration through the formation of a bony callus, minimizing scar tissue compared to mesodermal tissues like skin or muscle.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Resuscitation & General Surgical Principles"
+    },
+    {
+      "id": 11239,
+      "question": "A 32-year-old man suffers a spinal cord injury with a resultant paraplegia in a motorcycle accident. He presents to the emergency room with hypotension. Which of the following statement(s) is/are true concerning his diagnosis and management?",
+      "options": [
+        "The low blood pressure can be assumed to be due to neurogenic shock.",
+        "The sole cause of hypotension is the loss of sympathetic input to the venous system.",
+        "Despite significant hypotension, secondary organ injury will be uncommon.",
+        "There is no role for pharmacological intervention to maintain blood pressure."
+      ],
+      "correct_option_id": 2,
+      "explanation": "Neurogenic shock causes hypotension due to loss of sympathetic tone, but organ injury remains a risk if perfusion is inadequate.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Resuscitation & General Surgical Principles"
+    },
+    {
+      "id": 11240,
+      "question": "All of the following statements about thyroid hormone function during acute injury are true Except:",
+      "options": [
+        "Free triiodothyronine (T3) levels are frequently decreased.",
+        "Reduced free thyroxine (T4) concentrations are predictors of high mortality.",
+        "Thyroid-stimulating hormone (TSH) release undergoes a compensatory rise as T3/T4 levels drop.",
+        "Total T4 (protein bound and free) levels may be reduced."
+      ],
+      "correct_option_id": 2,
+      "explanation": "In acute illness (euthyroid sick syndrome), TSH typically remains normal or slightly low, not exhibiting a compensatory rise when free T4/T3 levels fall.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Resuscitation & General Surgical Principles"
+    },
+    {
+      "id": 11241,
+      "question": "Which of the following is the most commonly acquired infection in hospitalized surgical patients?",
+      "options": [
+        "Lower gastro-intestinal tract.",
+        "Lower respiratory tract.",
+        "Naso-pharynx.",
+        "Surgical wound."
+      ],
+      "correct_option_id": 3,
+      "explanation": "Surgical site infections (SSIs) remain one of the most common categories of healthcare-associated infections.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Resuscitation & General Surgical Principles"
+    },
+    {
+      "id": 11242,
+      "question": "Which of the following is the most effective way to prevent post-operative seroma/infection in an obese patient after an open appendectomy?",
+      "options": [
+        "Leaving the subcutaneous tissue and skin open to heal by secondary intention.",
+        "Closing the wound with a rubber drain.",
+        "Closing the wound with a closed suction drain.",
+        "Closing the wound with multiple sutures in the subcutaneous tissue."
+      ],
+      "correct_option_id": 2,
+      "explanation": "Closed suction drains are highly effective in managing potential dead space and reducing the accumulation of seroma or hematoma, thereby lowering infection risk.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Resuscitation & General Surgical Principles"
+    },
+    {
+      "id": 11243,
+      "question": "Naso-tracheal intubation is:",
+      "options": [
+        "Preferred for the unconscious patient without cervical spine injury.",
+        "Preferred for patients with suspected cervical spine injury.",
+        "Maximizes neck manipulation.",
+        "Contraindicated in the patients who is breathing spontaneously."
+      ],
+      "correct_option_id": 1,
+      "explanation": "Naso-tracheal intubation allows for better maintenance of in-line cervical spine stabilization compared to orotracheal intubation.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Resuscitation & General Surgical Principles"
+    },
+    {
+      "id": 11244,
+      "question": "The most common initial manifestation of increasing intra-cranial pressure in the victim of head trauma is:",
+      "options": [
+        "Change in level of consciousness.",
+        "Ipsi-lateral side of hemorrhage) pupillary dilation.",
+        "Contra-lateral pupillary dilation.",
+        "Hemi-paresis."
+      ],
+      "correct_option_id": 0,
+      "explanation": "Decreased level of consciousness, ranging from lethargy to coma, is the earliest and most reliable sign of rising intracranial pressure (ICP).",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Trauma: Head, Chest, & Abdomen"
+    },
+    {
+      "id": 11246,
+      "question": "A 31-year-old man is brought to the emergency room following a motor car accident in which his chest struck the steering wheel. Examination reveals stable vital signs, but the patient exhibits multiple palpable rib fractures and paradoxical movement of the right side of the chest. Chest X-ray shows no evidence of pneumo- or hemo-thorax but a large pulmonary contusion is developing. Proper treatment would consist of which of the following?",
+      "options": [
+        "Tracheostomy, mechanical ventilation, and positive end-expiratory pressure,",
+        "Stabilization of the chest wall with sandbags.",
+        "Stabilization with towel clips.",
+        "Immediate operative stabilization"
+      ],
+      "correct_option_id": 0,
+      "explanation": "Flail chest with significant underlying pulmonary contusion requires ventilatory support with PEEP to optimize oxygenation and manage the intrapulmonary shunt.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Trauma: Head, Chest, & Abdomen"
+    },
+    {
+      "id": 11247,
+      "question": "A 65-year-old man who smokes cigarettes and has chronic obstructive pulmonary disease falls and fractures the 7th, 8th, and 9th ribs in the left antero-lateral chest, Chest x-ray is otherwise normal. Appropriate treatment might include the following Except:",
+      "options": [
+        "Strapping the chest with adhesive tape.",
+        "Tube thoracostomy.",
+        "Peritoneal lavage.",
+        "Surgical fixation of the fractured ribs."
+      ],
+      "correct_option_id": 2,
+      "explanation": "Peritoneal lavage is used to assess for intra-abdominal hemorrhage in blunt trauma, not as a direct treatment for isolated rib fractures.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Trauma: Head, Chest, & Abdomen"
+    },
+    {
+      "id": 11248,
+      "question": "Which of the following situations would be an indication for performance of thoracotomy in the emergency room?",
+      "options": [
+        "Massive hemo-thorax following blunt trauma to the chest.",
+        "Blunt trauma to multiple organ systems with obtainable vital signs in the field but none on arrival in the emergency room.",
+        "Rapidly deteriorating patient with cardiac tamponade from penetrating thoracic trauma.",
+        "Penetrating thoracic trauma and no signs of life in the field."
+      ],
+      "correct_option_id": 2,
+      "explanation": "Cardiac tamponade, especially secondary to penetrating trauma, is an absolute indication for emergency room thoracotomy (or bedside pericardiocentesis/drainage) for immediate decompression.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Trauma: Head, Chest, & Abdomen"
+    },
+    {
+      "id": 11249,
+      "question": "Which of the following statements about head injuries is/are false?",
+      "options": [
+        "The majority of deaths from auto accident are due to head injuries.",
+        "Head injury alone often produces shock.",
+        "A rapid and complete neurologic examination is part of the initial evaluation of the trauma patient.",
+        "Optimizing arterial oxygenation is part of initial therapy."
+      ],
+      "correct_option_id": 1,
+      "explanation": "Isolated head injury rarely causes systemic shock; hypotension in a trauma patient usually indicates significant hemorrhage elsewhere (e.g., chest, abdomen, pelvis).",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Trauma: Head, Chest, & Abdomen"
+    },
+    {
+      "id": 11251,
+      "question": "A 28-year-old male was exposed to a motor cycle accident in which he was not wearing a helmet. On admission to the emergency room he was in severe respiratory distress and blood pressure 80/40 mm.Hg, and appeared cyanotic. He was bleeding profusely from the nose and had an obviously open femur fracture. Breath sounds were decreased on the right side of the chest. The initial management priority should be:",
+      "options": [
+        "Control of hemorrhage with anterior and posterior nasal packing.",
+        "Tube thoracostomy in the right hemo-thorax.",
+        "Endo-tracheal intubation with in-line cervical traction.",
+        "Obtain cross-table cervical spine film and chest film."
+      ],
+      "correct_option_id": 2,
+      "explanation": "The patient presents with severe respiratory distress (cyanosis, decreased BS, massive bleeding) indicating an immediate life threat requiring airway management (Intubation) while maintaining C-spine precautions.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Trauma: Head, Chest, & Abdomen"
+    },
+    {
+      "id": 11252,
+      "question": "A 75y. old man is involved in a motor car accident. Which of the following statement(s) is/are true concerning this patient's injury and management?",
+      "options": [
+        "Acceptable vital sign parameters are similar across all age groups.",
+        "Hypertonic solutions should not be used for resuscitation due to concerns for fluid overload.",
+        "The patient would be more prone to a subdural hematoma than a younger patient.",
+        "There is no role for inotropic agents in the management of this patient."
+      ],
+      "correct_option_id": 2,
+      "explanation": "Elderly patients have cerebral atrophy, making the bridging veins more susceptible to tearing from minor trauma, predisposing them to subdural hematoma.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Trauma: Head, Chest, & Abdomen"
+    },
+    {
+      "id": 11253,
+      "question": "Which ofthe following statement(s) is/are true concerning inhalation injury? ",
+      "options": [
+        "The physiology of these injuries includes upper airway obstruction 2ry to progressive oedema, bronchospasm from aerosolized irritants, atelectasis from loss of surfactant and alveolar oedema.",
+        "Endo-tracheal intubation is indicated immediately in all patients with suspected inhalation injury",
+        "Distal airway injuries are usually caused by heat injury.",
+        "Peak inspiratory pressures of > 40 cm of water are indicated to maintain functional residual capacity."
+      ],
+      "correct_option_id": 0,
+      "explanation": "Inhalation injury involves chemical irritation leading to inflammation, edema, and loss of surfactant function.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Burns & Local Infections"
+    },
+    {
+      "id": 11256,
+      "question": "Which of the following is/are not associated with increased likelihood of infection after major elective surgery?",
+      "options": [
+        "Age over 70 years.",
+        "Chronic malnutrition.",
+        "Controlled diabetes mellitus.",
+        "Long-term steroid use",
+        "Infection at a remote body site."
+      ],
+      "correct_option_id": 2,
+      "explanation": "Controlled diabetes mellitus does not significantly increase SSI risk; chronic malnutrition, steroid use, advanced age, and remote infection do.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Resuscitation & General Surgical Principles"
+    },
+    {
+      "id": 11257,
+      "question": "Advantages of epidural analgesia include:",
+      "options": [
+        "Earlier mobilization after surgery.",
+        "Earlier return of bowel function.",
+        "Decreased stress response to surgery.",
+        "Shorter hospitalizations.",
+        "All of the above."
+      ],
+      "correct_option_id": 4,
+      "explanation": "Epidural analgesia provides superior pain control, which facilitates early mobilization, reduces the physiologic stress response, and often shortens recovery time.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Resuscitation & General Surgical Principles"
+    },
+    {
+      "id": 11258,
+      "question": "A 36 years old man sustains a gunshot wound to the left buttock. He is hemodynamically stable. There is no exit wound, and an X-Ray of the abdomen shows the bullet to be located in the right lower quadrant. Correct management of a suspected rectal injury would include:",
+      "options": [
+        "Barium studies of the colon and rectum.",
+        "Barium studies of the bullet track.",
+        "Sigmoidoscopy in the emergency room.",
+        "Endoscopy of the bullet track."
+      ],
+      "correct_option_id": 2,
+      "explanation": "For stable patients with suspected low rectal injury related to penetrating trauma, flexible sigmoidoscopy is the preferred initial diagnostic tool.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Trauma: Head, Chest, & Abdomen"
+    },
+    {
+      "id": 11259,
+      "question": "If injury to a major artery in an extremity is suspected, surgical exploration should be carried out regardless of the presence of palpable pulses distal to the injury. The rationale is that the presence of palpable distal pulses does not reliably exclude:",
+      "options": [
+        "Significant arterial injury.",
+        "Significant injury to adjacent motor nerve trunks.",
+        "Significant injury to adjacent long bones.",
+        "Subsequent development of a compartment syndrome and the need for Fasciotomy."
+      ],
+      "correct_option_id": 0,
+      "explanation": "Palpable pulses can persist even with significant intimal injury or branch vessel disruption that might lead to thrombosis or ischemia.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Vascular & Extremity Trauma"
+    },
+    {
+      "id": 11260,
+      "question": "An 18-year-old football player is kicked in the left flank. Three hours later he develops hematuria. His vital signs are stable. The diagnostic test performed reveal extravasation of contrast into the renal parenchyma. Treatment should consist of:",
+      "options": [
+        "Antibiotics and serial monitoring of blood count and vital signs.",
+        "Resumption of normal daily activity excluding sports.",
+        "Exploration and suture of the laceration.",
+        "Nephrostomy."
+      ],
+      "correct_option_id": 2,
+      "explanation": "Significant contrast extravasation with hematuria in a hemodynamically stable patient often signifies a renal laceration requiring surgical exploration and repair to control bleeding and prevent further injury.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Trauma: Head, Chest, & Abdomen"
+    },
+    {
+      "id": 11261,
+      "question": "An 18-year-old football player is kicked in the left flank. Three hours later he develops hematuria. His vital signs are stable. Initial diagnostic tests in the emergency room should include which of the following?",
+      "options": [
+        "Retrograde Urethrography.",
+        "Retrograde Cystography.",
+        "Intra-venous Pyelogram (IVP),",
+        "Diagnostic Peritoneal Lavage (DPL)."
+      ],
+      "correct_option_id": 2,
+      "explanation": "For assessment of solid organ injury (like the kidney) in hemodynamically stable patients, IVP or CT urography (if available/preferred) is the initial imaging modality.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Trauma: Head, Chest, & Abdomen"
+    },
+    {
+      "id": 11262,
+      "question": "A 22-year-old man sustains a gunshot wound to the abdomen. At exploration, an apparently solitary distal small-bowel injury is treated with resection and primary anastomosis. On 7 day post-operative, drains through small bowel fluid the operative incision. The fascia remains intact. The fistula output is 300 mL/day and there is no evidence of intra-abdominal sepsis, correct treatment includes:",
+      "options": [
+        "Early re-operation to close the fistula tract.",
+        "Broad-spectrum antibiotics.",
+        "Total parenteral nutrition.",
+        "Somatostatin to lower fistula output."
+      ],
+      "correct_option_id": 2,
+      "explanation": "High-output enteric fistulas often require nutritional support, with TPN being key initially, while awaiting spontaneous closure.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Trauma: Head, Chest, & Abdomen"
+    },
+    {
+      "id": 11263,
+      "question": "Following blunt abdominal trauma, a 12 year old girl develops upper abdominal pain nausea, and vomiting. An upper gastro-intestinal series reveals a total obstruction of the duodenum with coiled spring appearance in the 2nd and 3rd portions. Appropriate management is:",
+      "options": [
+        "Gastro-jejunostomy.",
+        "Naso-gastric suction and observation.",
+        "Duodenal resection.",
+        "Duodeno-jejunostomy."
+      ],
+      "correct_option_id": 1,
+      "explanation": "This finding is classic for duodenal hematoma; management is typically non-operative with decompression and observation, as it usually resolves spontaneously.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Trauma: Head, Chest, & Abdomen"
+    },
+    {
+      "id": 11264,
+      "question": "A patient is brought to the emergency room after a motor car accident. He is unconscious, deep scalp laceration, one dilated pupil, heart rate is 120 beats/min, blood pressure is 80/40 mmHg, and respiratory rate is 35 breaths/min. Despite rapid administration of 2L normal saline, the patient's vital signs do not change significantly. The injury likely to explain this patient's hypotension is:",
+      "options": [
+        "Epidural or Subdural hematoma.",
+        "Parenchymal brain hemorrhage.",
+        "Basilar skull fracture.",
+        "None of the above."
+      ],
+      "correct_option_id": 3,
+      "explanation": "Unresponsive hypotension despite fluid resuscitation in head trauma patients strongly suggests significant hemorrhage elsewhere (e.g., pelvis, femur, abdomen, chest), rather than the brain injury itself causing shock.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Trauma: Head, Chest, & Abdomen"
+    },
+    {
+      "id": 11265,
+      "question": "An 18-year-old male suffers a gunshot wound to the abdomen, resulting in multiple injuries to the small bowel and colon. Which of the following statement(s) is/are true concerning this patient's peri-operative management?",
+      "options": [
+        "A multi-agent antibiotic regimen is indicated.",
+        "Antibiotics should be continued post-operatively for at least 7 days.",
+        "Laparotomy, as a diagnostic test for post-operative sepsis, should be considered.",
+        "The incidence of post-operative wound or intra-abdominal infection would be increased in association with a colon injury."
+      ],
+      "correct_option_id": 3,
+      "explanation": "Colonic injury introduces high levels of enteric bacteria, significantly increasing the risk of both wound infection and intra-abdominal abscess formation compared to small bowel injuries alone.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Trauma: Head, Chest, & Abdomen"
+    },
+    {
+      "id": 11266,
+      "question": "A 30-years-old, otherwise healthy woman undergoes an open appendectomy with primary closure of the wound for a perforated appendix. No antibiotics are administered. Should this patient develop an intra-abdominal abscess, which of the following organisms would most likely be responsible?",
+      "options": [
+        "Escherichia coli.",
+        "Bacteroides.",
+        "Streptococcus faecalis.",
+        "Serratia."
+      ],
+      "correct_option_id": 1,
+      "explanation": "Bacteroides fragilis is the dominant anaerobic pathogen in the colon and is frequently the leading cause of intra-abdominal abscesses following perforation.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Burns & Local Infections"
+    },
+    {
+      "id": 11267,
+      "question": "Which of the following would lead you to an arteriogram and/or exploration of possible femoral artery injury from a gunshot wound?",
+      "options": [
+        "Proximity of the probable bullet path to the neuro-vascular bundle.",
+        "A small hematoma at the entrance site.",
+        "Systolic blood pressure 5% different in the two legs.",
+        "A bruit over the injury."
+      ],
+      "correct_option_id": 0,
+      "explanation": "Proximity of a high-velocity injury to a major vessel is a hard indication for mandatory arterial imaging or immediate surgical exploration, even if pulses are present.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Vascular & Extremity Trauma"
+    },
+    {
+      "id": 11268,
+      "question": "A 27-year-old man sustains a single gunshot wound to the left thigh. In the emergency room he is noted to have a large hematoma of his medial thigh. He complains of paraesthesia in his foot. On examination there are weak pulses palpable distal to the injury and the patient is unable to move his foot. The appropriate initial management of this patient would be:",
+      "options": [
+        "Angiography.",
+        "Immediate exploration and repair.",
+        "Fasciotomy of anterior compartment.",
+        "Observation for resolution of spasm."
+      ],
+      "correct_option_id": 1,
+      "explanation": "The combination of a large expanding hematoma, neurological deficit (paresthesia/weakness), and diminished pulses mandates emergent surgical exploration for potential vascular and nerve repair.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Vascular & Extremity Trauma"
+    },
+    {
+      "id": 11269,
+      "question": "A 30-year-old man is stabbed in the arm. There is no evidence of vascular injury, but he cannot flex his three radial digits. He has injured the:",
+      "options": [
+        "Flexor pollicis longus and flexor digitus medius tendons.",
+        "Radial nerve.",
+        "Median nerve.",
+        "Ulnar nerve."
+      ],
+      "correct_option_id": 2,
+      "explanation": "Inability to flex the radial three digits (thumb, index, middle finger) specifically implicates the median nerve supplying the flexor pollicis longus and lateral two fingers' flexor digitorum profundus.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Nerve & Soft Tissue Injury"
+    },
+    {
+      "id": 11270,
+      "question": "Which of the following fracture or dislocation of the extremities induced by blunt trauma is associated with significant vascular injuries?",
+      "options": [
+        "Knee dislocation.",
+        "Closed posterior elbow dislocation.",
+        "Mid-clavicular fracture.",
+        "Supracondylar fracture femur."
+      ],
+      "correct_option_id": 0,
+      "explanation": "Knee dislocations, especially posterior ones, carry a very high risk of popliteal artery injury requiring urgent assessment.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Vascular & Extremity Trauma"
+    },
+    {
+      "id": 11271,
+      "question": "A 26-year-old man sustains a gunshot wound to the left thigh; Exploration reveals that a 5-cm portion of superficial femoral artery destroyed. Appropriate management includes:",
+      "options": [
+        "Debridement and end-to-end anastomosis.",
+        "Debridement and repair with an interposition prosthetic graft.",
+        "Debridement and repair with an interposition vein graft.",
+        "Ligation and observation."
+      ],
+      "correct_option_id": 2,
+      "explanation": "For segmental losses in the superficial femoral artery (SFA), autologous vein reconstruction is generally the preferred method for optimal long-term patency.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Vascular & Extremity Trauma"
+    },
+    {
+      "id": 11272,
+      "question": "Following traumatic peripheral nerve transection, regrowth usually occurs at which of the following rates?",
+      "options": [
+        "0.1 mm per day.",
+        "1 mm per day.",
+        "5 mm per day.",
+        "1 cm per day."
+      ],
+      "correct_option_id": 1,
+      "explanation": "Peripheral nerve regeneration proceeds at an average rate of approximately 1 mm per day, or about 1 inch per month.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Nerve & Soft Tissue Injury"
+    },
+    {
+      "id": 11273,
+      "question": "A 60-year-old man is admitted to the coronary care unit with a large anterior wall myocardial infarction. On his 2nd hospital day he begins to complain of the sudden onset of numbness in his right foot and an inability to move his right foot. On physical examination, the right femoral, popliteal, and pedal pulses are no longer palpable. Vascular consultation is obtained. Diagnosis of acute arterial embolus is made. Which of the following statements concerning this condition is true?",
+      "options": [
+        "Appropriate management would be Embolectomy of the right femoral artery under general anesthesia.",
+        "Prophylactic exploration of the contra-lateral femoral artery should be done despite the presence of a normal pulse.",
+        "The source of the embolus is most likely the left ventricle.",
+        "Arteriography is mandatory prior to operative intervention."
+      ],
+      "correct_option_id": 2,
+      "explanation": "Acute arterial emboli in patients with recent MI (especially anterior wall) strongly suggest mural thrombi in the left ventricle as the source.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Vascular & Extremity Trauma"
+    },
+    {
+      "id": 11274,
+      "question": "A 65-year-old man admitted to the hospital for myocardial infarction. Two days after admission complains of severe, mid-abdominal pain. His cardiac index is 1.6. Physical examination is remarkable for an absence of peritoneal irritation or distention despite the patient's persistent complaint of severe pain. Serum lactate is 9 (normal <3). In managing this problem you should:",
+      "options": [
+        "Perform computed tomography.",
+        "Perform mesenteric angiography.",
+        "Perform laparoscopy.",
+        "Perform flexible Sigmoidoscopy to assess the distal colon and rectum."
+      ],
+      "correct_option_id": 1,
+      "explanation": "Clinical picture suggests acute mesenteric ischemia (AMI) in a setting of low cardiac output; angiography is required for diagnosis and potential intervention (e.g., thrombolysis or stenting).",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Vascular & Extremity Trauma"
+    },
+    {
+      "id": 11275,
+      "question": "Which statement regarding contrast venography is true?",
+      "options": [
+        "It is more accurate than Doppler analysis and B-mode ultrasound (duplex scan) at detecting thrombi in the deep veins responsible for pulmonary emboli.",
+        "It identifies incompetent deep, superficial, and perforating veins.",
+        "It is totally non-invasive, painless, and safe.",
+        "It is particularly sensitive in identifying the proximal extent of an ilio-femoral thrombus."
+      ],
+      "correct_option_id": 1,
+      "explanation": "Contrast venography directly visualizes the entire venous tree and is excellent for mapping incompetent valves, unlike ultrasound which is primarily used for thrombus detection.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Vascular & Extremity Trauma"
+    },
+    {
+      "id": 11276,
+      "question": "The best initial therapy for deep venous thrombosis (DVT) of the common femoral veins:",
+      "options": [
+        "Heparin.",
+        "Placement of a vena caval filter.",
+        "Streptokinase.",
+        "Venous thrombectomy."
+      ],
+      "correct_option_id": 0,
+      "explanation": "Therapeutic anticoagulation with heparin is the cornerstone of initial management for DVT to prevent propagation and embolization.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Vascular & Extremity Trauma"
+    },
+    {
+      "id": 11277,
+      "question": "A 75-year-old man is found by his internist to have an asymptomatic carotid bruit. The best initial diagnostic examination would be:",
+      "options": [
+        "Trans-cranial Doppler studies.",
+        "Doppler ultrasonography (duplex).",
+        "Spiral CT angiography.",
+        "Magnetic resonance arteriogram (MRA)."
+      ],
+      "correct_option_id": 1,
+      "explanation": "Duplex ultrasound is the preferred initial, non-invasive, cost-effective modality to assess carotid plaque morphology and degree of stenosis.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Vascular & Extremity Trauma"
+    },
+    {
+      "id": 11278,
+      "question": "A 55-year-old man with recent onset of atrial fibrillation presents with a cold, pulseless left lower extremity. He complains of left leg paraesthesia and is unable to dorsi-flex his toes. Following a successful popliteal Embolectomy, with restoration of palpable pedal pulses, the patient is still unable to dorsi-flex his toes. The next step in management should be:",
+      "options": [
+        "Electromyography (EMG).",
+        "Elevation of the left leg.",
+        "Immediate fasciotomy.",
+        "Application of a posterior splint."
+      ],
+      "correct_option_id": 2,
+      "explanation": "Persistent neurological deficit after successful revascularization indicates muscle ischemia injury, necessitating immediate fasciotomy to prevent compartment syndrome.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Vascular & Extremity Trauma"
+    },
+    {
+      "id": 11279,
+      "question": "Conservative management is generally recommended for patients with which of the following symptoms or signs of arterial insufficiency?",
+      "options": [
+        "Ischemic ulceration.",
+        "Ischemic neuropathy.",
+        "Claudication.",
+        "Toe gangrene."
+      ],
+      "correct_option_id": 2,
+      "explanation": "Intermittent claudication is the classic symptom of stable Peripheral Arterial Disease (PAD) and is usually managed conservatively with lifestyle changes and medication.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Vascular & Extremity Trauma"
+    },
+    {
+      "id": 11280,
+      "question": "Correct statements concerning anti-platelet therapy include:",
+      "options": [
+        "Aspirin has been shown to be an effective anti-platelet agent.",
+        "Most anti-platelet agents work by enhancing prostaglandin synthesis.",
+        "Anti-platelet agents have not been shown to increase patency rates of coronary artery bypass grafts.",
+        "The anti-platelet effect of aspirin will last for the life of the platelet, which is generally 20-25 days."
+      ],
+      "correct_option_id": 0,
+      "explanation": "Aspirin irreversibly inhibits COX-1, preventing thromboxane A2 synthesis, and this effect lasts for the life of the platelet (about 10 days in circulation, 7-10 days in aggregate).",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Vascular & Extremity Trauma"
+    },
+    {
+      "id": 11281,
+      "question": "The sub-clavian steal syndrome is associated with which of the following hemodynamic abnormalities?",
+      "options": [
+        "Venous congestion of upper extremities.",
+        "Occlusion of the carotid artery.",
+        "Occlusion of the vertebral artery.",
+        "Occlusion of the sub-clavian artery."
+      ],
+      "correct_option_id": 3,
+      "explanation": "Subclavian steal syndrome results from significant proximal occlusion of the subclavian artery, causing retrograde flow in the ipsilateral vertebral artery.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Vascular & Extremity Trauma"
+    },
+    {
+      "id": 11282,
+      "question": "Symptoms or signs of atherosclerotic occlusive disease of the bifurcation of the abdominal aorta (Leriche syndrome) include:",
+      "options": [
+        "Claudication of the buttock and thigh.",
+        "Causalgia of the lower leg.",
+        "Retrograde ejaculation.",
+        "Gangrene of the feet."
+      ],
+      "correct_option_id": 0,
+      "explanation": "Leriche syndrome triad includes bilateral claudication (buttock/thigh), absent/diminished femoral pulses, and impotence.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Vascular & Extremity Trauma"
+    },
+    {
+      "id": 11283,
+      "question": "Wasting of the intrinsic muscles of the hand can be expected to follow injury of the:",
+      "options": [
+        "Ulnar nerve.",
+        "Radial nerve.",
+        "Axillary nerve.",
+        "Thenar and hypothenar nerves."
+      ],
+      "correct_option_id": 0,
+      "explanation": "The ulnar nerve supplies most of the intrinsic muscles of the hand responsible for fine motor control, leading to wasting (claw hand) upon injury.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Nerve & Soft Tissue Injury"
+    },
+    {
+      "id": 11284,
+      "question": "Following traumatic peripheral nerve transection, regrowth usually occurs at which of the following rates?",
+      "options": [
+        "mm per day.",
+        "cm per day.",
+        "mm per day.",
+        "None of the above."
+      ],
+      "correct_option_id": 1,
+      "explanation": "Axonal regeneration proceeds at approximately 1 mm per day, which corresponds to roughly 1 cm per month.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Nerve & Soft Tissue Injury"
+    },
+    {
+      "id": 11285,
+      "question": "Compression of the affected nerve is produced by:",
+      "options": [
+        "Infection within the cavernous sinus.",
+        "Herniation of the uncal process of the temporal lobe.",
+        "Laceration of the corpus callosum by the falx cerebri.",
+        "Occult damage to the superior cervical ganglion.",
+        "Cerebellar hypoxia."
+      ],
+      "correct_option_id": 1,
+      "explanation": "Uncal herniation compresses structures against the tentorium, most commonly affecting the ipsilateral oculomotor nerve (CN III).",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Trauma: Head, Chest, & Abdomen"
+    },
+    {
+      "id": 11286,
+      "question": "Which of the following treatments is contraindicated in the management of frostbite of an extremity?",
+      "options": [
+        "Rapid warming in warm water.",
+        "Antibiotics and tetanus anti-serum.",
+        "Elevation of the extremity.",
+        "Early amputation of demarcated areas."
+      ],
+      "correct_option_id": 3,
+      "explanation": "Early amputation of demarcated (clearly dead) tissue is contraindicated; rewarming and observation are crucial, as demarcation may change.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Nerve & Soft Tissue Injury"
+    },
+    {
+      "id": 11287,
+      "question": "Proper treatment for frostbite consists of:",
+      "options": [
+        "Debridement of the affected part followed by silver sulfadiazine dressing.",
+        "Administration of corticosteroids.",
+        "Immersion of the affected part in water at 40-44 \u00b0C.",
+        "Re-warming of the affected part at room temperature."
+      ],
+      "correct_option_id": 2,
+      "explanation": "Rapid rewarming using controlled circulating warm water (40-44\u00b0C) is the mainstay of initial treatment for viable frostbite.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Nerve & Soft Tissue Injury"
+    },
+    {
+      "id": 11288,
+      "question": "A patient has burns in one leg (circumferential), one arm (circumferential) and the anterior trunk; what are the percentages of burn does the patient have?",
+      "options": [
+        "18%.",
+        "27%.",
+        "35%.",
+        "45%."
+      ],
+      "correct_option_id": 3,
+      "explanation": "Rule of Nines calculation: Left Leg (18%) + Left Arm (9%) + Anterior Trunk (18%) = 45%.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Burns & Local Infections"
+    },
+    {
+      "id": 11289,
+      "question": "The appropriate management of a deep partial-thickness burn is:",
+      "options": [
+        "Early excision and grafting.",
+        "Surgical debridement and dressings.",
+        "Dressings only.",
+        "Observation."
+      ],
+      "correct_option_id": 0,
+      "explanation": "Deep partial-thickness burns often have poor inherent healing potential and benefit significantly from early excision and skin grafting to reduce infection risk and scarring.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Burns & Local Infections"
+    },
+    {
+      "id": 11290,
+      "question": "The most frequent non-bacterial, opportunistic organism recovered from burn wounds is:",
+      "options": [
+        "Aspergillus.",
+        "Candida.",
+        "Fusarium.",
+        "Phycomycetes."
+      ],
+      "correct_option_id": 1,
+      "explanation": "Candida species are common fungal colonizers and opportunistic invaders in large, severe burn wounds.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Burns & Local Infections"
+    },
+    {
+      "id": 11291,
+      "question": "A 30 y. old man with an 80% burn; The intra-venous fluid should be given in the first 24 hours following burn injury is:",
+      "options": [
+        "9.2 liters of 5% glucose in Ringer's lactate.",
+        "14.4 liters of Ringer's lactate.",
+        "7.2 liters of 5% albumin solution.",
+        "5.5 liters of the penta-fraction component of hydroxyl-ethyl starch."
+      ],
+      "correct_option_id": 1,
+      "explanation": "Using the Parkland formula (4 mL/kg/%TBSA for the first 8 hours, then 2 mL/kg/%TBSA for the next 16 hours), a 60 kg patient with 80% burn requires approximately 19.2 L in 24 hours, with 14.4 L being Ringer's Lactate initially.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Burns & Local Infections"
+    },
+    {
+      "id": 11292,
+      "question": "The systemic response to a significant burn includes accelerated fluid losses. Which of the following statement(s) is/are true concerning tissue edema following a burn?",
+      "options": [
+        "Oedema in tissue immediately surrounding the burn is 2ry to local tissue oedema immediately surrounding the burn is 2nd disruption of the capillary bed.",
+        "Oedema in tissue immediately surrounding the burn is 2ry to the local release of vaso-active mediators such as prostaglandins, thromboxane and reactive oxygen radicals.",
+        "Tissue oedema following a burn occurs only in the tissues at/or immediately adjacent to the burn.",
+        "Pulmonary changes following a burn occur only 2ry to excessive fluid administration."
+      ],
+      "correct_option_id": 1,
+      "explanation": "Burn shock involves the release of massive amounts of vasoactive mediators (prostaglandins, leukotrienes) which increase capillary permeability systemically, causing edema.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Burns & Local Infections"
+    },
+    {
+      "id": 11293,
+      "question": "A 25y. old man is brought to the emergency room after sustaining burns during a fire in his apartment, He has blistering and erythema of his face, left upper extremity, and chest with frank charring of his right upper extremity. He is agitated, hypotensive, and tachycardia. Which one of the following statements concerning this patient's initial wound management is correct?",
+      "options": [
+        "Topical antibiotics should not be used, as they will encourage growth of the resistant organisms.",
+        "Escharotomy should only be performed if neurologic impairment is imminent.",
+        "Excision of areas of 3rd-degree or of deep 2nd-degree burns usually takes place 3-7 days after injury.",
+        "Split-thickness skin grafts over the Eschar of 3rd-degree burns should be performed immediately in order to prevent fluid loss."
+      ],
+      "correct_option_id": 2,
+      "explanation": "For deep partial thickness and full thickness burns, the standard time for excision and grafting is typically 3 to 7 days post-injury, once the shock phase has passed.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Burns & Local Infections"
+    },
+    {
+      "id": 11294,
+      "question": "Which of the following statement regarding the burn patient is correct?",
+      "options": [
+        "High-dose penicillin should be administrated prophylactically.",
+        "Tetanus prophylaxis is not necessary if the patient has been immunized in the previous 3 years.",
+        "The most sensitive indicator of adequacy of fluid resuscitation is heart rate.",
+        "The patient in need of immediate intubation for airway protection and oxygen administration."
+      ],
+      "correct_option_id": 3,
+      "explanation": "Airway compromise from smoke/heat inhalation requires immediate definitive airway management (intubation) to prevent fatal obstruction.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Burns & Local Infections"
+    },
+    {
+      "id": 11295,
+      "question": "A 12-year-old boy comes to emergency with pain and inflammation over the ball of his left foot and red streaks extending up the inner aspect of his leg. With history of removing a wood splinter from the sole of his foot on the previous day. The most likely infecting organism is:",
+      "options": [
+        "Clostridium perfingens.",
+        "Clostridium tetani.",
+        "Staphylococcus.",
+        "Streptococcus."
+      ],
+      "correct_option_id": 3,
+      "explanation": "The spreading red streaks ascending the limb suggest lymphangitis, which is most commonly caused by Group A Streptococcus following minor skin trauma.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Burns & Local Infections"
+    },
+    {
+      "id": 11296,
+      "question": "The appropriate antibiotic to describe while awaiting specific culture verification is:",
+      "options": [
+        "Penicillin.",
+        "Erythromycin.",
+        "Tetracycline.",
+        "Azathioprine."
+      ],
+      "correct_option_id": 0,
+      "explanation": "Penicillin remains the drug of choice for empirical coverage against susceptible Streptococci and Clostridia in soft tissue infections.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Burns & Local Infections"
+    },
+    {
+      "id": 11297,
+      "question": "Which of the following cases is considered clean contaminated wound:",
+      "options": [
+        "Open cholecystectomy for cholelithiasis.",
+        "Herniorrhaphy with mesh repair.",
+        "Appendectomy with walled-off abscess.",
+        "Gunshot wound to the abdomen with injuries to small bowel and sigmoid colon."
+      ],
+      "correct_option_id": 0,
+      "explanation": "Clean-contaminated wounds involve entry into the GI, respiratory, or genitourinary tracts without significant contamination, such as routine cholecystectomy.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Burns & Local Infections"
+    },
+    {
+      "id": 11298,
+      "question": "A patient with a localized wound infection after surgery should be treated with:",
+      "options": [
+        "Antibiotics and warm soaks to the wound.",
+        "Antibiotics and opening the wound.",
+        "Antibiotics alone.",
+        "Incision and drainage alone."
+      ],
+      "correct_option_id": 3,
+      "explanation": "Localized wound infections are best treated by relieving the collection of pus via incision and drainage (I&D), often negating the need for systemic antibiotics.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Burns & Local Infections"
+    },
+    {
+      "id": 11299,
+      "question": "The most appropriate treatment of a 4-cm hepatic abscess is:",
+      "options": [
+        "Antibiotic therapy alone.",
+        "Aspiration for culture and antibiotic therapy.",
+        "Percutaneous drainage and antibiotic therapy.",
+        "Operative exploration, open drainage of the abscess and antibiotic therapy."
+      ],
+      "correct_option_id": 2,
+      "explanation": "For abscesses greater than 3-4 cm, percutaneous catheter drainage guided by imaging is the definitive initial treatment, combined with appropriate antibiotics.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Vascular & Extremity Trauma"
+    },
+    {
+      "id": 11300,
+      "question": "Infections that require operative treatment include all of the following Except:",
+      "options": [
+        "Empyema.",
+        "Infected ascites.",
+        "Necrotizing fasciitis of the thigh.",
+        "Vascular graft infection."
+      ],
+      "correct_option_id": 1,
+      "explanation": "Infected ascites (peritonitis) is typically managed with aggressive antibiotics; the other conditions usually require drainage or debridement.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Burns & Local Infections"
+    },
+    {
+      "id": 11301,
+      "question": "The classic chest X-ray finding in anthrax is:",
+      "options": [
+        "Bilateral apical pneumo-thorax.",
+        "Widened mediastinum and effusions.",
+        "Basilar pneumonia.",
+        "Pulmonary oedema."
+      ],
+      "correct_option_id": 1,
+      "explanation": "Inhalation anthrax classically causes severe mediastinal lymphadenitis, visible on CXR as a widened mediastinum, often accompanied by pleural effusions.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Burns & Local Infections"
+    },
+    {
+      "id": 11303,
+      "question": "The drug of choice for clostridial myonecrosis is:",
+      "options": [
+        "Penicillin G.",
+        "Ampicillin.",
+        "Amikacin.",
+        "Cephalosporin."
+      ],
+      "correct_option_id": 0,
+      "explanation": "High-dose intravenous Penicillin G is the critical adjunctive medical treatment for gas gangrene, alongside surgical debridement.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Burns & Local Infections"
+    },
+    {
+      "id": 11304,
+      "question": "An infection with Staphylococcus aureus acquired in an intensive care unit should be treated initially with:",
+      "options": [
+        "Aztreonam.",
+        "Erythromycin.",
+        "Methicillin.",
+        "Vancomycin."
+      ],
+      "correct_option_id": 3,
+      "explanation": "If MRSA (Methicillin-Resistant S. aureus) is suspected, particularly in ICU-acquired infections, Vancomycin is the drug of choice pending susceptibility testing.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Burns & Local Infections"
+    },
+    {
+      "id": 11305,
+      "question": "Staphylococcus aureus produces each of the following Except:",
+      "options": [
+        "Cell wall peptidoglycan.",
+        "Entero-toxin.",
+        "Epidermolytic Toxin.",
+        "Neuro-exotoxin."
+      ],
+      "correct_option_id": 3,
+      "explanation": "S. aureus produces Enterotoxin and Epidermolytic Toxin (SSSS); Clostridium species (tetani/botulinum) are primary producers of potent neurotoxins.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Burns & Local Infections"
+    },
+    {
+      "id": 11306,
+      "question": "An Exo-toxin plays in important part in the pathogenicity of infection with each of the following Except:",
+      "options": [
+        "Clostridium botulinum.",
+        "Clostridium tetani.",
+        "Escherichia coli.",
+        "Staphylococcus aureus."
+      ],
+      "correct_option_id": 2,
+      "explanation": "While E. coli can produce exotoxins, the classic life-threatening toxigenic diseases (Botulism, Tetanus, Staphylococcal toxin mediated syndromes) rely heavily on exotoxins for their primary pathology.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Burns & Local Infections"
+    },
+    {
+      "id": 11307,
+      "question": "A 12-year-old boy comes to emergency with pain and inflammation over the ball of his left foot and red streaks extending up the inner aspect of his leg. With history of removing a wood splinter from the sole of his foot on the previous day. The most likely infecting organism is:",
+      "options": [
+        "Clostridium perfingens.",
+        "Clostridium tetani.",
+        "Staphylococcus.",
+        "Streptococcus."
+      ],
+      "correct_option_id": 3,
+      "explanation": "Red streaks along lymphatic channels indicate lymphangitis, which is most commonly caused by Streptococcus species in minor skin breaches.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Burns & Local Infections"
+    },
+    {
+      "id": 11308,
+      "question": "The appropriate antibiotic to describe while awaiting specific culture verification is:",
+      "options": [
+        "Penicillin.",
+        "Erythromycin.",
+        "Tetracycline.",
+        "Azathioprine."
+      ],
+      "correct_option_id": 0,
+      "explanation": "Penicillin is a broad-spectrum choice covering many common skin/soft tissue pathogens pending culture results.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Burns & Local Infections"
+    },
+    {
+      "id": 11309,
+      "question": "Fibro-cystic disease of the breast has been associated with elevated blood levels of:",
+      "options": [
+        "Testosterone.",
+        "Progesterone.",
+        "Estrogen.",
+        "Luteinizing hormone."
+      ],
+      "correct_option_id": 2,
+      "explanation": "Fibrocystic changes are frequently linked to fluctuating or relatively high levels of estrogen exposure.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Breast Pathology"
+    },
+    {
+      "id": 11310,
+      "question": "A 14-year-old black girl had her right breast removed because of a large mass. The tumor weighed 1400 g and was found to have a bulging, very firm, lobulated surface with a whorl-like pattern; This neoplasm is most likely:",
+      "options": [
+        "Cysto-sarcoma phylloides.",
+        "Intra-ductal carcinoma.",
+        "Malignant lymphoma.",
+        "Fibro-adenoma."
+      ],
+      "correct_option_id": 3,
+      "explanation": "Fibro-adenomas, especially massive forms in young women, can grow extremely large (macronodular fibroadenoma) and present with firm, lobulated masses.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Breast Pathology"
+    },
+    {
+      "id": 11311,
+      "question": "For pregnant women who are found to have breast cancer:",
+      "options": [
+        "Termination of a first-trimester pregnancy is mandatory.",
+        "Carcinoma of the breast behaves more aggressively in pregnant women owing to hormonal stimulation.",
+        "Breast conservation is inappropriate for 3rd-trimester pregnancies.",
+        "Administration of adjuvant chemotherapy is safe for the fetus during the 2nd and 3rd trimesters."
+      ],
+      "correct_option_id": 2,
+      "explanation": "Breast conservation therapy requires post-operative radiation, which is absolutely contraindicated during pregnancy, thus mandating mastectomy if pregnancy is advanced (3rd trimester).",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Breast Pathology"
+    },
+    {
+      "id": 11312,
+      "question": "True statements regarding Paget's disease of the breast include that:",
+      "options": [
+        "Usually precedes development of Paget's disease of bone.",
+        "Presents with nipple-areolar eczematous changes.",
+        "Does not involve axillary lymph nodes because it is a manifestation of intra-ductal carcinoma only.",
+        "Is adequately treated with wide excision when it presents as a mass."
+      ],
+      "correct_option_id": 1,
+      "explanation": "Paget disease classically manifests as a unilateral, eczematous, scaling lesion of the nipple and areola, representing intraductal spread.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Breast Pathology"
+    },
+    {
+      "id": 11313,
+      "question": "Incisional biopsy of a breast mass in a 35-year-old woman demonstrates a hyper-cellular fibro-adenoma (cysto-sarcoma phylloides) at the time of frozen section. Appropriate management of this lesion could include:",
+      "options": [
+        "Wide local excision with a rim of normal tissue.",
+        "Lumpectomy and axillary lymph-adenectomy.",
+        "Modified radical mastectomy.",
+        "Excision, post-operative radio-therapy, and systemic chemo-therapy."
+      ],
+      "correct_option_id": 0,
+      "explanation": "Cystosarcoma phylloides (even when borderline/malignant) is managed primarily with wide local excision with adequate margins, as lymphatic spread is rare.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Breast Pathology"
+    },
+    {
+      "id": 11314,
+      "question": "True statements about discharge from the nipple include:",
+      "options": [
+        "Intermittent thin or milky discharge can be physiologic.",
+        "Expressible nipple discharge is an indication for open biopsy.",
+        "Bloody discharge is indicative of an underlying malignancy.",
+        "Galactorrhoea is indicative of an underlying malignancy."
+      ],
+      "correct_option_id": 0,
+      "explanation": "Physiologic discharge (e.g., lactation, post-lactation residual fluid) is common and usually bilateral/multiductal.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Breast Pathology"
+    },
+    {
+      "id": 11315,
+      "question": "The incidence of breast cancer:",
+      "options": [
+        "Increases with increasing age.",
+        "Is related to dietary fat intake.",
+        "Is related to coffee intake.",
+        "Is related to vitamin C intake."
+      ],
+      "correct_option_id": 0,
+      "explanation": "Age is the single most significant non-modifiable risk factor for the development of sporadic breast cancer.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Breast Pathology"
+    },
+    {
+      "id": 11316,
+      "question": "Unilateral bloody nipple discharge from one duct orifice is most commonly caused by which of the following pathologic conditions?",
+      "options": [
+        "Paget's disease of the nipple.",
+        "Intra-ductal carcinoma.",
+        "Inflammatory carcinoma.",
+        "Sub-areolar mastitis."
+      ],
+      "correct_option_id": 1,
+      "explanation": "Bloody, unilateral discharge from a single duct is highly suspicious for an intraductal papilloma or underlying ductal carcinoma in situ (DCIS).",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Breast Pathology"
+    },
+    {
+      "id": 11317,
+      "question": "Which of the following conditions is associated with increased risk of breast cancer?",
+      "options": [
+        "Fibrocystic Mastopathy.",
+        "Severe hyperplasia.",
+        "Atypical hyperplasia.",
+        "Papillomatosis."
+      ],
+      "correct_option_id": 2,
+      "explanation": "Atypical ductal or lobular hyperplasia carries a significantly elevated lifetime risk compared to usual fibrocystic changes.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Breast Pathology"
+    },
+    {
+      "id": 11318,
+      "question": "Which of the following breast lesions are non-invasive malignancies?",
+      "options": [
+        "Intra-ductal carcinoma of the Comedo type.",
+        "Tubular carcinoma and mucinous carcinoma.",
+        "Infiltrating ductal carcinoma and lobular carcinoma.",
+        "Medullary carcinoma, including atypical medullary lesions."
+      ],
+      "correct_option_id": 0,
+      "explanation": "Comedo-type DCIS is an example of Ductal Carcinoma In Situ (DCIS), which is non-invasive malignancy confined to the ducts.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Breast Pathology"
+    },
+    {
+      "id": 11319,
+      "question": "Which of the following are the most important and clinically useful risk factors for breast cancer?",
+      "options": [
+        "Fibrocystic disease, age, and gender.",
+        "Cysts, family history in immediate relatives, and gender.",
+        "Age, gender, and family history in immediate relatives.",
+        "Obesity, nulli-parity, and alcohol use."
+      ],
+      "correct_option_id": 2,
+      "explanation": "Age and female gender are universal risk factors, while a significant family history (especially in first-degree relatives) is a major clinical predictor.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Breast Pathology"
+    },
+    {
+      "id": 11320,
+      "question": "Which of the following pathologic findings is the strongest contraindication to breast preservation (lumpectomy with breast radiation) as primary treatment for a newly diagnosed breast cancer?",
+      "options": [
+        "Grade 3, poorly differentiated, infiltrating ductal carcinoma.",
+        "Extensive intra-ductal cancer around the invasive lesion.",
+        "Tumor size > 3 cm.",
+        "+ve surgical margin for invasive cancer."
+      ],
+      "correct_option_id": 3,
+      "explanation": "Positive surgical margins following lumpectomy are the strongest predictor of local recurrence and necessitate re-excision or mastectomy.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Breast Pathology"
+    },
+    {
+      "id": 11321,
+      "question": "Which of the following statement(s) is/are true concerning radiation therapy after lumpectomy?",
+      "options": [
+        "The total dose given to the breast is usually in the range of 2500 to 3000 cGy.",
+        "Radiation to the axillary nodal bed is normally part of the procedure in most patients.",
+        "Long-term complications of radiation therapy include rib fractures and arm oedema.",
+        "Breast oedema and skin erythema usually resolves within a few weeks"
+      ],
+      "correct_option_id": 2,
+      "explanation": "Radiation therapy can cause chronic changes including skin fibrosis, lymphedema (if axilla treated), and, rarely, rib fractures or radiation pneumonitis.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Breast Pathology"
+    },
+    {
+      "id": 11322,
+      "question": "A 21-years old woman presents with an asymptomatic breast mass. Which the following statement(s) is/are true concerning her diagnosis and treatment?",
+      "options": [
+        "Mammography will play an important role in diagnosing the lesion.",
+        "Ultrasonography is often useful in the differential diagnosis of this lesion.",
+        "The mass should always be excised.",
+        "The lesion should be considered pre-malignant."
+      ],
+      "correct_option_id": 1,
+      "explanation": "In young women (<30 years), the dense breast tissue makes mammography low yield; ultrasound is the imaging modality of choice to differentiate cysts from solid masses.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Breast Pathology"
+    },
+    {
+      "id": 11323,
+      "question": "A 45-year-old woman presents with eczematous lesion of her nipple. Which of the following statement(s) is/are true concerning her diagnosis and management?",
+      "options": [
+        "Treatment is with warm compresses and oral antibiotics.",
+        "Biopsy of the nipple revealing malignant cells within the milk ducts is invariably associated with an underlying invasive carcinoma.",
+        "The appropriate treatment is mastectomy.",
+        "The lesion always represents a high-risk disease with a significant risk of subsequent metastatic disease."
+      ],
+      "correct_option_id": 2,
+      "explanation": "Paget disease (eczematous lesion) almost always signifies underlying ductal carcinoma in situ or invasive carcinoma, necessitating mastectomy if cancer is confirmed.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Breast Pathology"
+    },
+    {
+      "id": 11324,
+      "question": "Which of the following statement(s) is/are correct concerning cysto-sarcoma phyllodes?",
+      "options": [
+        "The tumor is most commonly seen in post-menopausal women.",
+        "Total mastectomy is necessary for all patients with this diagnosis.",
+        "Axillary lymph node dissection is not necessary for malignant cysto-sarcoma phyllodes.",
+        "Most patients with the malignant variant of cysto-sarcoma phyllodes die of metastatic disease."
+      ],
+      "correct_option_id": 2,
+      "explanation": "Cystosarcoma phylloides metastasizes hematogenously, not typically via lymphatics; thus, axillary dissection is rarely indicated.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Breast Pathology"
+    },
+    {
+      "id": 11325,
+      "question": "Which of the following statement(s) is/are true concerning adjuvant systemic therapy?",
+      "options": [
+        "Adjuvant Tamoxifen in post-menopausal, node-positive, ER-positive women is equivalent to cytotoxic chemotherapy.",
+        "Tamoxifen clearly improves survival in all hormonal receptor-positive patients.",
+        "CMF is associated with improved overall survival in both pre-menopausal and post-menopausal node-positive patients.",
+        "There is no evidence to suggest a role for chemo-therapy in node-negative patients"
+      ],
+      "correct_option_id": 0,
+      "explanation": "In postmenopausal node-positive ER+ patients, Tamoxifen offers a survival benefit similar in magnitude to that achieved by standard combination chemotherapy regimens like CMF.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Breast Pathology"
+    },
+    {
+      "id": 11326,
+      "question": "Which of the following statements about epigastric hernias is/are true concerning the diagnosis and management?",
+      "options": [
+        "A large peritoneal sac containing abdominal viscera is common.",
+        "At the time of surgical repair, a careful search for other defects should be performed.",
+        "Recurrent epigastric hernias after simple closure are un-common.",
+        "Patient with symptoms of a painful midline abdominal mass frequently will contain incarcerated small bowel."
+      ],
+      "correct_option_id": 1,
+      "explanation": "Epigastric hernias often occur as part of a spectrum of midline defects (linea alba); thorough exploration during repair is necessary to identify and close all associated defects.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Hernias & GI Lesions"
+    },
+    {
+      "id": 11327,
+      "question": "Which of the following hernias follows the path of the spermatic cord within the cremasteric muscle?",
+      "options": [
+        "Femoral.",
+        "Direct inguinal.",
+        "Indirect inguinal.",
+        "Spigelian."
+      ],
+      "correct_option_id": 2,
+      "explanation": "Indirect inguinal hernias enter through the internal ring, following the path of descent/course of the spermatic cord.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Hernias & GI Lesions"
+    },
+    {
+      "id": 11328,
+      "question": "A sliding Hernia :",
+      "options": [
+        "Has a high recurrence rate after repair.",
+        "Involves a retroperitoneal structure.",
+        "Is more common in the left groin.",
+        "Occur almost exclusively in women.",
+        "Inter-parietal."
+      ],
+      "correct_option_id": 1,
+      "explanation": "A sliding hernia occurs when a portion of the abdominal viscera (often sigmoid colon or cecum) adheres to and forms part of the hernia sac wall, making it retroperitoneal.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Hernias & GI Lesions"
+    },
+    {
+      "id": 11329,
+      "question": "When a sliding hernia is present in the right groin, the most common finding is:",
+      "options": [
+        "A loop of ileum fixed in the sac by adhesions.",
+        "A loop of ileum that makes up part of the posterior wall of the sac.",
+        "A loop of ileum that makes up the anterior wall of the sac.",
+        "The cecum that makes up the posterior wall of the sac."
+      ],
+      "correct_option_id": 3,
+      "explanation": "On the right side, the cecum is mobile and usually forms the posterior wall of the hernia sac in a sliding hernia.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Hernias & GI Lesions"
+    },
+    {
+      "id": 11331,
+      "question": "Spontaneous closure of which of the following congenital abnormalities of the abdominal wall generally occurs by the age of 4?",
+      "options": [
+        "Umbilical hernia.",
+        "Patent urachus.",
+        "Patent omphalo-mesenteric duct.",
+        "Omphalocele."
+      ],
+      "correct_option_id": 0,
+      "explanation": "Small umbilical hernias in children frequently close spontaneously by age 4-5 years.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Hernias & GI Lesions"
+    },
+    {
+      "id": 11332,
+      "question": "The following statement(s) is/are true concerning umbilical hernias in adults:",
+      "options": [
+        "Most umbilical hernias in adults are the result of a congenital defect carried into adulthood.",
+        "A para-umbilical hernia typically occurs in multiparous females.",
+        "The presence of ascites is a contraindication to elective umbilical hernia repair.",
+        "Incarceration is uncommon with umbilical hernias."
+      ],
+      "correct_option_id": 1,
+      "explanation": "Adult umbilical hernias result from fascial weakness (acquired), and these defects are common in multiparous women due to chronic increased intra-abdominal pressure.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Hernias & GI Lesions"
+    },
+    {
+      "id": 11333,
+      "question": "A number of special circumstances exist in the repair of inguinal hernias, The following statement(s) is/are correct:",
+      "options": [
+        "Simultaneous repair of bilateral direct inguinal hernias can be performed with no significant increased risk of recurrence.",
+        "The pre-peritoneal approach may be appropriate for repair of a multiple recurrent hernia.",
+        "A femoral hernia repair can best be accomplished using a Bassini's or Shouldice repair.",
+        "Management of an incarcerated inguinal hernia with obstruction is best approached via laparotomy incision."
+      ],
+      "correct_option_id": 1,
+      "explanation": "Recurrent hernias, especially multiple recurrences, are often managed via the pre-peritoneal approach (e.g., totally extra-peritoneal, or TEP) to place mesh below the retracted internal ring.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Hernias & GI Lesions"
+    },
+    {
+      "id": 11334,
+      "question": "True statements regarding squamous cell carcinoma of the lip include:",
+      "options": [
+        "The lesion arises in areas of persistent hyperkeratosis.",
+        "> 90% of cases occur on the upper lip.",
+        "Radiography is considered inappropriate treatment for these lesions.",
+        "Initially metastases are to the ipsilateral posterior cervical lymph nodes."
+      ],
+      "correct_option_id": 0,
+      "explanation": "SCC typically arises from actinic keratoses or areas of chronic sun damage (hyperkeratosis) and >90% occur on the lower lip.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Hernias & GI Lesions"
+    },
+    {
+      "id": 11335,
+      "question": "Which of the following statements regarding carpal tunnel syndrome is correct?",
+      "options": [
+        "It is rarely 2ry to trauma.",
+        "It common with pregnancy.",
+        "It most often causes parathesia during waking hours.",
+        "It is often associated with vascular compromise with surgical treatment involves release of the extensor retinaculum."
+      ],
+      "correct_option_id": 1,
+      "explanation": "Pregnancy hormones often cause fluid retention leading to swelling within the carpal tunnel, making CTS common during gestation.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Nerve & Soft Tissue Injury"
+    },
+    {
+      "id": 11336,
+      "question": "Management of leukoplakia of the oral cavity includes:",
+      "options": [
+        "Excisional biopsy of all lesions.",
+        "Application of topical antibiotics.",
+        "Ascertaining that dentures fit properly.",
+        "Application of topical chemo-therapeutic agents."
+      ],
+      "correct_option_id": 2,
+      "explanation": "If leukoplakia is suspected to be related to chronic mechanical irritation, ensuring proper fitting of dentures or removal of sharp teeth/restorations is an essential initial step.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Hernias & GI Lesions"
+    },
+    {
+      "id": 11337,
+      "question": "A 4.5kg infant, born following un-complicated labor and delivery, is noted to have a uni-lateral cleft lip and palate. The parents should be advised to:",
+      "options": [
+        "The child almost has other congenital anomalies.",
+        "Rehabilitation requires adjunctive speech therapy.",
+        "Lip repair is indicated at 1 year of age.",
+        "Palate repair is indicated prior to 6 mo. of age."
+      ],
+      "correct_option_id": 1,
+      "explanation": "Repair of the palate is usually done around 9-12 months to facilitate normal speech development; speech therapy is a critical component of long-term rehabilitation.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Hernias & GI Lesions"
+    },
+    {
+      "id": 11338,
+      "question": "A 40-year-old woman undergoes wide excision of a pigmented lesion of her thigh. Pathologic examination reveals malignant melanoma that is Clark's level IV. findings on examination of the groin are normal. The patient should be advised that:",
+      "options": [
+        "Radio-therapy will be an important part of subsequent therapy.",
+        "Immuno-therapy is an effective form of adjunctive treatment for metastatic malignant melanoma.",
+        "Groin dissection is not indicated unless and until groin nodes become palpable",
+        "Intra-lesional Bacille-Calmette-Guerin (BCG) administration has been found to aid in local control in the majority of patients."
+      ],
+      "correct_option_id": 2,
+      "explanation": "For intermediate thickness melanoma (Level IV), prophylactic lymph node dissection is generally not recommended unless nodes become clinically positive.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Hernias & GI Lesions"
+    },
+    {
+      "id": 11339,
+      "question": "The most common symptom after major pulmonary embolism is:",
+      "options": [
+        "Cough.",
+        "Dyspnea.",
+        "Hemoptysis.",
+        "Pleural pain."
+      ],
+      "correct_option_id": 1,
+      "explanation": "Sudden onset of dyspnea (shortness of breath) is the most frequently reported symptom following a significant pulmonary embolism.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Vascular & Extremity Trauma"
+    },
+    {
+      "id": 11340,
+      "question": "The first diagnostic study of choice for suspected deep venous thrombosis (DVT) of the lower extremity is:",
+      "options": [
+        "Contrast ultrasonography.",
+        "Impedance plethysmography.",
+        "Radio-active labeled fibrinogen uptake.",
+        "Real-time Doppler imaging."
+      ],
+      "correct_option_id": 3,
+      "explanation": "Duplex ultrasound (combining B-mode imaging and Doppler flow assessment) is the standard, non-invasive initial test for suspected DVT.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Vascular & Extremity Trauma"
+    },
+    {
+      "id": 11341,
+      "question": "Patients with phlebographically confirmed deep vein thrombosis of the calf.",
+      "options": [
+        "Can expect asymptomatic recovery if treated promptly with anti-coagulants.",
+        "May be effectively treated with low dose heparin.",
+        "May be effectively treated with pneumatic compression stockings.",
+        "Are at risk for significant pulmonary embolism."
+      ],
+      "correct_option_id": 3,
+      "explanation": "Any confirmed DVT carries a significant risk of clot migration to the pulmonary circulation, regardless of location (calf or thigh).",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Vascular & Extremity Trauma"
+    },
+    {
+      "id": 11342,
+      "question": "A 25-year-old woman presents to the emergency room complaining of redness and pain in her right foot up to the level of the mid-calf. She reports that her right leg has been swollen for at least 15 years, but her left leg has been normal. On physical examination she has a temperature of 39\u00b0C (102.2\u00b0 F). The left leg is normal. The right leg is not tender, but it is swollen from the inguinal ligament down and there is obvious cellulitis of the right foot. The patient's underlying problem is:",
+      "options": [
+        "Popliteal entrapment syndrome.",
+        "Acute arterial insufficiency.",
+        "Primary lymph-oedema.",
+        "Deep venous thrombosis."
+      ],
+      "correct_option_id": 2,
+      "explanation": "Chronic, non-tender, non-pitting swelling of long duration (15 years) suggests underlying primary lymphedema, which is now complicated by secondary cellulitis (due to infection susceptibility).",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Vascular & Extremity Trauma"
+    },
+    {
+      "id": 11343,
+      "question": "Which of the following statements are true concerning his hospital course (patient with multiple fractures including a comminuted fracture of the femur and multiple rib fractures)?",
+      "options": [
+        "Low-dose heparin should not be employed during his hospital stay.",
+        "Acute respiratory failure associated with petechiae of the head, torse and sclera would suggest a pulmonary embolism.",
+        "Early fracture fixation would decrease the incidence of fat emboli.",
+        "The placement of a Green-field filter should be avoided due to the risk of lower extremity edema."
+      ],
+      "correct_option_id": 2,
+      "explanation": "Early surgical stabilization of long bone fractures, particularly the femur, significantly reduces the risk of fat embolization syndrome.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Resuscitation & General Surgical Principles"
+    },
+    {
+      "id": 11344,
+      "question": "A 65-year-old patient presents with a painless, ulcerated lesion on his right cheek, 1 year ago with no lymph node enlargement neck reveals. The most likely diagnosis is:",
+      "options": [
+        "Melanoma.",
+        "Basal Cell Carcinoma (BCC).",
+        "Squamous Cell Carcinoma (SCC).",
+        "Sebaceous cyst."
+      ],
+      "correct_option_id": 1,
+      "explanation": "Painless, pearly, ulcerated lesions, especially on the face, are classic for Basal Cell Carcinoma, which rarely metastasizes.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Hernias & GI Lesions"
+    },
+    {
+      "id": 11345,
+      "question": "Patients with a penicillin allergy are Least likely to have a cross-reaction with:",
+      "options": [
+        "Synthetic penicillins.",
+        "Carbapenems.",
+        "Cephalosporins.",
+        "Monobactams."
+      ],
+      "correct_option_id": 3,
+      "explanation": "Monobactams, like Aztreonam, share structural features but lack the core beta-lactam ring structure of penicillins, resulting in minimal to no cross-reactivity.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Burns & Local Infections"
+    },
+    {
+      "id": 11346,
+      "question": "Which of the following is/are not associated with increased likelihood of infection after major elective surgery?",
+      "options": [
+        "Age over 70 years.",
+        "Chronic malnutrition.",
+        "Controlled diabetes mellitus.",
+        "Long-term steroid use",
+        "Infection at a remote body site."
+      ],
+      "correct_option_id": 2,
+      "explanation": "While uncontrolled diabetes increases risk, well-controlled diabetes mellitus does not generally elevate SSI risk compared to other major comorbidities.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Resuscitation & General Surgical Principles"
+    },
+    {
+      "id": 11254,
+      "question": "Advantages of epidural analgesia include:",
+      "options": [
+        "Earlier mobilization after surgery.",
+        "Earlier return of bowel function.",
+        "Decreased stress response to surgery.",
+        "Shorter hospitalizations.",
+        "All of the above."
+      ],
+      "correct_option_id": 4,
+      "explanation": "Epidural narcotics provide superior analgesia, leading to improved respiratory mechanics, reduced surgical stress response, and faster functional recovery.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Resuscitation & General Surgical Principles"
+    },
+    {
+      "id": 11347,
+      "question": "A 25-years old woman arrives in the emergency room following a motor car accident. She is acutely dyspneic with a respiratory rate 60 breaths/min Breath sounds are markedly diminished on the right side. The first step in managing the patient should be to:",
+      "options": [
+        "Imitation a chest x-ray",
+        "Administer intra-venous fluids",
+        "Draw arterial blood for blood gas determination",
+        "Decompress the right pleural space"
+      ],
+      "correct_option_id": 3,
+      "explanation": "Diminished breath sounds and acute dyspnea post-trauma strongly suggest a tension pneumothorax. This is a life-threatening emergency requiring immediate needle decompression prior to imaging or other interventions.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma and Critical Care",
+      "chapter": "Acute Trauma & Resuscitation"
+    },
+    {
+      "id": 11348,
+      "question": "In a stable patient, the management of a complete transaction of the common bile duct distal to the insertion of the cystic duct would be optimally performed with a:",
+      "options": [
+        "Choledocho-duodenostomy",
+        "Bridging of the injury with a T-tube",
+        "Roux-en-Y choledocho-jejunostomy",
+        "Primary end-to-end anastomosis of the transected bile duct"
+      ],
+      "correct_option_id": 2,
+      "explanation": "For complex or complete transection of the common bile duct, a Roux-en-Y choledochojejunostomy provides the most durable long-term reconstruction, bypassing distal scarring or tension. Primary anastomosis is rarely feasible for complete transection.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma and Critical Care",
+      "chapter": "Trauma Syndromes & Specific Repairs"
+    },
+    {
+      "id": 11349,
+      "question": "A 28-year-old man is brought to the emergency room for a severe head injury after a fall. Initially lethargic, he becomes comatose and does not move his right side. His left pupil is dilated and responds only sluggishly. The most common initial manifestation of increasing intra-cranial pressure in the victim of head trauma is:",
+      "options": [
+        "Change in level of consciousness",
+        "Ipsi-lateral side of hemorrhage) pupillary dilation",
+        "Contra-lateral pupillary dilation",
+        "Hemi-paresis"
+      ],
+      "correct_option_id": 0,
+      "explanation": "Altered mental status (lethargy progressing to coma) is often the earliest sign reflecting generalized cerebral dysfunction due to rising ICP. Uncal herniation classically causes ipsilateral pupillary dilation (CN III compression), but LOC change precedes this finding.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma and Critical Care",
+      "chapter": "Trauma Syndromes & Specific Repairs"
+    },
+    {
+      "id": 11350,
+      "question": "An elderly pedestrian collides with a bicycle-riding pizza delivery man and suffer a uni-lateral fracture of his pelvis through the obturator foramen. You would manage this injury by:",
+      "options": [
+        "External pelvic fixation",
+        "Angiographic visualization of the obturator artery with surgical exploration, if artery is injured or constricted",
+        "Direct surgical approach with internal fixation of the ischial ramus",
+        "Short-term bed rest until hemodynamic stability is assured and thereafter by gentle ambulation as pain permits"
+      ],
+      "correct_option_id": 3,
+      "explanation": "Unilateral rami fractures (e.g., through the obturator foramen) are typically stable injuries. Management focuses on pain control and early mobilization once hemodynamic stability is confirmed. Complex fixation is reserved for unstable or displaced fractures.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma and Critical Care",
+      "chapter": "Trauma Syndromes & Specific Repairs"
+    },
+    {
+      "id": 11351,
+      "question": "A patient is brought to the emergency room after a motor car accident. He is unconscious, deep scalp laceration, one dilated pupil, heart rate is 120 beats/min, blood pressure is 80/40 mmHg, and respiratory rate is 35 breaths/min. Despite rapid administration of 2L normal saline, the patient's vital signs do not change significantly. The injury likely to explain this patient's hypotension is:",
+      "options": [
+        "Epidural or Subdural hematoma",
+        "Parenchymal brain hemorrhage",
+        "Basilar skull fracture",
+        "None of the above"
+      ],
+      "correct_option_id": 3,
+      "explanation": "Isolated intracranial lesions (EDH/SDH) rarely cause profound hypotension resistant to initial fluid resuscitation unless associated with severe underlying extracranial hemorrhage. This patient's findings suggest profound hemorrhagic shock from another source (e.g., abdomen, pelvis, long bone fracture).",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma and Critical Care",
+      "chapter": "Acute Trauma & Resuscitation"
+    },
+    {
+      "id": 11352,
+      "question": "A 25y. old man is brought to the emergency room after sustaining burns during a fire in his apartment, He has blistering and erythema of his face, left upper extremity, and chest with frank charring of his right upper extremity. He is agitated, hypotensive, and tachycardia. Which one of the following statements concerning this patient's initial wound management is correct?",
+      "options": [
+        "Topical antibiotics should not be used, as they will encourage growth of the resistant organisms",
+        "Escharotomy should only be performed if neurologic impairment is imminent",
+        "Excision of areas of 3rd-degree or of deep 2nd-degree burns usually takes place 3-7 days after injury",
+        "Split-thickness skin grafts over the Eschar of 3rd-degree burns should be performed immediately in order to prevent fluid loss"
+      ],
+      "correct_option_id": 2,
+      "explanation": "Early excision of deep dermal and full-thickness burns is crucial, often optimally performed between 3 to 7 days post-injury when the zone of stasis has demarcated and the patient is physiologically stable enough for surgery. Topical antibiotics are standard care; escharotomy is for compromised circulation/ventilation.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma and Critical Care",
+      "chapter": "Burn Management & Infections"
+    },
+    {
+      "id": 11353,
+      "question": "Which of the following statement regarding the burn patient is correct?",
+      "options": [
+        "High-dose penicillin should be administrated prophylactically",
+        "Tetanus prophylaxis is not necessary if the patient has been immunized in the previous 3 years",
+        "The most sensitive indicator of adequacy of fluid resuscitation is heart rate",
+        "The patient in need of immediate intubation for airway protection and oxygen administration"
+      ],
+      "correct_option_id": 3,
+      "explanation": "Patients with significant facial burns, soot inhalation, or airway compromise symptoms require emergent intubation. Heart rate is a poor indicator of fluid status in burns due to sympathetic response; urine output and MAP are preferred. Routine prophylactic antibiotics are avoided.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma and Critical Care",
+      "chapter": "Burn Management & Infections"
+    },
+    {
+      "id": 11354,
+      "question": "The intense pain associated with a felon occurs because of:",
+      "options": [
+        "Bone involvement",
+        "A closed space infection",
+        "Digital artery thrombosis",
+        "Nail bed involvement"
+      ],
+      "correct_option_id": 1,
+      "explanation": "A felon is an infection of the pulp space of the fingertip, a rigid, closed fascial compartment. Rapid pressure buildup within this space leads to severe pain, risking compromise of the delicate structures supplied by the neurovascular bundles.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma and Critical Care",
+      "chapter": "Burn Management & Infections"
+    }
+  ]
+}
