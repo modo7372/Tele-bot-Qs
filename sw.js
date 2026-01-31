@@ -1,4 +1,4 @@
-const CACHE_NAME = 'medquiz-v2.7'; // هام: قم بتغيير هذا الرقم عند كل تحديث
+const CACHE_NAME = 'medquiz-v2.8'; // هام: قم بتغيير هذا الرقم عند كل تحديث
 const ASSETS = [
   './',
   './index.html',
