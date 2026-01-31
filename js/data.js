@@ -63,8 +63,9 @@ loadQuestions: async () => {
     },
 
     saveLeaderboard: (score) => {
-        if(State.sel.term && State.sel.subj) {
-            const ctx = `${State.sel.term}_${State.sel.subj}`.replace(/[.#$/\[\]]/g, "_");
+        // MODIFICATION 3.2: Use State.sel.terms (assuming first term for rank or user manually ensures single selection for ranking)
+        if(State.sel.terms.length === 1 && State.sel.subj) { 
+            const ctx = `${State.sel.terms[0]}_${State.sel.subj}`.replace(/[.#$/\[\]]/g, "_");
             db.ref(`ranks/${ctx}/${State.user.id}`).transaction((curr) => {
                 let old = (curr && typeof curr==='object') ? curr.score : (curr||0);
                 return { score: old + score, name: State.user.first_name };
@@ -72,4 +73,3 @@ loadQuestions: async () => {
         }
     }
 };
- 
