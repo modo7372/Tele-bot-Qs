@@ -1,6 +1,4 @@
---- START OF FILE sw.js.txt ---
-
-const CACHE_NAME = 'medquiz-v2.6'; // هام: قم بتغيير هذا الرقم عند كل تحديث
+const CACHE_NAME = 'medquiz-v2.7'; // هام: قم بتغيير هذا الرقم عند كل تحديث
 const ASSETS = [
   './',
   './index.html',
