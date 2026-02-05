@@ -5,7 +5,7 @@
 const ALLOWED_IDS = [5814737296, 2004826495]; 
 const ENABLE_SECURITY = false; 
 
-// Firebase Configuration
+// Firebase Configuration - Your existing config
 const FB_CONF = { 
     apiKey: "AIzaSyDEZFJmcXK2LxYAZ-Yjv_M1HbC6zi_qilg", 
     authDomain: "exambotdb.firebaseapp.com", 
@@ -53,8 +53,9 @@ const State = {
     showIrrelevantOptions: false,
     firebaseUid: null,
     isAnonymous: true,
-    sessionStartTime: null
+    sessionStartTime: null,
+    answers: []  // Track detailed answers
 };
 
-// Security Helpers
+// Security Helper
 const checkAdmin = (telegramId) => ALLOWED_IDS.includes(Number(telegramId));
