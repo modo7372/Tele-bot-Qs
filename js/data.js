@@ -115,6 +115,11 @@ const Data = {
     initSync: async () => {
         console.log("🔄 Starting data sync...");
         
+        // DEBUG - Check Telegram data
+        console.log("🔍 State.user:", State.user);
+        console.log("🔍 telegram_id:", State.user.telegram_id);
+        console.log("🔍 ALLOWED_IDS:", ALLOWED_IDS);
+        
         // Load local data first
         const local = {
             mistakes: JSON.parse(localStorage.getItem('mistakes') || '[]'),
@@ -125,19 +130,13 @@ const Data = {
         };
         State.localData = local;
         
-        // Update Firebase status in settings
-        const fbStatusEl = document.getElementById('firebase-status');
-        
         // Sync with Firebase
         if (currentUser) {
-            if(fbStatusEl) fbStatusEl.innerText = 'متصل بـ Firebase - UID: ' + currentUser.uid.substring(0, 8) + '...';
-            
             try {
                 const snapshot = await db.ref('user_progress/' + currentUser.uid).once('value');
                 const cloudData = snapshot.val();
                 
                 if (cloudData) {
-                    console.log("✅ Cloud data found, merging...");
                     State.localData = {
                         mistakes: Data.mergeArrays(local.mistakes, cloudData.mistakes),
                         archive: Data.mergeArrays(local.archive, cloudData.archive),
@@ -148,27 +147,36 @@ const Data = {
                     
                     if (State.localData.settings.theme) UI.setTheme(State.localData.settings.theme);
                     if (State.localData.settings.anim === false) UI.toggleAnim(false);
-                } else {
-                    console.log("ℹ️ No cloud data, using local");
                 }
                 
                 Data.saveData();
             } catch (e) {
                 console.log("⚠️ Firebase sync failed:", e.message);
-                if(fbStatusEl) fbStatusEl.innerText = 'خطأ في المزامنة: ' + e.message;
             }
-        } else {
-            if(fbStatusEl) fbStatusEl.innerText = 'غير متصل - سيتم استخدام التخزين المحلي فقط';
         }
         
-        // Check admin status
-        isAdmin = checkAdmin(State.user.telegram_id);
-        console.log("👤 Admin status:", isAdmin);
-        if (isAdmin) {
+        // ============================================
+        // ADMIN CHECK - FIXED VERSION
+        // ============================================
+        console.log("🔍 Checking admin...");
+        
+        // Get Telegram ID and convert to number
+        const tgId = State.user.telegram_id || State.user.id;
+        const tgIdNum = Number(tgId);
+        
+        console.log("🔍 tgId:", tgId, "->", tgIdNum);
+        console.log("🔍 ALLOWED_IDS:", ALLOWED_IDS);
+        console.log("🔍 Match?", ALLOWED_IDS.includes(tgIdNum));
+        
+        // CRITICAL: Use window.isAdmin to ensure it's global
+        window.isAdmin = ALLOWED_IDS.includes(tgIdNum);
+        console.log("👤 Admin status:", window.isAdmin);
+        
+        if (window.isAdmin) {
+            console.log("👔 Setting up admin panel...");
             Data.setupAdminPanel();
         }
     },
-
     mergeArrays: (local, cloud) => {
         if (!cloud) return local;
         if (!local) return cloud;
