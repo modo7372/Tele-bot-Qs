@@ -437,53 +437,63 @@ const Data = {
         db.ref('analytics').once('value').then(snap => {
             const data = snap.val();
             const dataStr = JSON.stringify(data, null, 2);
-            const filename = 'medquiz_analytics_' + new Date().toISOString().split('T')[0] + '.json';
             
-            // Define fallback logic as a function to avoid code duplication
-            const triggerFallback = () => {
-                console.warn("Direct download failed/blocked. Using clipboard fallback.");
-                navigator.clipboard.writeText(dataStr).then(() => {
-                    alert("📋 Data copied! Paste into text editor and save as: " + filename);
-                }).catch(() => {
-                    const modal = document.createElement('div');
-                    modal.innerHTML = `
-                        <div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:99999;display:flex;justify-content:center;align-items:center;padding:20px;">
-                            <div style="background:#fff;padding:20px;border-radius:10px;width:100%;max-width:600px;max-height:90vh;display:flex;flex-direction:column;gap:10px;">
-                                <h3>📊 Analytics Data</h3>
-                                <p>Download blocked by browser. Please copy manually:</p>
-                                <textarea style="width:100%;height:300px;font-family:monospace;" readonly>${dataStr}</textarea>
-                                <button onclick="this.parentElement.parentElement.parentElement.remove()" style="margin-top:10px;width:100%;padding:10px;cursor:pointer;">Close</button>
-                            </div>
+            // Create a secure modal for data display since downloads are sandboxed
+            const modal = document.createElement('div');
+            modal.innerHTML = `
+                <div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:99999;display:flex;justify-content:center;align-items:center;padding:20px;">
+                    <div style="background:#fff;padding:20px;border-radius:10px;width:100%;max-width:600px;max-height:90vh;display:flex;flex-direction:column;gap:15px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                            <h3 style="margin:0;color:#333">📊 Export Analytics</h3>
+                            <button class="close-modal-btn" style="background:none;border:none;font-size:24px;cursor:pointer;">&times;</button>
                         </div>
-                    `;
-                    document.body.appendChild(modal);
-                });
+                        <p style="margin:0;color:#666;font-size:14px;line-height:1.4;">
+                            ⚠️ Downloads are disabled in this environment.<br>
+                            Please copy the raw data below:
+                        </p>
+                        <textarea id="export-area" style="width:100%;height:300px;font-family:monospace;border:1px solid #ccc;border-radius:5px;padding:10px;font-size:12px;resize:none;" readonly>${dataStr}</textarea>
+                        <div style="display:flex;gap:10px;">
+                            <button id="btn-copy" style="flex:1;padding:12px;background:#4CAF50;color:white;border:none;border-radius:5px;cursor:pointer;font-weight:bold;font-size:16px;">
+                                📋 Copy to Clipboard
+                            </button>
+                            <button class="close-modal-btn-main" style="flex:1;padding:12px;background:#f44336;color:white;border:none;border-radius:5px;cursor:pointer;font-weight:bold;font-size:16px;">
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            
+            // Close handlers
+            const close = () => { if(document.body.contains(modal)) document.body.removeChild(modal); };
+            modal.querySelector('.close-modal-btn').onclick = close;
+            modal.querySelector('.close-modal-btn-main').onclick = close;
+            
+            // Copy handler
+            document.getElementById('btn-copy').onclick = function() {
+                const textArea = document.getElementById('export-area');
+                textArea.select();
+                
+                // Try modern API first, fall back to execCommand
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(dataStr).then(() => {
+                        this.innerText = "✅ Copied!";
+                        setTimeout(() => this.innerText = "📋 Copy to Clipboard", 2000);
+                    }).catch(err => {
+                        console.error("Clipboard API failed:", err);
+                        document.execCommand('copy');
+                        this.innerText = "✅ Copied (Manual)";
+                    });
+                } else {
+                    document.execCommand('copy');
+                    this.innerText = "✅ Copied (Legacy)";
+                }
             };
 
-            try {
-                const blob = new Blob([dataStr], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                
-                // Cleanup nicely - DO NOT throw errors here
-                setTimeout(() => {
-                    if (document.body.contains(a)) {
-                        document.body.removeChild(a);
-                    }
-                    window.URL.revokeObjectURL(url);
-                }, 100);
-            } catch (e) {
-                // This catch block handles synchronous errors during DOM manipulation
-                console.error("Export failed:", e);
-                triggerFallback();
-            }
         }).catch(err => {
              console.error("Firebase read error:", err);
-             alert("Error fetching data");
+             alert("Error fetching data: " + err.message);
         });
     },
     saveLeaderboard: (score) => {
