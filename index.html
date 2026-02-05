@@ -8,43 +8,55 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#6c5ce7">
     
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script> <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-    <link rel="stylesheet" href="css/style.css?v=3.7">
+    <link rel="stylesheet" href="css/style.css?v=4.0">
 </head>
 <body data-theme="light">
 
-    <div id="lock-screen">
+    <!-- Lock Screen for Unauthorized Access -->
+    <div id="lock-screen" style="display:none;">
         <div class="lock-icon">🔒</div>
         <h3>التطبيق محمي</h3>
         <p id="debug-id" class="debug-text"></p>
     </div>
 
+    <!-- Background Animation Canvas -->
     <canvas id="bg-canvas"></canvas>
 
+    <!-- Main App Container -->
     <div class="container" id="app-wrap" style="display:none;">
         
+        <!-- App Header -->
         <header class="glass-box app-header">
             <div class="user-profile-header" onclick="UI.openModal('m-set')">
                 <div id="u-avatar" class="u-avatar">👤</div>
                 <div class="u-info">
                     <span id="u-name">Guest</span>
                     <small id="db-status">جاري التحميل...</small>
+                    <small id="auth-status" style="color:orange;">جاري تسجيل الدخول...</small>
                 </div>
             </div>
             <div class="header-actions">
                 <button class="btn btn-ghost" onclick="Game.randomizeUI()" title="تغيير الألوان">🎨</button>
                 <button class="btn btn-ghost" onclick="Game.shareApp()" title="مشاركة البوت">📤</button>
                 <button class="btn btn-ghost" onclick="UI.openModal('m-set')" title="الإعدادات">⚙️</button>
-                </div>
+                <!-- Admin button will be added here automatically -->
+            </div>
         </header>
 
+        <!-- Main Content Area -->
         <main id="main-content">
             
+            <!-- HOME VIEW -->
             <div id="v-home" class="grid-menu">
+                
+                <!-- Progress Card -->
                 <div class="full-span-card glass-box home-stats-card" onclick="UI.showTotalStats()">
                     <div class="progress-ring" id="home-progress-ring">
                         <div class="progress-inner">
@@ -60,6 +72,8 @@
                         <small>إجابة صحيحة</small>
                     </div>
                 </div>
+
+                <!-- Filters Box -->
                 <div class="full-span-card glass-box filters-box">
                     <label>🔍 تصفية الأسئلة:</label>
                     <div class="chip-group" id="filter-opts">
@@ -74,29 +88,31 @@
                             <input type="checkbox" id="chk-instant" checked onchange="Game.toggleInstant(this.checked)">
                             <label for="chk-instant" style="cursor:pointer; color:var(--txt-main)">تصحيح فوري</label>
                         </div>
-                        
                         <div style="display:flex; align-items:center; gap:5px;">
                             <input type="checkbox" id="chk-auto-hide-main" checked onchange="UI.toggleAutoHide(this.checked)">
                             <label for="chk-auto-hide-main" style="cursor:pointer; color:var(--txt-main)">إخفاء الخيارات الخاطئة تلقائياً</label>
                         </div>
                     </div>
-
                 </div>
 
+                <!-- Random Quiz Button -->
                 <button class="btn btn-animated-grad full-span-card" onclick="Game.startGlobalRandom()" style="min-height:80px; flex-direction: column;">
                     <h3>🔀 اختبار عشوائي سريع</h3>
                     <small>1 - 50 سؤال عشوائي</small>
                 </button>
 
+                <!-- Menu Cards -->
                 <div class="menu-card" onclick="Game.startFlow('normal')">
                     <div class="icon">🚀</div>
                     <h3>بدء المذاكرة</h3>
                 </div>
+                
                 <div class="menu-card survival" onclick="Game.startFlow('survival')">
                     <div class="icon">🔥</div>
                     <h3>وضع البقاء</h3>
                     <small>خطأ = خسارة</small>
                 </div>
+                
                 <div class="menu-card time-attack" onclick="Game.startFlow('timeAttack')">
                     <div class="icon">⚡</div>
                     <h3>هجوم الوقت</h3>
@@ -116,16 +132,19 @@
                     <div class="icon">📚</div>
                     <h3>الأرشيف</h3>
                 </div>
+                
                 <div class="menu-card" onclick="Game.startFavMode()">
                     <div class="icon">⭐</div>
                     <h3>المفضلة</h3>
                 </div>
-                 <div class="menu-card" onclick="UI.openModal('m-search')">
+                 
+                <div class="menu-card" onclick="UI.openModal('m-search')">
                     <div class="icon">🔍</div>
                     <h3>بحث متقدم</h3>
                 </div>
             </div>
 
+            <!-- SELECTION VIEW -->
             <div id="v-select" class="glass-box hidden column-flex">
                 <div class="view-header">
                     <h3 id="sel-head">اختر</h3>
@@ -136,12 +155,12 @@
                 <div id="sel-body" class="sel-list scroll-shadow"></div>
                 <div class="view-footer sticky-footer">
                     <button id="btn-all" class="btn btn-sec hidden" onclick="Game.toggleAll()">الكل</button>
-                    
                     <button class="btn btn-sec" onclick="UI.goHome()">🏠 خروج</button>
                     <button class="btn btn-primary" onclick="Game.nextSel()">التالي ➡</button>
                 </div>
             </div>
 
+            <!-- QUIZ VIEW -->
             <div id="v-quiz" class="quiz-view hidden">
                 <div id="timer-bar"></div>
                 
@@ -190,6 +209,7 @@
                 </div>
             </div>
 
+            <!-- PDF VIEW -->
             <div id="v-pdf" class="hidden column-flex">
                  <div class="app-header glass-box" style="margin-bottom: 0;">
                      <h3>📝 وضع القراءة (PDF)</h3>
@@ -201,6 +221,9 @@
         </main>
     </div>
 
+    <!-- ================= MODALS ================= -->
+
+    <!-- Search Modal -->
     <div id="m-search" class="modal" onclick="if(event.target==this) UI.closeModal('m-search')">
         <div class="modal-content">
             <h3>🔍 بحث متقدم</h3>
@@ -221,9 +244,22 @@
         </div>
     </div>
 
+    <!-- Settings Modal -->
     <div id="m-set" class="modal" onclick="if(event.target==this) UI.closeModal('m-set')">
         <div class="modal-content settings-modal">
             <h3>⚙️ الإعدادات</h3>
+            
+            <!-- Firebase Auth Info -->
+            <div class="set-group" style="background:rgba(0,0,0,0.05); padding:10px; border-radius:8px; margin-bottom:15px;">
+                <label>🔥 حالة الاتصال:</label>
+                <div id="firebase-status" style="font-size:0.9em; color:var(--txt-sec);">
+                    جاري التحميل...
+                </div>
+                <button class="btn btn-sm btn-sec" onclick="Data.showFirebaseUid()" style="margin-top:5px;">
+                    عرض معرف المستخدم
+                </button>
+            </div>
+
             <div class="set-group">
                 <label>أنا:</label>
                 <div class="toggle-row">
@@ -235,10 +271,12 @@
                 <label style="margin-top:10px;">اختر الأفاتار:</label>
                 <div class="chip-grid" id="avatar-list"></div>
             </div>
+
             <div class="set-group">
                 <label>الثيم</label>
                 <div class="chip-group scrollable-chips" id="theme-list"></div>
             </div>
+
             <div class="set-group">
                 <label>تفضيلات التطبيق</label>
                 <div class="toggle-row"><span>🔊 الصوت</span><input type="checkbox" id="chk-sound" onchange="UI.toggleSound(this.checked)"></div>
@@ -266,6 +304,7 @@
         </div>
     </div>
 
+    <!-- Stats Modal -->
     <div id="m-stats" class="modal" onclick="if(event.target==this) UI.closeModal('m-stats')">
         <div class="modal-content">
             <h2>📊 التقرير التراكمي</h2>
@@ -281,6 +320,7 @@
         </div>
     </div>
 
+    <!-- Score Modal -->
     <div id="m-score" class="modal">
         <div class="modal-content">
             <h2>🏁 النتيجة</h2>
@@ -292,6 +332,7 @@
         </div>
     </div>
 
+    <!-- Archive Modal -->
     <div id="m-archive" class="modal" onclick="if(event.target==this) UI.closeModal('m-archive')">
         <div class="modal-content">
             <h3>📚 الأرشيف</h3>
@@ -303,6 +344,7 @@
         </div>
     </div>
 
+    <!-- Rank Modal -->
     <div id="m-rank" class="modal">
         <div class="modal-content">
             <h2 class="text-primary">🏆 الترتيب</h2>
@@ -316,6 +358,7 @@
         </div>
     </div>
 
+    <!-- Admin Analytics Modal (NEW) -->
     <div id="m-admin" class="modal" onclick="if(event.target==this) UI.closeModal('m-admin')">
         <div class="modal-content" style="max-width:500px; width:90%;">
             <h2>📊 Analytics Panel (Admin Only)</h2>
@@ -328,12 +371,185 @@
             </div>
         </div>
     </div>
+
+    <!-- ================= SCRIPTS ================= -->
     
-    <script src="js/config.js?v=4.3"></script>
-    <script src="js/data.js?v=4.3"></script>
-    <script src="js/ui.js?v=4.3"></script>
-    <script src="js/game.js?v=4.3"></script>
-    <script src="js/main.js?v=4.3"></script>
+    <script>
+        // ============================================
+        // CONFIGURATION & FIREBASE SETUP
+        // ============================================
+        
+        const ALLOWED_IDS = [5814737296, 2004826495]; 
+        const ENABLE_SECURITY = false; 
+        
+        // Firebase Configuration
+        const FB_CONF = { 
+            apiKey: "AIzaSyDEZFJmcXK2LxYAZ-Yjv_M1HbC6zi_qilg", 
+            authDomain: "exambotdb.firebaseapp.com", 
+            databaseURL: "https://exambotdb-default-rtdb.firebaseio.com", 
+            projectId: "exambotdb", 
+            storageBucket: "exambotdb.firebasestorage.app", 
+            messagingSenderId: "950600562980", 
+            appId: "1:950600562980:web:f993c22d45e5cfdd3d9bb1" 
+        };
+        
+        // Initialize Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(FB_CONF);
+        }
+        const db = firebase.database();
+        const auth = firebase.auth();
+        
+        // Enable debug logging to see errors
+        firebase.database.enableLogging(false); // Set to true for debugging
+        
+        // Global State
+        let currentUser = null;
+        let isAdmin = false;
+        
+        // Theme Definitions
+        const THEMES = [
+            { id: 'light', name: 'Light', color: '#f5f7fa' },
+            { id: 'dark', name: 'Dark', color: '#232526' },
+            { id: 'midnight', name: 'Midnight', color: '#0f2027' },
+            { id: 'forest', name: 'Forest', color: '#134E5E' },
+            { id: 'ocean', name: 'Ocean', color: '#4facfe' },
+            { id: 'sunset', name: 'Sunset', color: '#fda085' },
+            { id: 'lavender', name: 'Lavender', color: '#cd9cf2' },
+            { id: 'coffee', name: 'Coffee', color: '#3e2b26' },
+            { id: 'hacker', name: 'Hacker', color: '#000000' },
+            { id: 'minimal', name: 'Minimal', color: '#ffffff' },
+            { id: "crimson", name: "Crimson", color: "linear-gradient(135deg, #1f1c18 0%, #8a2323 100%)" },
+            { id: "mint", name: "Mint", color: "linear-gradient(120deg, #e0f2f1 0%, #b2dfdb 100%)" },
+            { id: "cyberpunk", name: "Cyberpunk", color: "linear-gradient(160deg, #0b0213 0%, #200d3d 100%)" }
+        ];
+        
+        // Application State
+        const State = {
+            user: { id: 0, first_name: "Guest", telegram_id: null },
+            allQ: [], pool: [], quiz: [], qIdx: 0, score: 0, mode: 'normal',
+            localData: { mistakes: [], archive: [], fav: [], settings: {}, sessions: [] },
+            sel: { terms:[], subj:null, lessons:[], chapters:[], limit:'All' },
+            showIrrelevantOptions: false,
+            firebaseUid: null,
+            isAnonymous: true,
+            sessionStartTime: null,
+            answers: []
+        };
+        
+        // Security Helper
+        const checkAdmin = (telegramId) => ALLOWED_IDS.includes(Number(telegramId));
+        
+        // Update auth status display
+        function updateAuthStatus(status, color) {
+            const el = document.getElementById('auth-status');
+            if(el) {
+                el.innerText = status;
+                el.style.color = color || 'orange';
+            }
+        }
+    </script>
+
+    <!-- Load other JS files -->
+    <script src="js/data.js?v=4.0"></script>
+    <script src="js/ui.js?v=4.0"></script>
+    <script src="js/game.js?v=4.0"></script>
     
+    <!-- Main Application Logic -->
+    <script>
+        // ============================================
+        // MAIN APPLICATION ENTRY
+        // ============================================
+        
+        window.onload = async () => {
+            const APP_VER = '4.0-firebase';
+            const savedVer = localStorage.getItem('app_version');
+            if(savedVer !== APP_VER) {
+                localStorage.setItem('app_version', APP_VER);
+                console.log('App Updated to ' + APP_VER);
+            }
+        
+            // Telegram Init
+            const tg = window.Telegram.WebApp; 
+            tg.ready(); 
+            tg.expand();
+            
+            State.user = tg.initDataUnsafe.user || {id: 0, first_name: "Guest", telegram_id: null};
+            State.user.telegram_id = State.user.id;
+            
+            const isAllowed = ALLOWED_IDS.includes(Number(State.user.id));
+            
+            // Security Check
+            const lockScreen = document.getElementById('lock-screen');
+            const appWrap = document.getElementById('app-wrap');
+            
+            if (ENABLE_SECURITY && !isAllowed) {
+                if(lockScreen) {
+                    lockScreen.innerHTML = `
+                        <div class="lock-icon">🔒</div>
+                        <h3>وضع محدود</h3>
+                        <p>أنت لا تستخدم تليجرام أو ID غير مصرح</p>
+                        <button onclick="enableDemoMode()" class="btn btn-primary" style="margin-top:15px;">
+                            متابعة في الوضع التجريبي
+                        </button>
+                        <p style="font-size:0.7em; opacity:0.5; margin-top:10px;">ID: ${State.user.id}</p>
+                    `;
+                    lockScreen.style.display = 'flex';
+                }
+            } else {
+                if(lockScreen) lockScreen.style.display = 'none';
+                if(appWrap) appWrap.style.display = 'flex';
+            }
+            
+            if(tg.isVersionAtLeast && tg.isVersionAtLeast('6.1')) {
+                const primary = getComputedStyle(document.body).getPropertyValue('--primary');
+                if(primary) tg.setHeaderColor(primary.trim());
+            }
+        
+            // Initialize Firebase Auth
+            updateAuthStatus('جاري تسجيل الدخول...', 'orange');
+            await Data.initAuth();
+            
+            // Data & Sync
+            await Data.initSync();
+            
+            // UI Init
+            UI.init();
+            
+            // Load Questions
+            Data.loadQuestions();
+        
+            // PWA Registration
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('sw.js').catch(e => console.log('SW Fail', e));
+            }
+        
+            // Setup Session
+            State.sessionStartTime = Date.now();
+        
+            // Keyboard Shortcuts
+            document.addEventListener('keydown', e => {
+                const vQuiz = document.getElementById('v-quiz');
+                if(!vQuiz || vQuiz.classList.contains('hidden')) return;
+                const k = e.key.toLowerCase(), m = {'a':0,'b':1,'c':2,'d':3,'e':4}; 
+                if(m[k]!==undefined) Game.answer(m[k]);
+                if(k===' '||k==='enter') { e.preventDefault(); Game.nextQ(); }
+                if(k==='arrowright') Game.nextQ();
+                if(k==='arrowleft') Game.navQ(-1);
+                if(k==='s') Game.toggleFav();
+            });
+        };
+        
+        window.enableDemoMode = () => {
+            document.getElementById('lock-screen').style.display = 'none';
+            document.getElementById('app-wrap').style.display = 'flex';
+            State.user.first_name = "Demo User";
+            State.user.id = 0;
+            State.user.telegram_id = 0;
+            State.isAnonymous = true;
+            UI.updateProfileDisplay();
+        };
+    </script>
+
 </body>
 </html>
