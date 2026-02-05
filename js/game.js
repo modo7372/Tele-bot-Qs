@@ -774,27 +774,27 @@ const Game = {
     
     // Ensure Zen Mode is disabled when finishing the quiz
     finishQuiz: () => {
-        // 1. Disable Zen Mode immediately if active
         if(document.getElementById('app-wrap').classList.contains('zen-mode-active')) {
             Game.toggleZenMode(false);
         }
 
-        // 2. Original finish logic
         Game.stopTimer();
         clearTimeout(autoNavTimer);
+    
         let finalScore = State.answers.filter(a => a.isCorrect).length;
         State.score = finalScore;
-        // Don't save leaderboard score if the session had no questions to answer competitively
+    
+        // Save analytics to Firebase
         if (State.mode !== 'view_mode' && State.mode !== 'search_mode' && State.quiz.length > 0) {
-            Data.saveLeaderboard(State.score);
+            Data.saveSessionAnalytics();
         }
+    
         AudioSys.playSuccess();
         const pct = State.quiz.length > 0 ? Math.round((State.score / State.quiz.length) * 100) : 0;
-        document.getElementById('sc-val').innerText = `${pct}%`;
-        document.getElementById('sc-txt').innerText = `${State.score} / ${State.quiz.length}`;
+        document.getElementById('sc-val').innerText = pct + '%';
+        document.getElementById('sc-txt').innerText = State.score + ' / ' + State.quiz.length;
         UI.openModal('m-score');
-    },
-    
+    },    
     toggleFav: () => {
         const id = State.quiz[State.qIdx].id;
         if(State.localData.fav.includes(id)) State.localData.fav = State.localData.fav.filter(x=>x!==id);
