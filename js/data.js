@@ -23,53 +23,42 @@ loadQuestions: async () => {
     },
     
     initSync: async () => {
+        // Load local data first
         const local = {
-            mistakes: JSON.parse(localStorage.getItem('mistakes')||'[]'),
-            archive: JSON.parse(localStorage.getItem('archive')||'[]'),
-            fav: JSON.parse(localStorage.getItem('fav')||'[]'),
-            settings: JSON.parse(localStorage.getItem('settings')||'{}')
+            mistakes: JSON.parse(localStorage.getItem('mistakes') || '[]'),
+            archive: JSON.parse(localStorage.getItem('archive') || '[]'),
+            fav: JSON.parse(localStorage.getItem('fav') || '[]'),
+            settings: JSON.parse(localStorage.getItem('settings') || '{}'),
+            sessions: JSON.parse(localStorage.getItem('sessions') || '[]')
         };
         State.localData = local;
-
-        if (window.Telegram.WebApp.isVersionAtLeast && window.Telegram.WebApp.isVersionAtLeast('6.9')) {
+    
+        // Sync with Firebase
+        if (currentUser) {
             try {
-                Telegram.WebApp.CloudStorage.getItem('medquiz_data', (err, val) => {
-                    if(!err && val) {
-                        const cloud = JSON.parse(val);
-                        State.localData = { ...local, ...cloud };
-                        if(State.localData.settings.theme) UI.setTheme(State.localData.settings.theme);
-                        if(State.localData.settings.anim === false) UI.toggleAnim(false);
-                        if(State.localData.settings.fontSize) UI.updateStyleVar('--font-size', State.localData.settings.fontSize);
-                    }
-                });
-            } catch(e) { console.log("Cloud init skipped: ", e); }
-        } else {
-             if(State.localData.settings.theme) UI.setTheme(State.localData.settings.theme);
+                const snapshot = await db.ref('user_progress/' + currentUser.uid).once('value');
+                const cloudData = snapshot.val();
+            
+                if (cloudData) {
+                    // Merge cloud data with local
+                    State.localData = {
+                        mistakes: Data.mergeArrays(local.mistakes, cloudData.mistakes),
+                        archive: Data.mergeArrays(local.archive, cloudData.archive),
+                        fav: Data.mergeArrays(local.fav, cloudData.fav),
+                        settings: { ...local.settings, ...cloudData.settings },
+                        sessions: cloudData.sessions || local.sessions
+                    };
+                
+                    if (State.localData.settings.theme) UI.setTheme(State.localData.settings.theme);
+                    if (State.localData.settings.anim === false) UI.toggleAnim(false);
+                }
+            
+                Data.saveData();
+            } catch (e) {
+                console.log("Firebase sync skipped, using local:", e);
+            }
         }
+    
+        isAdmin = checkAdmin(State.user.telegram_id);
+        if (isAdmin) Data.setupAdminPanel();
     },
-
-    saveData: () => {
-        const str = JSON.stringify(State.localData);
-        localStorage.setItem('mistakes', JSON.stringify(State.localData.mistakes));
-        localStorage.setItem('archive', JSON.stringify(State.localData.archive));
-        localStorage.setItem('fav', JSON.stringify(State.localData.fav));
-        localStorage.setItem('settings', JSON.stringify(State.localData.settings));
-        
-        if (window.Telegram.WebApp.isVersionAtLeast && window.Telegram.WebApp.isVersionAtLeast('6.9')) {
-            try {
-                Telegram.WebApp.CloudStorage.setItem('medquiz_data', str);
-            } catch(e){ console.log("Cloud save skipped"); }
-        }
-    },
-
-    saveLeaderboard: (score) => {
-        // MODIFICATION 3.2: Use State.sel.terms (assuming first term for rank or user manually ensures single selection for ranking)
-        if(State.sel.terms.length === 1 && State.sel.subj) { 
-            const ctx = `${State.sel.terms[0]}_${State.sel.subj}`.replace(/[.#$/\[\]]/g, "_");
-            db.ref(`ranks/${ctx}/${State.user.id}`).transaction((curr) => {
-                let old = (curr && typeof curr==='object') ? curr.score : (curr||0);
-                return { score: old + score, name: State.user.first_name };
-            });
-        }
-    }
-};
