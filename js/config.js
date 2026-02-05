@@ -2,7 +2,7 @@
 // CONFIGURATION & FIREBASE SETUP
 // ============================================
 
-const ALLOWED_IDS = [5814737296, 2004826495]; 
+const ALLOWED_IDS = [5814737296, ]; 
 const ENABLE_SECURITY = false; 
 
 // Firebase Configuration - Your existing config
