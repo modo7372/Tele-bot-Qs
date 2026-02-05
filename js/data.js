@@ -433,68 +433,47 @@ const Data = {
         `;
     },
 
-        exportAnalytics: () => {
-            db.ref('analytics').once('value').then(snap => {
-                const data = snap.val();
-                const dataStr = JSON.stringify(data, null, 2);
-                const filename = 'medquiz_analytics_' + new Date().toISOString().split('T')[0] + '.json';
-        
-                // Try multiple methods
-        
-                // Method 1: Download (works in normal browser)
-                const blob = new Blob([dataStr], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = filename;
-                document.body.appendChild(a);
-        
-                try {
-                    a.click();
-                    console.log("✅ Download started");
+    exportAnalytics: () => {
+        db.ref('analytics').once('value').then(snap => {
+            const data = snap.val();
+            const dataStr = JSON.stringify(data, null, 2);
+            const filename = 'medquiz_analytics_' + new Date().toISOString().split('T')[0] + '.json';
             
-                    // Check if download actually worked
-                    setTimeout(() => {
-                        if (document.body.contains(a)) {
-                            // Still in DOM = blocked
-                            document.body.removeChild(a);
-                            throw new Error("Download blocked");
-                        }
-                    }, 100);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
             
-                } catch (e) {
-                    // Method 2: Copy to clipboard (works in Telegram)
-                    document.body.removeChild(a);
-                    console.log("⚠️ Download blocked, trying clipboard...");
-            
-                    navigator.clipboard.writeText(dataStr).then(() => {
-                        alert("📋 Analytics data copied to clipboard!\n\n" +
-                              "Paste into a text editor and save as:\n" + filename);
-                    }).catch(() => {
-                        // Method 3: Show in modal for manual copy
-                        const modalHtml = `
-                            <div id=\"export-modal\" style=\"position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:99999;display:flex;justify-content:center;align-items:center;padding:20px;box-sizing:border-box;\">
-                                <div style=\"background:var(--glass-bg,#fff);padding:20px;border-radius:15px;width:100%;max-width:600px;max-height:90vh;overflow:auto;color:var(--txt-main,#000);\">\n                            <h3>📊 Export Analytics Data</h3>
-                                    <p style=\"margin:10px 0;\">Copy this JSON data:</p>
-                                    <textarea id=\"export-data\" style=\"width:100%;height:300px;font-family:monospace;font-size:11px;direction:ltr;text-align:left;\" readonly>${dataStr}</textarea>
-                                    <div style=\"margin-top:15px;display:flex;gap:10px;\">
-                                        <button onclick=\"document.getElementById('export-data').select();document.execCommand('copy');alert('Copied!')\" class=\"btn btn-primary\" style=\"flex:1;\">📋 Copy All</button>
-                                        <button onclick=\"document.getElementById('export-modal').remove()\" class=\"btn btn-sec\" style=\"flex:1;\">❌ Close</button>
-                                    </div>
-                                    <p style=\"margin-top:10px;font-size:0.8em;opacity:0.7;\">Save this text as: ${filename}</p>
-                                </div>
+            try {
+                a.click();
+                setTimeout(() => {
+                    if (document.body.contains(a)) {
+                        document.body.removeChild(a);
+                        throw new Error("Download blocked");
+                    }
+                }, 100);
+            } catch (e) {
+                document.body.removeChild(a);
+                navigator.clipboard.writeText(dataStr).then(() => {
+                    alert("📋 Data copied! Paste into text editor and save as: " + filename);
+                }).catch(() => {
+                    const modal = document.createElement('div');
+                    modal.innerHTML = `
+                        <div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:99999;display:flex;justify-content:center;align-items:center;padding:20px;">
+                            <div style="background:#fff;padding:20px;border-radius:10px;width:100%;max-width:600px;max-height:90vh;">
+                                <h3>📊 Analytics Data</h3>
+                                <textarea style="width:100%;height:300px;font-family:monospace;" readonly>${dataStr}</textarea>
+                                <button onclick="this.parentElement.parentElement.remove()" style="margin-top:10px;width:100%;padding:10px;">Close</button>
                             </div>
-                        `;
-                        document.body.insertAdjacentHTML('beforeend', modalHtml);
-                    });
-                }
-        
-            }).catch(e => {
-                console.error("Export failed:", e);
-                alert("❌ Export failed: " + e.message);
-            });
-        },
-
+                        </div>
+                    `;
+                    document.body.appendChild(modal);
+                });
+            }
+        });
+    },
     saveLeaderboard: (score) => {
         // Handled in saveSessionAnalytics
     }
