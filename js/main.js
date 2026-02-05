@@ -1,3 +1,7 @@
+// ============================================
+// MAIN APPLICATION ENTRY
+// ============================================
+
 window.onload = async () => {
     const APP_VER = '3.0-firebase';
     const savedVer = localStorage.getItem('app_version');
@@ -24,7 +28,7 @@ window.onload = async () => {
                 <div class="lock-icon">🔒</div>
                 <h3>وضع محدود</h3>
                 <p>أنت لا تستخدم تليجرام أو ID غير مصرح</p>
-                <button onclick="window.enableDemoMode()" class="btn btn-primary" style="margin-top:15px;">
+                <button onclick="enableDemoMode()" class="btn btn-primary" style="margin-top:15px;">
                     متابعة في الوضع التجريبي
                 </button>
                 <p style="font-size:0.7em; opacity:0.5; margin-top:10px;">ID: ${State.user.id}</p>
