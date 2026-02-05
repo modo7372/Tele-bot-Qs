@@ -59,8 +59,8 @@ const Data = {
             updateAuthStatus('فشل تسجيل الدخول', 'red');
             
             if (e.code === 'auth/admin-restricted-operation') {
-                alert("⚠️ خطأ: لم يتم تفعيل تسجيل الدخول المجهول في Firebase\\n\\n" +
-                      "يرجى الذهاب إلى:\\n" +
+                alert("⚠️ خطأ: لم يتم تفعيل تسجيل الدخول المجهول في Firebase\n\n" +
+                      "يرجى الذهاب إلى:\n" +
                       "Firebase Console > Authentication > Sign-in method > Anonymous > Enable");
             } else if (e.code === 'auth/network-request-failed') {
                 alert("⚠️ خطأ في الاتصال بالشبكة");
@@ -73,8 +73,8 @@ const Data = {
     // Show Firebase UID to user
     showFirebaseUid: () => {
         if (currentUser) {
-            alert("🔥 معرف المستخدم (Firebase UID):\\n\\n" + currentUser.uid + 
-                  "\\n\\nانسخ هذا المعرف وأضفه إلى:\\n" +
+            alert("🔥 معرف المستخدم (Firebase UID):\n\n" + currentUser.uid + 
+                  "\n\nانسخ هذا المعرف وأضفه إلى:\n" +
                   "Firebase Console > Database > admins/" + currentUser.uid + " = true");
         } else {
             alert("❌ لم يتم تسجيل الدخول بعد");
@@ -439,39 +439,51 @@ const Data = {
             const dataStr = JSON.stringify(data, null, 2);
             const filename = 'medquiz_analytics_' + new Date().toISOString().split('T')[0] + '.json';
             
-            const blob = new Blob([dataStr], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            
-            try {
-                a.click();
-                setTimeout(() => {
-                    if (document.body.contains(a)) {
-                        document.body.removeChild(a);
-                        throw new Error("Download blocked");
-                    }
-                }, 100);
-            } catch (e) {
-                document.body.removeChild(a);
+            // Define fallback logic as a function to avoid code duplication
+            const triggerFallback = () => {
+                console.warn("Direct download failed/blocked. Using clipboard fallback.");
                 navigator.clipboard.writeText(dataStr).then(() => {
                     alert("📋 Data copied! Paste into text editor and save as: " + filename);
                 }).catch(() => {
                     const modal = document.createElement('div');
                     modal.innerHTML = `
                         <div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:99999;display:flex;justify-content:center;align-items:center;padding:20px;">
-                            <div style="background:#fff;padding:20px;border-radius:10px;width:100%;max-width:600px;max-height:90vh;">
+                            <div style="background:#fff;padding:20px;border-radius:10px;width:100%;max-width:600px;max-height:90vh;display:flex;flex-direction:column;gap:10px;">
                                 <h3>📊 Analytics Data</h3>
+                                <p>Download blocked by browser. Please copy manually:</p>
                                 <textarea style="width:100%;height:300px;font-family:monospace;" readonly>${dataStr}</textarea>
-                                <button onclick="this.parentElement.parentElement.remove()" style="margin-top:10px;width:100%;padding:10px;">Close</button>
+                                <button onclick="this.parentElement.parentElement.parentElement.remove()" style="margin-top:10px;width:100%;padding:10px;cursor:pointer;">Close</button>
                             </div>
                         </div>
                     `;
                     document.body.appendChild(modal);
                 });
+            };
+
+            try {
+                const blob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                
+                // Cleanup nicely - DO NOT throw errors here
+                setTimeout(() => {
+                    if (document.body.contains(a)) {
+                        document.body.removeChild(a);
+                    }
+                    window.URL.revokeObjectURL(url);
+                }, 100);
+            } catch (e) {
+                // This catch block handles synchronous errors during DOM manipulation
+                console.error("Export failed:", e);
+                triggerFallback();
             }
+        }).catch(err => {
+             console.error("Firebase read error:", err);
+             alert("Error fetching data");
         });
     },
     saveLeaderboard: (score) => {
