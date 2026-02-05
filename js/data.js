@@ -1,53 +1,83 @@
-// ============================================
-// DATA MANAGEMENT & FIREBASE INTEGRATION
-// ============================================
-
 const Data = {
     
     // Initialize Anonymous Authentication
     initAuth: async () => {
+        console.log("🔥 Initializing Firebase Auth...");
+        
         try {
-            // Listen for auth state changes
-            auth.onAuthStateChanged((user) => {
+            // Check if already signed in
+            const unsubscribe = auth.onAuthStateChanged((user) => {
                 if (user) {
+                    console.log("✅ Already signed in:", user.uid);
                     currentUser = user;
                     State.firebaseUid = user.uid;
                     State.isAnonymous = user.isAnonymous;
-                    console.log('Auth state: User signed in', user.uid);
+                    updateAuthStatus('متصل', 'green');
                     
-                    // Link Telegram ID if available
+                    // Link Telegram ID
                     if (State.user.telegram_id && State.user.telegram_id !== 0) {
                         db.ref('user_links/' + user.uid).set({
                             telegram_id: State.user.telegram_id,
                             name: State.user.first_name,
                             last_seen: firebase.database.ServerValue.TIMESTAMP
-                        });
+                        }).catch(e => console.log("Link error:", e));
                     }
                 } else {
-                    console.log('Auth state: No user');
+                    console.log("⚠️ No user, signing in anonymously...");
                     Data.signInAnonymous();
                 }
+                unsubscribe();
             });
             
-            // Check current auth state
-            if (!auth.currentUser) {
-                await Data.signInAnonymous();
-            }
         } catch (e) {
-            console.error('Auth init error:', e);
+            console.error("❌ Auth init error:", e);
+            updateAuthStatus('خطأ في الاتصال', 'red');
         }
     },
 
     signInAnonymous: async () => {
         try {
+            updateAuthStatus('جاري تسجيل الدخول...', 'orange');
             const userCredential = await auth.signInAnonymously();
-            currentUser = userCredential.user;
-            State.firebaseUid = currentUser.uid;
-            State.isAnonymous = true;
-            localStorage.setItem('firebase_uid', currentUser.uid);
-            console.log('Signed in anonymously:', currentUser.uid);
+            
+            if (userCredential && userCredential.user) {
+                currentUser = userCredential.user;
+                State.firebaseUid = currentUser.uid;
+                State.isAnonymous = true;
+                localStorage.setItem('firebase_uid', currentUser.uid);
+                
+                console.log("✅✅✅ SIGNED IN! UID:", currentUser.uid);
+                updateAuthStatus('متصل', 'green');
+                
+                // Save to localStorage for persistence
+                localStorage.setItem('firebase_uid', currentUser.uid);
+                
+                return currentUser;
+            }
         } catch (e) {
-            console.error('Anonymous auth failed:', e);
+            console.error("❌ Anonymous auth FAILED:", e);
+            updateAuthStatus('فشل تسجيل الدخول', 'red');
+            
+            if (e.code === 'auth/admin-restricted-operation') {
+                alert("⚠️ خطأ: لم يتم تفعيل تسجيل الدخول المجهول في Firebase\\n\\n" +
+                      "يرجى الذهاب إلى:\\n" +
+                      "Firebase Console > Authentication > Sign-in method > Anonymous > Enable");
+            } else if (e.code === 'auth/network-request-failed') {
+                alert("⚠️ خطأ في الاتصال بالشبكة");
+            } else {
+                console.error("Error code:", e.code, "Message:", e.message);
+            }
+        }
+    },
+
+    // Show Firebase UID to user
+    showFirebaseUid: () => {
+        if (currentUser) {
+            alert("🔥 معرف المستخدم (Firebase UID):\\n\\n" + currentUser.uid + 
+                  "\\n\\nانسخ هذا المعرف وأضفه إلى:\\n" +
+                  "Firebase Console > Database > admins/" + currentUser.uid + " = true");
+        } else {
+            alert("❌ لم يتم تسجيل الدخول بعد");
         }
     },
 
@@ -83,6 +113,8 @@ const Data = {
     
     // Load user data from Firebase with local fallback
     initSync: async () => {
+        console.log("🔄 Starting data sync...");
+        
         // Load local data first
         const local = {
             mistakes: JSON.parse(localStorage.getItem('mistakes') || '[]'),
@@ -93,14 +125,19 @@ const Data = {
         };
         State.localData = local;
         
+        // Update Firebase status in settings
+        const fbStatusEl = document.getElementById('firebase-status');
+        
         // Sync with Firebase
         if (currentUser) {
+            if(fbStatusEl) fbStatusEl.innerText = 'متصل بـ Firebase - UID: ' + currentUser.uid.substring(0, 8) + '...';
+            
             try {
                 const snapshot = await db.ref('user_progress/' + currentUser.uid).once('value');
                 const cloudData = snapshot.val();
                 
                 if (cloudData) {
-                    // Merge cloud data with local
+                    console.log("✅ Cloud data found, merging...");
                     State.localData = {
                         mistakes: Data.mergeArrays(local.mistakes, cloudData.mistakes),
                         archive: Data.mergeArrays(local.archive, cloudData.archive),
@@ -111,16 +148,22 @@ const Data = {
                     
                     if (State.localData.settings.theme) UI.setTheme(State.localData.settings.theme);
                     if (State.localData.settings.anim === false) UI.toggleAnim(false);
+                } else {
+                    console.log("ℹ️ No cloud data, using local");
                 }
                 
                 Data.saveData();
             } catch (e) {
-                console.log("Firebase sync skipped, using local:", e);
+                console.log("⚠️ Firebase sync failed:", e.message);
+                if(fbStatusEl) fbStatusEl.innerText = 'خطأ في المزامنة: ' + e.message;
             }
+        } else {
+            if(fbStatusEl) fbStatusEl.innerText = 'غير متصل - سيتم استخدام التخزين المحلي فقط';
         }
         
         // Check admin status
         isAdmin = checkAdmin(State.user.telegram_id);
+        console.log("👤 Admin status:", isAdmin);
         if (isAdmin) {
             Data.setupAdminPanel();
         }
@@ -152,15 +195,21 @@ const Data = {
         if (currentUser) {
             try {
                 await db.ref('user_progress/' + currentUser.uid).update(dataToSave);
+                console.log("💾 Saved to Firebase");
             } catch (e) {
-                console.log("Firebase save failed, kept local:", e);
+                console.log("⚠️ Firebase save failed:", e.message);
             }
         }
     },
 
     // NEW: Save detailed session analytics
     saveSessionAnalytics: async () => {
-        if (!State.quiz.length || State.mode === 'view_mode') return;
+        if (!State.quiz.length || State.mode === 'view_mode') {
+            console.log("⏭️ Skipping analytics");
+            return;
+        }
+        
+        console.log("📊 Saving session analytics...");
         
         const sessionData = {
             user_id: currentUser ? currentUser.uid : 'anonymous',
@@ -203,16 +252,18 @@ const Data = {
                     name: State.user.first_name,
                     timestamp: sessionData.timestamp
                 });
+                console.log("🏆 Leaderboard updated");
             }
             
             // Save detailed analytics
             const sessionKey = db.ref('analytics/sessions').push().key;
             await db.ref('analytics/sessions/' + sessionKey).set(sessionData);
+            console.log("✅ Analytics saved:", sessionKey);
             
             await Data.updateUserStats(sessionData);
             
         } catch (e) {
-            console.log("Analytics save failed:", e);
+            console.error("❌ Analytics save failed:", e);
         }
     },
 
@@ -252,7 +303,7 @@ const Data = {
             if (ans.is_correct) current.subjects[ans.subject].chapters[ans.chapter].correct++;
         });
         
-        // Identify weak areas (<60% accuracy)
+        // Identify weak areas
         const weakAreas = [];
         const strongAreas = [];
         Object.entries(current.subjects).forEach(([subj, data]) => {
@@ -264,10 +315,11 @@ const Data = {
         current.strong_areas = strongAreas;
         
         await statsRef.set(current);
+        console.log("👤 User stats updated");
     },
 
     setupAdminPanel: () => {
-        console.log('Admin user detected');
+        console.log('👔 Admin detected');
         setTimeout(() => {
             const header = document.querySelector('.header-actions');
             if (header && !document.getElementById('btn-admin')) {
@@ -278,12 +330,18 @@ const Data = {
                 adminBtn.title = 'Analytics Panel';
                 adminBtn.onclick = () => { Data.loadAnalytics(); UI.openModal('m-admin'); };
                 header.appendChild(adminBtn);
+                console.log("📊 Admin button added");
             }
         }, 500);
     },
 
     loadAnalytics: async () => {
-        if (!isAdmin) return;
+        if (!isAdmin) {
+            alert("❌ غير مصرح");
+            return;
+        }
+        
+        console.log("📈 Loading analytics...");
         try {
             const [sessionsSnap, usersSnap] = await Promise.all([
                 db.ref('analytics/sessions').limitToLast(100).once('value'),
@@ -292,9 +350,11 @@ const Data = {
             
             const sessions = sessionsSnap.val() || {};
             const users = usersSnap.val() || {};
+            console.log("📊 Data:", Object.keys(sessions).length, "sessions,", Object.keys(users).length, "users");
             Data.renderAnalytics({ sessions, users });
         } catch (e) {
-            console.error("Failed to load analytics:", e);
+            console.error("Failed:", e);
+            alert("خطأ في تحميل التحليلات: " + e.message);
         }
     },
 
@@ -378,6 +438,6 @@ const Data = {
     },
 
     saveLeaderboard: (score) => {
-        // Now handled in saveSessionAnalytics
+        // Handled in saveSessionAnalytics
     }
 };
