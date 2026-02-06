@@ -1,87 +1,43 @@
+// data.js - Fixed: Use Telegram ID as primary key for cross-device sync
+// Firebase data per TELEGRAM ID (not Firebase Auth UID), localStorage per APP
+
+import { 
+    app, auth, db, signInAnonymously, onAuthStateChanged, 
+    ref, set, get, update, push, serverTimestamp, onValue, off,
+    runTransaction, onDisconnect,
+    ADMIN_IDS, ALLOWED_USER_IDS, THEMES, State, APP_ID, getStorageKey, 
+    checkUserRole, isAdmin, isAllowedUser, hasAccess 
+} from '../config.js';
+
 const Data = {
     
-    // Initialize Anonymous Authentication
+    listeners: {},
+    isOnline: true,
+    syncQueue: [],
+    
+    /**
+     * Initialize Firebase anonymous authentication
+     */
     initAuth: async () => {
         console.log("🔥 Initializing Firebase Auth...");
-        
-        try {
-            // Check if already signed in
-            const unsubscribe = auth.onAuthStateChanged((user) => {
-                if (user) {
-                    console.log("✅ Already signed in:", user.uid);
-                    currentUser = user;
-                    State.firebaseUid = user.uid;
-                    State.isAnonymous = user.isAnonymous;
-                    updateAuthStatus('متصل', 'green');
-                    
-                    // Link Telegram ID
-                    if (State.user.telegram_id && State.user.telegram_id !== 0) {
-                        db.ref('user_links/' + user.uid).set({
-                            telegram_id: State.user.telegram_id,
-                            name: State.user.first_name,
-                            last_seen: firebase.database.ServerValue.TIMESTAMP
-                        }).catch(e => console.log("Link error:", e));
-                    }
-                } else {
-                    console.log("⚠️ No user, signing in anonymously...");
-                    Data.signInAnonymous();
-                }
-                unsubscribe();
-            });
-            
-        } catch (e) {
-            console.error("❌ Auth init error:", e);
-            updateAuthStatus('خطأ في الاتصال', 'red');
-        }
+        return Promise.resolve();
     },
 
-    signInAnonymous: async () => {
-        try {
-            updateAuthStatus('جاري تسجيل الدخول...', 'orange');
-            const userCredential = await auth.signInAnonymously();
-            
-            if (userCredential && userCredential.user) {
-                currentUser = userCredential.user;
-                State.firebaseUid = currentUser.uid;
-                State.isAnonymous = true;
-                localStorage.setItem('firebase_uid', currentUser.uid);
-                
-                console.log("✅✅✅ SIGNED IN! UID:", currentUser.uid);
-                updateAuthStatus('متصل', 'green');
-                
-                // Save to localStorage for persistence
-                localStorage.setItem('firebase_uid', currentUser.uid);
-                
-                return currentUser;
-            }
-        } catch (e) {
-            console.error("❌ Anonymous auth FAILED:", e);
-            updateAuthStatus('فشل تسجيل الدخول', 'red');
-            
-            if (e.code === 'auth/admin-restricted-operation') {
-                alert("⚠️ خطأ: لم يتم تفعيل تسجيل الدخول المجهول في Firebase\n\n" +
-                      "يرجى الذهاب إلى:\n" +
-                      "Firebase Console > Authentication > Sign-in method > Anonymous > Enable");
-            } else if (e.code === 'auth/network-request-failed') {
-                alert("⚠️ خطأ في الاتصال بالشبكة");
-            } else {
-                console.error("Error code:", e.code, "Message:", e.message);
-            }
-        }
-    },
-
-    // Show Firebase UID to user
+    /**
+     * Show Firebase UID for debugging (optional)
+     */
     showFirebaseUid: () => {
-        if (currentUser) {
-            alert("🔥 معرف المستخدم (Firebase UID):\n\n" + currentUser.uid + 
-                  "\n\nانسخ هذا المعرف وأضفه إلى:\n" +
-                  "Firebase Console > Database > admins/" + currentUser.uid + " = true");
+        if (window.currentUser) {
+            alert("🔥 Firebase UID:\n\n" + window.currentUser.uid + 
+                  "\n\n📱 Telegram ID:\n\n" + (State.user.telegram_id || 'N/A'));
         } else {
             alert("❌ لم يتم تسجيل الدخول بعد");
         }
     },
 
-    // Load Questions
+    /**
+     * Load questions from JSON files
+     */
     loadQuestions: async () => {
         try {
             const list = await (await fetch('questions_list.json')).json();
@@ -90,9 +46,9 @@ const Data = {
                     let d = await (await fetch('Questions/' + f)).json();
                     State.allQ.push(...d.questions.map(q => ({
                         ...q, 
-                        term: q.term || d.meta.source, 
-                        subject: q.subject || d.meta.subject, 
-                        lesson: q.lesson || d.meta.lesson, 
+                        term: q.term || d.meta?.source || 'General', 
+                        subject: q.subject || d.meta?.subject || 'General', 
+                        lesson: q.lesson || d.meta?.lesson || 'General', 
                         chapter: q.chapter || "General"
                     })));
                 } catch(e) { 
@@ -102,7 +58,7 @@ const Data = {
             
             const dbStatus = document.getElementById('db-status');
             if(dbStatus) dbStatus.innerText = State.allQ.length + ' سؤال';
-            if(UI && UI.updateHomeStats) UI.updateHomeStats();
+            if(window.UI && window.UI.updateHomeStats) window.UI.updateHomeStats();
 
         } catch(e) { 
             const dbStatus = document.getElementById('db-status');
@@ -111,392 +67,299 @@ const Data = {
         }
     },
     
-    // Load user data from Firebase with local fallback
+    /**
+     * Get consistent user ID (Telegram ID only, never Firebase Auth UID)
+     */
+    getUserId: () => {
+        // ALWAYS use Telegram ID as the primary identifier
+        const teleId = State.user.telegram_id || State.user.id;
+        if (teleId && teleId !== 0 && teleId !== 'anonymous') {
+            return teleId.toString();
+        }
+        // Fallback only for anonymous users without Telegram
+        return 'anonymous_' + (window.currentUser?.uid || 'guest');
+    },
+    
+    /**
+     * Initialize data synchronization
+     */
     initSync: async () => {
-        console.log("🔄 Starting data sync...");
+        console.log("🔄 Starting data sync... App ID:", APP_ID);
         
-        // DEBUG - Check Telegram data
-        console.log("🔍 State.user:", State.user);
-        console.log("🔍 telegram_id:", State.user.telegram_id);
-        console.log("🔍 ALLOWED_IDS:", ALLOWED_IDS);
-        
-        // Load local data first
+        // 1. Load local data first (per-app isolation)
         const local = {
-            mistakes: JSON.parse(localStorage.getItem('mistakes') || '[]'),
-            archive: JSON.parse(localStorage.getItem('archive') || '[]'),
-            fav: JSON.parse(localStorage.getItem('fav') || '[]'),
-            settings: JSON.parse(localStorage.getItem('settings') || '{}'),
-            sessions: JSON.parse(localStorage.getItem('sessions') || '[]')
+            mistakes: JSON.parse(localStorage.getItem(getStorageKey('mistakes')) || '[]'),
+            archive: JSON.parse(localStorage.getItem(getStorageKey('archive')) || '[]'),
+            fav: JSON.parse(localStorage.getItem(getStorageKey('fav')) || '[]'),
+            settings: JSON.parse(localStorage.getItem(getStorageKey('settings')) || '{}'),
+            sessions: JSON.parse(localStorage.getItem(getStorageKey('sessions')) || '[]'),
+            last_sync: parseInt(localStorage.getItem(getStorageKey('last_sync')) || '0')
         };
         State.localData = local;
         
-        // Sync with Firebase
-        if (currentUser) {
-            try {
-                const snapshot = await db.ref('user_progress/' + currentUser.uid).once('value');
-                const cloudData = snapshot.val();
+        // Apply settings immediately
+        if (State.localData.settings.theme && window.UI) {
+            UI.setTheme(State.localData.settings.theme);
+        }
+        if (State.localData.settings.anim === false && window.UI) {
+            UI.toggleAnim(false);
+        }
+        
+        // 2. Setup real-time sync with Firebase (by TELEGRAM ID)
+        if (window.currentUser) {
+            await Data.setupRealtimeSync();
+        }
+        
+        // 3. Setup connectivity monitoring
+        Data.setupConnectivityMonitoring();
+        
+        console.log("🔍 User:", Data.getUserId(), "| Role:", window.userRole, "| App:", APP_ID);
+    },
+    
+    /**
+     * Setup real-time listeners - KEY FIX: Use Telegram ID as path
+     */
+    setupRealtimeSync: async () => {
+        const userId = Data.getUserId();
+        
+        // CRITICAL: Skip if we don't have a real Telegram ID
+        if (userId.startsWith('anonymous_')) {
+            console.log("⚠️ No Telegram ID, operating in local-only mode");
+            return;
+        }
+        
+        const userRef = ref(db, 'users/' + userId);  // FIXED: Telegram ID as key
+        
+        console.log("📡 Setting up real-time sync for Telegram user:", userId);
+        
+        // Remove existing listener
+        if (Data.listeners.userData) {
+            off(Data.listeners.userData.ref, 'value', Data.listeners.userData.callback);
+        }
+        
+        // Real-time listener
+        const handleDataChange = (snapshot) => {
+            const cloudData = snapshot.val();
+            
+            if (!cloudData) {
+                console.log("☁️ No cloud data, pushing local...");
+                Data.saveData();
+                return;
+            }
+            
+            const cloudTime = cloudData.last_updated || 0;
+            const localTime = State.localData.last_updated || 
+                             parseInt(localStorage.getItem(getStorageKey('last_sync')) || '0');
+            
+            console.log("📊 Sync - Cloud:", new Date(cloudTime), "| Local:", new Date(localTime));
+            
+            if (cloudTime > localTime) {
+                console.log("⬇️ Updating from cloud...");
                 
-                if (cloudData) {
-                    State.localData = {
-                        mistakes: Data.mergeArrays(local.mistakes, cloudData.mistakes),
-                        archive: Data.mergeArrays(local.archive, cloudData.archive),
-                        fav: Data.mergeArrays(local.fav, cloudData.fav),
-                        settings: { ...local.settings, ...cloudData.settings },
-                        sessions: cloudData.sessions || local.sessions
-                    };
-                    
-                    if (State.localData.settings.theme) UI.setTheme(State.localData.settings.theme);
-                    if (State.localData.settings.anim === false) UI.toggleAnim(false);
+                State.localData = {
+                    mistakes: Data.mergeArrays(State.localData.mistakes, cloudData.mistakes),
+                    archive: Data.mergeArrays(State.localData.archive, cloudData.archive),
+                    fav: Data.mergeArrays(State.localData.fav, cloudData.fav),
+                    settings: { ...cloudData.settings, ...State.localData.settings },
+                    sessions: cloudData.sessions || State.localData.sessions,
+                    last_updated: cloudTime
+                };
+                
+                Data.saveLocalOnly();
+                
+                if(window.UI && window.UI.updateHomeStats) {
+                    UI.updateHomeStats();
                 }
                 
+                Data.showSyncIndicator();
+            } else if (cloudTime < localTime) {
+                console.log("⬆️ Pushing local to cloud...");
                 Data.saveData();
-            } catch (e) {
-                console.log("⚠️ Firebase sync failed:", e.message);
             }
-        }
+        };
         
-        // ============================================
-        // ADMIN CHECK - FIXED VERSION
-        // ============================================
-        console.log("🔍 Checking admin...");
+        onValue(userRef, handleDataChange);
         
-        // Get Telegram ID and convert to number
-        const tgId = State.user.telegram_id || State.user.id;
-        const tgIdNum = Number(tgId);
+        Data.listeners.userData = {
+            ref: userRef,
+            callback: handleDataChange
+        };
         
-        console.log("🔍 tgId:", tgId, "->", tgIdNum);
-        console.log("🔍 ALLOWED_IDS:", ALLOWED_IDS);
-        console.log("🔍 Match?", ALLOWED_IDS.includes(tgIdNum));
-        
-        // CRITICAL: Use window.isAdmin to ensure it's global
-        window.isAdmin = ALLOWED_IDS.includes(tgIdNum);
-        console.log("👤 Admin status:", window.isAdmin);
-        
-        if (window.isAdmin) {
-            console.log("👔 Setting up admin panel...");
-            Data.setupAdminPanel();
+        // Link Firebase Auth UID to Telegram ID for reference (optional)
+        if (window.currentUser) {
+            await set(ref(db, 'auth_links/' + window.currentUser.uid), {
+                telegram_id: State.user.telegram_id || State.user.id,
+                name: State.user.first_name,
+                linked_at: serverTimestamp()
+            });
         }
     },
+    
+    /**
+     * Setup connectivity monitoring
+     */
+    setupConnectivityMonitoring: () => {
+        window.addEventListener('online', () => {
+            Data.isOnline = true;
+            Data.processSyncQueue();
+        });
+        
+        window.addEventListener('offline', () => {
+            Data.isOnline = false;
+        });
+        
+        Data.isOnline = navigator.onLine;
+    },
+    
+    showSyncIndicator: () => {
+        const indicator = document.getElementById('sync-indicator') || Data.createSyncIndicator();
+        indicator.style.opacity = '1';
+        setTimeout(() => indicator.style.opacity = '0', 1500);
+    },
+    
+    createSyncIndicator: () => {
+        const div = document.createElement('div');
+        div.id = 'sync-indicator';
+        div.innerHTML = '🔄 تم التزامن';
+        div.style.cssText = `
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--success, #00b894);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            z-index: 10000;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        `;
+        document.body.appendChild(div);
+        return div;
+    },
+    
     mergeArrays: (local, cloud) => {
-        if (!cloud) return local;
-        if (!local) return cloud;
+        if (!cloud) return local || [];
+        if (!local) return cloud || [];
         return [...new Set([...local, ...cloud])];
     },
 
-    // Save to both Firebase and LocalStorage
-    saveData: async () => {
+    /**
+     * Save data - KEY FIX: Use Telegram ID as path
+     */
+    saveData: async (options = {}) => {
+        const userId = Data.getUserId();
+        
+        // Skip Firebase save if no real Telegram ID
+        if (userId.startsWith('anonymous_')) {
+            console.log("📴 Anonymous user, saving local only");
+            Data.saveLocalOnly();
+            return;
+        }
+        
+        const now = Date.now();
+        
         const dataToSave = {
-            mistakes: State.localData.mistakes,
-            archive: State.localData.archive,
-            fav: State.localData.fav,
-            settings: State.localData.settings,
-            last_updated: firebase.database.ServerValue.TIMESTAMP
+            mistakes: State.localData.mistakes || [],
+            archive: State.localData.archive || [],
+            fav: State.localData.fav || [],
+            settings: State.localData.settings || {},
+            telegram_id: State.user.telegram_id || State.user.id,
+            user_name: State.user.first_name,
+            last_updated: serverTimestamp(),
+            client_timestamp: now,
+            app_id: APP_ID,
+            firebase_uid: window.currentUser?.uid || null  // Reference only
         };
         
-        // LocalStorage
-        localStorage.setItem('mistakes', JSON.stringify(State.localData.mistakes));
-        localStorage.setItem('archive', JSON.stringify(State.localData.archive));
-        localStorage.setItem('fav', JSON.stringify(State.localData.fav));
-        localStorage.setItem('settings', JSON.stringify(State.localData.settings));
+        // 1. Always save to localStorage (per-app)
+        Data.saveLocalOnly();
         
-        // Firebase
-        if (currentUser) {
+        // 2. Save to Firebase by TELEGRAM ID (cross-device)
+        if (window.currentUser && Data.isOnline && !options.localOnly) {
             try {
-                await db.ref('user_progress/' + currentUser.uid).update(dataToSave);
-                console.log("💾 Saved to Firebase");
+                await update(ref(db, 'users/' + userId), dataToSave);  // FIXED: Telegram ID path
+                
+                console.log("💾 Saved to Firebase for Telegram user:", userId);
+                localStorage.setItem(getStorageKey('last_sync'), now.toString());
+                State.localData.last_updated = now;
+                
             } catch (e) {
                 console.log("⚠️ Firebase save failed:", e.message);
+                Data.queueForSync(dataToSave);
             }
+        } else if (!Data.isOnline) {
+            Data.queueForSync(dataToSave);
         }
     },
-
-    // NEW: Save detailed session analytics
-    saveSessionAnalytics: async () => {
-        if (!State.quiz.length || State.mode === 'view_mode') {
-            console.log("⏭️ Skipping analytics");
-            return;
-        }
+    
+    saveLocalOnly: () => {
+        const now = Date.now();
         
-        console.log("📊 Saving session analytics...");
+        localStorage.setItem(getStorageKey('mistakes'), JSON.stringify(State.localData.mistakes || []));
+        localStorage.setItem(getStorageKey('archive'), JSON.stringify(State.localData.archive || []));
+        localStorage.setItem(getStorageKey('fav'), JSON.stringify(State.localData.fav || []));
+        localStorage.setItem(getStorageKey('settings'), JSON.stringify(State.localData.settings || {}));
+        localStorage.setItem(getStorageKey('sessions'), JSON.stringify(State.localData.sessions || []));
+        localStorage.setItem(getStorageKey('last_sync'), now.toString());
         
-        const sessionData = {
-            user_id: currentUser ? currentUser.uid : 'anonymous',
-            telegram_id: State.user.telegram_id || 0,
-            user_name: State.user.first_name,
-            timestamp: firebase.database.ServerValue.TIMESTAMP,
-            mode: State.mode,
-            term: State.sel.terms[0] || 'random',
-            subject: State.sel.subj || 'mixed',
-            lessons: State.sel.lessons || [],
-            total_questions: State.quiz.length,
-            score: State.score,
-            accuracy: Math.round((State.score / State.quiz.length) * 100),
-            time_spent: State.sessionStartTime ? Date.now() - State.sessionStartTime : 0,
-            answers: State.answers.map((a, idx) => ({
-                question_id: State.quiz[idx].id,
-                subject: State.quiz[idx].subject,
-                lesson: State.quiz[idx].lesson,
-                chapter: State.quiz[idx].chapter,
-                is_correct: a.isCorrect,
-                selected_option: a.selectedIdx,
-                correct_option: State.quiz[idx].correct_option_id
-            })),
-            mistakes_made: State.answers.filter(a => !a.isCorrect).map((a, idx) => ({
-                question_id: State.quiz[idx].id,
-                subject: State.quiz[idx].subject,
-                lesson: State.quiz[idx].lesson,
-                chapter: State.quiz[idx].chapter
-            }))
-        };
+        State.localData.last_updated = now;
+    },
+    
+    queueForSync: (data) => {
+        Data.syncQueue.push({
+            data: data,
+            timestamp: Date.now(),
+            retries: 0
+        });
+        localStorage.setItem(getStorageKey('sync_queue'), JSON.stringify(Data.syncQueue));
+    },
+    
+    processSyncQueue: async () => {
+        if (!Data.isOnline) return;
         
-        try {
-            // Save to leaderboard
-            if (State.sel.terms.length === 1 && State.sel.subj) {
-                const ctx = (State.sel.terms[0] + '_' + State.sel.subj).replace(/[.#$/[\\]]/g, "_");
-                await db.ref('leaderboards/' + ctx + '/' + currentUser.uid).set({
-                    score: sessionData.score,
-                    accuracy: sessionData.accuracy,
-                    total: sessionData.total_questions,
-                    name: State.user.first_name,
-                    timestamp: sessionData.timestamp
+        const queue = JSON.parse(localStorage.getItem(getStorageKey('sync_queue')) || '[]');
+        if (queue.length === 0) return;
+        
+        const userId = Data.getUserId();
+        if (userId.startsWith('anonymous_')) return;
+        
+        console.log("🔄 Processing queue:", queue.length, "items");
+        
+        const successful = [];
+        
+        for (const item of queue) {
+            try {
+                await update(ref(db, 'users/' + userId), {  // FIXED: Telegram ID path
+                    ...item.data,
+                    last_updated: serverTimestamp()
                 });
-                console.log("🏆 Leaderboard updated");
+                successful.push(item);
+            } catch (e) {
+                item.retries++;
+                if (item.retries > 3) successful.push(item);
             }
-            
-            // Save detailed analytics
-            const sessionKey = db.ref('analytics/sessions').push().key;
-            await db.ref('analytics/sessions/' + sessionKey).set(sessionData);
-            console.log("✅ Analytics saved:", sessionKey);
-            
-            await Data.updateUserStats(sessionData);
-            
-        } catch (e) {
-            console.error("❌ Analytics save failed:", e);
-        }
-    },
-
-    updateUserStats: async (session) => {
-        if (!currentUser) return;
-        
-        const statsRef = db.ref('analytics/user_stats/' + currentUser.uid);
-        const snapshot = await statsRef.once('value');
-        const current = snapshot.val() || {
-            total_sessions: 0,
-            total_questions: 0,
-            total_correct: 0,
-            subjects: {},
-            weak_areas: [],
-            strong_areas: []
-        };
-        
-        current.total_sessions++;
-        current.total_questions += session.total_questions;
-        current.total_correct += session.score;
-        current.last_active = session.timestamp;
-        current.telegram_id = session.telegram_id;
-        current.user_name = session.user_name;
-        
-        // Subject breakdown
-        session.answers.forEach(ans => {
-            if (!current.subjects[ans.subject]) {
-                current.subjects[ans.subject] = { total: 0, correct: 0, chapters: {} };
-            }
-            current.subjects[ans.subject].total++;
-            if (ans.is_correct) current.subjects[ans.subject].correct++;
-            
-            if (!current.subjects[ans.subject].chapters[ans.chapter]) {
-                current.subjects[ans.subject].chapters[ans.chapter] = { total: 0, correct: 0 };
-            }
-            current.subjects[ans.subject].chapters[ans.chapter].total++;
-            if (ans.is_correct) current.subjects[ans.subject].chapters[ans.chapter].correct++;
-        });
-        
-        // Identify weak areas
-        const weakAreas = [];
-        const strongAreas = [];
-        Object.entries(current.subjects).forEach(([subj, data]) => {
-            const accuracy = data.correct / data.total;
-            if (accuracy < 0.6) weakAreas.push(subj);
-            else if (accuracy > 0.85) strongAreas.push(subj);
-        });
-        current.weak_areas = weakAreas;
-        current.strong_areas = strongAreas;
-        
-        await statsRef.set(current);
-        console.log("👤 User stats updated");
-    },
-
-    setupAdminPanel: () => {
-        console.log('👔 Admin detected');
-        setTimeout(() => {
-            const header = document.querySelector('.header-actions');
-            if (header && !document.getElementById('btn-admin')) {
-                const adminBtn = document.createElement('button');
-                adminBtn.id = 'btn-admin';
-                adminBtn.className = 'btn btn-ghost';
-                adminBtn.innerText = '📊';
-                adminBtn.title = 'Analytics Panel';
-                adminBtn.onclick = () => { Data.loadAnalytics(); UI.openModal('m-admin'); };
-                header.appendChild(adminBtn);
-                console.log("📊 Admin button added");
-            }
-        }, 500);
-    },
-
-    loadAnalytics: async () => {
-        if (!isAdmin) {
-            alert("❌ غير مصرح");
-            return;
         }
         
-        console.log("📈 Loading analytics...");
-        try {
-            const [sessionsSnap, usersSnap] = await Promise.all([
-                db.ref('analytics/sessions').limitToLast(100).once('value'),
-                db.ref('analytics/user_stats').once('value')
-            ]);
-            
-            const sessions = sessionsSnap.val() || {};
-            const users = usersSnap.val() || {};
-            console.log("📊 Data:", Object.keys(sessions).length, "sessions,", Object.keys(users).length, "users");
-            Data.renderAnalytics({ sessions, users });
-        } catch (e) {
-            console.error("Failed:", e);
-            alert("خطأ في تحميل التحليلات: " + e.message);
+        Data.syncQueue = queue.filter(item => !successful.includes(item));
+        localStorage.setItem(getStorageKey('sync_queue'), JSON.stringify(Data.syncQueue));
+    },
+
+    /**
+     * Cleanup listeners
+     */
+    cleanup: () => {
+        if (Data.listeners.userData) {
+            off(Data.listeners.userData.ref, 'value', Data.listeners.userData.callback);
         }
-    },
-
-    renderAnalytics: (data) => {
-        const container = document.getElementById('analytics-content');
-        if (!container) return;
-        
-        const sessions = Object.values(data.sessions || {});
-        const users = Object.values(data.users || {});
-        
-        const totalUsers = users.length;
-        const totalSessions = sessions.length;
-        const totalQuestions = sessions.reduce((sum, s) => sum + (s.total_questions || 0), 0);
-        const avgAccuracy = sessions.length > 0 
-            ? Math.round(sessions.reduce((sum, s) => sum + (s.accuracy || 0), 0) / sessions.length)
-            : 0;
-        
-        // Find weak subjects
-        const subjectStats = {};
-        sessions.forEach(s => {
-            (s.mistakes_made || []).forEach(m => {
-                if (!subjectStats[m.subject]) subjectStats[m.subject] = { mistakes: 0 };
-                subjectStats[m.subject].mistakes++;
-            });
-        });
-        
-        const topWeakSubjects = Object.entries(subjectStats)
-            .sort((a, b) => b[1].mistakes - a[1].mistakes)
-            .slice(0, 5);
-        
-        // Most active users
-        const userActivity = {};
-        sessions.forEach(s => {
-            if (!userActivity[s.user_name]) userActivity[s.user_name] = { sessions: 0, questions: 0 };
-            userActivity[s.user_name].sessions++;
-            userActivity[s.user_name].questions += s.total_questions || 0;
-        });
-        
-        const topUsers = Object.entries(userActivity)
-            .sort((a, b) => b[1].questions - a[1].questions)
-            .slice(0, 5);
-        
-        container.innerHTML = `
-            <div class="stats-grid">
-                <div class="stat-item"><h3>المستخدمين</h3><p>${totalUsers}</p></div>
-                <div class="stat-item"><h3>الجلسات</h3><p>${totalSessions}</p></div>
-                <div class="stat-item"><h3>الأسئلة</h3><p>${totalQuestions}</p></div>
-                <div class="stat-item"><h3>متوسط الدقة</h3><p>${avgAccuracy}%</p></div>
-            </div>
-            
-            <h4 style="margin:20px 0 10px; color:var(--primary)">📉 المواد الأكثر صعوبة</h4>
-            ${topWeakSubjects.map(([subj, stats]) => 
-                `<div style="padding:8px; background:rgba(0,0,0,0.05); margin:3px 0; border-radius:5px; text-align:left; direction:ltr;">
-                    ${subj}: ${stats.mistakes} errors
-                </div>`
-            ).join('')}
-            
-            <h4 style="margin:20px 0 10px; color:var(--primary)">🔥 الأكثر نشاطاً</h4>
-            ${topUsers.map(([name, stats]) => 
-                `<div style="padding:8px; background:rgba(0,0,0,0.05); margin:3px 0; border-radius:5px; text-align:left; direction:ltr;">
-                    ${name}: ${stats.questions} questions (${stats.sessions} sessions)
-                </div>`
-            ).join('')}
-            
-            <button class="btn btn-primary full-width" onclick="Data.exportAnalytics()" style="margin-top:20px;">
-                📥 تصدير البيانات الكاملة (JSON)
-            </button>
-        `;
-    },
-
-    exportAnalytics: () => {
-        db.ref('analytics').once('value').then(snap => {
-            const data = snap.val();
-            const dataStr = JSON.stringify(data, null, 2);
-            
-            // Create a secure modal for data display since downloads are sandboxed
-            const modal = document.createElement('div');
-            modal.innerHTML = `
-                <div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:99999;display:flex;justify-content:center;align-items:center;padding:20px;">
-                    <div style="background:#fff;padding:20px;border-radius:10px;width:100%;max-width:600px;max-height:90vh;display:flex;flex-direction:column;gap:15px;">
-                        <div style="display:flex;justify-content:space-between;align-items:center;">
-                            <h3 style="margin:0;color:#333">📊 Export Analytics</h3>
-                            <button class="close-modal-btn" style="background:none;border:none;font-size:24px;cursor:pointer;">&times;</button>
-                        </div>
-                        <p style="margin:0;color:#666;font-size:14px;line-height:1.4;">
-                            ⚠️ Downloads are disabled in this environment.<br>
-                            Please copy the raw data below:
-                        </p>
-                        <textarea id="export-area" style="width:100%;height:300px;font-family:monospace;border:1px solid #ccc;border-radius:5px;padding:10px;font-size:12px;resize:none;" readonly>${dataStr}</textarea>
-                        <div style="display:flex;gap:10px;">
-                            <button id="btn-copy" style="flex:1;padding:12px;background:#4CAF50;color:white;border:none;border-radius:5px;cursor:pointer;font-weight:bold;font-size:16px;">
-                                📋 Copy to Clipboard
-                            </button>
-                            <button class="close-modal-btn-main" style="flex:1;padding:12px;background:#f44336;color:white;border:none;border-radius:5px;cursor:pointer;font-weight:bold;font-size:16px;">
-                                Close
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(modal);
-            
-            // Close handlers
-            const close = () => { if(document.body.contains(modal)) document.body.removeChild(modal); };
-            modal.querySelector('.close-modal-btn').onclick = close;
-            modal.querySelector('.close-modal-btn-main').onclick = close;
-            
-            // Copy handler
-            document.getElementById('btn-copy').onclick = function() {
-                const textArea = document.getElementById('export-area');
-                textArea.select();
-                
-                // Try modern API first, fall back to execCommand
-                if (navigator.clipboard && navigator.clipboard.writeText) {
-                    navigator.clipboard.writeText(dataStr).then(() => {
-                        this.innerText = "✅ Copied!";
-                        setTimeout(() => this.innerText = "📋 Copy to Clipboard", 2000);
-                    }).catch(err => {
-                        console.error("Clipboard API failed:", err);
-                        document.execCommand('copy');
-                        this.innerText = "✅ Copied (Manual)";
-                    });
-                } else {
-                    document.execCommand('copy');
-                    this.innerText = "✅ Copied (Legacy)";
-                }
-            };
-
-        }).catch(err => {
-             console.error("Firebase read error:", err);
-             alert("Error fetching data: " + err.message);
-        });
-    },
-    saveLeaderboard: (score) => {
-        // Handled in saveSessionAnalytics
     }
 };
+
+// Make Data available globally
+window.Data = Data;
+
+window.addEventListener('beforeunload', () => {
+    Data.cleanup();
+});
