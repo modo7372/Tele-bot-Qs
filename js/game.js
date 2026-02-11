@@ -75,54 +75,132 @@ const Game = {
 
     getFilteredPool: () => {
         let p = [...State.allQ];
+    
+        // Apply global term filter FIRST if any terms are selected
+        if (State.globalSelectedTerms && State.globalSelectedTerms.length > 0) {
+            p = p.filter(q => State.globalSelectedTerms.includes(q.term));
+        }
+    
         const mist = State.localData.mistakes;
         const arch = State.localData.archive;
+        
         if(State.filter === 'new') p = p.filter(q => !arch.includes(q.id));
         else if(State.filter === 'wrong') p = p.filter(q => mist.includes(q.id));
         else if(State.filter === 'answered') p = p.filter(q => arch.includes(q.id));
+        
         return p;
     },
 
+
     // ... (Keep luckyShot, startGlobalRandom, startFavMode) ...
     luckyShot: () => {
-        let pool = Game.getFilteredPool();
-        if(!pool.length) return alert('لا توجد أسئلة متاحة حسب الفلتر المختار.');
+        let pool = Game.getFilteredPool(); // Respects global term filter
+        if(!pool.length) {
+            if (State.globalSelectedTerms.length > 0) {
+                return alert('لا توجد أسئلة في التروم المختارة.');
+            }
+            return alert('لا توجد أسئلة متاحة حسب الفلتر المختار.');
+        }
         const q = pool[Math.floor(Math.random() * pool.length)];
         Game.startQuizSession([q], 'lucky');
     },
+
     startGlobalRandom: () => {
-        let sub = Game.getFilteredPool();
-        if(!sub.length) return alert('القائمة فارغة حسب الفلتر المختار.');
+        let sub = Game.getFilteredPool(); // Respects global term filter
+        if(!sub.length) {
+            if (State.globalSelectedTerms.length > 0) {
+                return alert('لا توجد أسئلة في التروم المختارة حسب الفلتر المختار.');
+            }
+            return alert('القائمة فارغة حسب الفلتر المختار.');
+        }
         sub.sort(() => 0.5 - Math.random());
         const count = Math.floor(Math.random() * 50) + 1;
         Game.startQuizSession(sub.slice(0, count), 'normal');
     },
+
     startFavMode: () => {
         const favs = State.localData.fav;
         if(!favs.length) return alert('قائمة المفضلة فارغة!');
-        const pool = State.allQ.filter(q => favs.includes(q.id));
+    
+        let pool = State.allQ.filter(q => favs.includes(q.id));
+    
+        // Apply global term filter to favorites too
+        if (State.globalSelectedTerms && State.globalSelectedTerms.length > 0) {
+            pool = pool.filter(q => State.globalSelectedTerms.includes(q.term));
+        }
+    
+        if (!pool.length) {
+            return alert('لا توجد أسئلة مفضلة في التروم المختارة.');
+        }
+    
         Game.startQuizSession(pool, 'normal');
     },
+
     startFlow: (m) => {
         State.tempMode = m; 
         State.isRankMode = false;
-        State.pool = Game.getFilteredPool();
-        if(m === 'mistakes') State.pool = State.pool.filter(q => State.localData.mistakes.includes(q.id));
-        if(!State.pool.length) return alert('لا توجد أسئلة متاحة.');
-        
+        State.pool = Game.getFilteredPool(); // This now includes global term filter
+    
+        if(!State.pool.length) {
+            // Check if it's because of term filter
+            if (State.globalSelectedTerms.length > 0) {
+                return alert('لا توجد أسئلة متاحة في التروم المختارة حسب الفلتر المختار.');
+            }
+            return alert('لا توجد أسئلة متاحة.');
+        }
+    
         // Reset state and history
         State.sel = {terms:[], subj:null, lessons:[], chapters:[], limit:'All'};
         navHistory = []; 
-        
-        Game.renderSel('term');
+    
+        // If terms are pre-selected globally, skip term selection and go to subject
+        if (State.globalSelectedTerms.length > 0) {
+            State.sel.terms = [...State.globalSelectedTerms];
+            Game.renderSel('subj');
+        } else {
+            Game.renderSel('term');
+        }
     },
+
+    clearTermSelection: () => {
+        State.globalSelectedTerms = [];
+        document.querySelectorAll('#term-selector-chips .chip').forEach(chip => {
+            chip.classList.remove('selected');
+        });
+        UI.updateActiveTermIndicator();
+        Data.saveData();
+        Game.triggerHaptic('selection');
+    }
+
+
+
     startRankMode: () => {
         State.isRankMode = true; 
-        State.pool = State.allQ; 
+        // Apply global term filter to rank mode too
+        State.pool = [...State.allQ];
+        if (State.globalSelectedTerms && State.globalSelectedTerms.length > 0) {
+            State.pool = State.pool.filter(q => State.globalSelectedTerms.includes(q.term));
+        }
+    
         State.sel = {term:null, subj:null, lessons:[], chapters:[], limit:'All'}; 
         navHistory = [];
-        Game.renderSel('term');
+    
+        // Skip term selection if globally selected
+        if (State.globalSelectedTerms.length === 1) {
+            State.sel.term = State.globalSelectedTerms[0];
+            Game.renderSel('subj');
+        } else if (State.globalSelectedTerms.length > 1) {
+            // For multiple terms in rank mode, use the first one or show term selector
+            State.sel.term = State.globalSelectedTerms[0];
+            Game.renderSel('subj');
+        } else {
+            Game.renderSel('term');
+        }
     },
+
+
+    
+
     startRandomInMode: () => {
         let sub = State.pool;
         if(State.sel.terms.length > 0) sub = sub.filter(q => State.sel.terms.includes(q.term));
