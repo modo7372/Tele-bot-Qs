@@ -3,7 +3,7 @@
 // ============================================
 
 window.onload = async () => {
-    const APP_VER = '3.3-firebase';
+    const APP_VER = '3.9-firebase';
     const savedVer = localStorage.getItem('app_version');
     if(savedVer !== APP_VER) {
         localStorage.setItem('app_version', APP_VER);
