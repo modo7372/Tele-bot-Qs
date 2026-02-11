@@ -451,7 +451,7 @@
             qIdx: 0, 
             score: 0, 
             mode: 'normal',
-            selectedTerms: [], // NEW: For term selector
+            selectedTerms: [], // For term selector
             localData: { 
                 mistakes: [], 
                 archive: [], 
@@ -467,10 +467,11 @@
             isAnonymous: true,
             sessionStartTime: null,
             answers: [],
-            filter: 'all', // NEW: Add filter property
-            instantFeedback: true, // NEW: Add instant feedback property
-            tempMode: 'normal', // NEW: Add temp mode
-            isRankMode: false // NEW: Add rank mode flag
+            filter: 'all', // Add filter property
+            instantFeedback: true, // Add instant feedback property
+            tempMode: 'normal', // Add temp mode
+            isRankMode: false, // Add rank mode flag
+            globalSelectedTerms: [] // Empty array means all terms
         };
         
         // Security Helper
