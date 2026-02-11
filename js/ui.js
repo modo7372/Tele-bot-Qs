@@ -42,6 +42,10 @@ const UI = {
         const autoHide = State.localData.settings?.hideIrrelevant === true;
         document.getElementById('chk-auto-hide-main').checked = autoHide;
         
+        // Initialize Term Selector
+        UI.renderTermSelector();
+        UI.updateActiveTermIndicator();
+        
         console.log("✅ UI Initialized");
     },
 
@@ -64,6 +68,7 @@ const UI = {
     goHome: () => {
         UI.showView('v-home');
         UI.updateHomeStats();
+        UI.updateActiveTermIndicator(); // Refresh term indicator
         Game.stopTimer();
         clearTimeout(autoNavTimer);
     },
@@ -267,9 +272,24 @@ const UI = {
     },
 
     updateHomeStats: () => {
-        const total = State.allQ.length;
-        const archive = State.localData.archive?.length || 0;
-        const correct = State.localData.archive?.length - State.localData.mistakes?.length || 0;
+        // Calculate stats based on filtered pool (respects global term selection)
+        let pool = [...State.allQ];
+        if (State.globalSelectedTerms && State.globalSelectedTerms.length > 0) {
+            pool = pool.filter(q => State.globalSelectedTerms.includes(q.term));
+        }
+        
+        const total = pool.length;
+        const archive = State.localData.archive?.filter(id => {
+            const q = State.allQ.find(x => x.id === id);
+            return q && (State.globalSelectedTerms.length === 0 || State.globalSelectedTerms.includes(q.term));
+        }).length || 0;
+        
+        const mistakes = State.localData.mistakes?.filter(id => {
+            const q = State.allQ.find(x => x.id === id);
+            return q && (State.globalSelectedTerms.length === 0 || State.globalSelectedTerms.includes(q.term));
+        }).length || 0;
+        
+        const correct = archive - mistakes;
         const pct = total > 0 ? Math.round((archive / total) * 100) : 0;
         
         const pctEl = document.getElementById('home-pct');
@@ -287,9 +307,23 @@ const UI = {
     },
 
     showTotalStats: () => {
-        const total = State.allQ.length;
-        const archive = State.localData.archive?.length || 0;
-        const mistakes = State.localData.mistakes?.length || 0;
+        // Calculate stats based on filtered pool
+        let pool = [...State.allQ];
+        if (State.globalSelectedTerms && State.globalSelectedTerms.length > 0) {
+            pool = pool.filter(q => State.globalSelectedTerms.includes(q.term));
+        }
+        
+        const total = pool.length;
+        const archive = State.localData.archive?.filter(id => {
+            const q = State.allQ.find(x => x.id === id);
+            return q && (State.globalSelectedTerms.length === 0 || State.globalSelectedTerms.includes(q.term));
+        }).length || 0;
+        
+        const mistakes = State.localData.mistakes?.filter(id => {
+            const q = State.allQ.find(x => x.id === id);
+            return q && (State.globalSelectedTerms.length === 0 || State.globalSelectedTerms.includes(q.term));
+        }).length || 0;
+        
         const correct = archive - mistakes;
         const solvedPct = total > 0 ? Math.round((archive / total) * 100) : 0;
         const accPct = archive > 0 ? Math.round((correct / archive) * 100) : 0;
@@ -329,5 +363,74 @@ const UI = {
         Data.saveData();
         // Update current quiz state if in quiz
         State.showIrrelevantOptions = !val;
+    },
+
+    // ============================================
+    // TERM SELECTOR FUNCTIONS (NEW)
+    // ============================================
+
+    // Render term selector chips on home screen
+    renderTermSelector: () => {
+        const container = document.getElementById('term-selector-chips');
+        if (!container) return;
+        
+        // Get unique terms from all questions
+        const terms = [...new Set(State.allQ.map(q => q.term))].filter(t => t).sort();
+        
+        if (terms.length === 0) {
+            container.innerHTML = '<div style="color:var(--txt-sec); text-align:center; padding:10px;">جاري تحميل التروم...</div>';
+            return;
+        }
+        
+        container.innerHTML = '';
+        terms.forEach(term => {
+            const chip = document.createElement('div');
+            chip.className = 'chip';
+            chip.innerText = term;
+            chip.dataset.term = term;
+            
+            // Check if this term is globally selected
+            if (State.globalSelectedTerms.includes(term)) {
+                chip.classList.add('selected');
+            }
+            
+            chip.onclick = () => {
+                Game.triggerHaptic('selection');
+                chip.classList.toggle('selected');
+                
+                // Update global selection
+                const termValue = chip.dataset.term;
+                if (chip.classList.contains('selected')) {
+                    if (!State.globalSelectedTerms.includes(termValue)) {
+                        State.globalSelectedTerms.push(termValue);
+                    }
+                } else {
+                    State.globalSelectedTerms = State.globalSelectedTerms.filter(t => t !== termValue);
+                }
+                
+                UI.updateActiveTermIndicator();
+                UI.updateHomeStats(); // Update stats to reflect term filter
+                Data.saveData(); // Persist selection
+            };
+            
+            container.appendChild(chip);
+        });
+        
+        UI.updateActiveTermIndicator();
+    },
+
+    // Update the indicator showing which terms are selected
+    updateActiveTermIndicator: () => {
+        const indicator = document.getElementById('active-term-indicator');
+        const list = document.getElementById('active-terms-list');
+        
+        if (!indicator || !list) return;
+        
+        if (State.globalSelectedTerms.length === 0) {
+            indicator.classList.add('hidden');
+        } else {
+            indicator.classList.remove('hidden');
+            list.innerText = State.globalSelectedTerms.join(' + ');
+        }
     }
 };
