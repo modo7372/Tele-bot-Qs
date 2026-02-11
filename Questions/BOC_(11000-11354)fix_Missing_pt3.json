@@ -1,0 +1,562 @@
+{
+  "meta": {
+    "source": "Consolidated from BOC_(11000-11233).json, BOC_(11234-11354).json",
+    "lesson": "Custom Lesson"
+  },
+  "questions": [
+    {
+      "id": 11002,
+      "question": "A patient with non-obstructing cancer of the sigmoid colon is prepared for elective resection. To minimize the risk of post-operative infectious complications, your planning should include:",
+      "options": [
+        "A pre-operative single parenteral dose of antibiotic effective against aerobes and anaerobes.",
+        "Avoidance of oral antibiotic to prevent emergence of Clostridium difficile.",
+        "Post-operative parenteral administration of antibiotic for 2-4 days effective against aerobes and anaerobes.",
+        "Post-operative parenteral antibiotic administration effective against aerobes and anaerobes for 5-7 days."
+      ],
+      "correct_option_id": 2,
+      "explanation": "Prolonged post-operative antibiotic administration is not supported by current evidence and increases risks. While a single pre-operative dose is standard, extending parenteral antibiotics for 2-4 days was a practice in some older protocols, especially for contaminated cases. However, modern guidelines emphasize limiting antibiotic duration to reduce resistance and complications like C. difficile. For routine prophylaxis, a single dose is sufficient. Longer courses are reserved for established infections, not prophylaxis.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "General Surgical Principles",
+      "chapter": "Perioperative and Critical Care"
+    },
+    {
+      "id": 11008,
+      "question": "Healthy patients undergoing uncomplicated surgery can remain N.P.O. (with intravenous fluid support) for how many days before significant protein catabolism occurs?",
+      "options": [
+        "2 days.",
+        "4 days.",
+        "7 days.",
+        "10 days."
+      ],
+      "correct_option_id": 1,
+      "explanation": "In a healthy individual with adequate glycogen stores and IV fluid support, the body can tolerate a short period of starvation. Significant protein catabolism is generally spared for the first few days as the body utilizes glycogen and begins to transition to fat metabolism. By day 4, however, glycogen stores are depleted, and if nutritional support is not initiated, the body will begin to rely more heavily on gluconeogenesis from amino acids, leading to a notable increase in protein breakdown.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "General Surgical Principles",
+      "chapter": "Perioperative and Critical Care"
+    },
+    {
+      "id": 11027,
+      "question": "Which of the following is true regarding post-operative fever?",
+      "options": [
+        "Urinalysis, urine culture, and chest x-ray must be obtained as part of a complete fever workup in post-operative patients within 72 h of operation.",
+        "In a febrile post-operative patient, wound cultures should be obtained regardless of the appearance of the wound.",
+        "Wound infections in the first two days are uncommon.",
+        "Fevers persisting for greater than 96 h post-operatively are expected in cases of diffuse intra-abdominal infection, such as feculent peritonitis from diverticulitis, even with appropriate surgical management.",
+        "All of the above."
+      ],
+      "correct_option_id": 4,
+      "explanation": "All the statements represent important clinical considerations in evaluating post-operative fever. A systematic workup is crucial (A), wound evaluation is necessary even if the skin is intact (B), early fevers are usually not from wound infections (C), and persistent fever can be expected in severe intra-abdominal sepsis despite treatment (D). Therefore, 'All of the above' is the most comprehensive answer.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "General Surgical Principles",
+      "chapter": "Perioperative and Critical Care"
+    },
+    {
+      "id": 11038,
+      "question": "Which of the following statements about extra-cellular fluid are true?",
+      "options": [
+        "The total extra-cellular fluid volume represents 40% of the body weight.",
+        "The plasma volume constitutes 1/4 of the total extra-cellular fluid.",
+        "Potassium is the principal cation in extra-cellular fluid.",
+        "The interstitial fluid equilibrates slowly with the other body compartments."
+      ],
+      "correct_option_id": 0,
+      "explanation": "Total body water constitutes about 60% of body weight. The extracellular fluid (ECF) makes up approximately one-third of the total body water, which is about 20% of total body weight. The statement that ECF represents 40% of body weight is incorrect; this value is closer to the percentage of intracellular fluid.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "General Surgical Principles",
+      "chapter": "Shock, Trauma, and Wound Care"
+    },
+    {
+      "id": 11043,
+      "question": "The evaluation of a patient scheduled for elective surgery should include the following as tests of hemostasis and coagulation:",
+      "options": [
+        "History and physical examination.",
+        "Complete blood count (CBC), including platelet count.",
+        "Prothrombin time (PT) and activated partial thromboplastin time (APTT).",
+        "Studies of platelet aggregation with adenosine di-phosphate (ADP) and epinephrine."
+      ],
+      "correct_option_id": 2,
+      "explanation": "While a thorough history is the most important screening tool, routine baseline laboratory tests of hemostasis are standard practice prior to elective surgery. Prothrombin time (PT) and activated partial thromboplastin time (APTT) assess the extrinsic/common and intrinsic/common pathways of the coagulation cascade, respectively. They are fundamental tests to identify underlying coagulopathies that could lead to surgical bleeding, even in a patient with a negative history.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "General Surgical Principles",
+      "chapter": "Shock, Trauma, and Wound Care"
+    },
+    {
+      "id": 11045,
+      "question": "Which of the following statements about the presence of gallstones in diabetes patients is/are correct?",
+      "options": [
+        "The presence of gallstones, regardless of the presence of symptoms, is an indication for cholecystectomy in a diabetic patient.",
+        "Diabetic patients with gallstones and chronic biliary pain should be managed non-operatively.",
+        "The presence of diabetes and gallstones places the patient at high risk for pancreatic cancer.",
+        "Diabetic patients with symptomatic gallstones should have prompt elective cholecystectomy, to avoid the complications of acute cholecystitis."
+      ],
+      "correct_option_id": 0,
+      "explanation": "Given the increased risk of severe and life-threatening complications of acute cholecystitis (such as gangrenous cholecystitis, perforation, and higher mortality) in diabetic patients, some surgical guidelines advocate for prophylactic cholecystectomy even in the absence of symptoms. The rationale is that the risk of emergent surgery for acute complications outweighs the risk of elective surgery.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "General Surgical Principles",
+      "chapter": "Shock, Trauma, and Wound Care"
+    },
+    {
+      "id": 11047,
+      "question": "What is the major determinant in an individual patient's risk for peri-operative complications?",
+      "options": [
+        "The anesthetic technique (e.g., general, regional).",
+        "The length of the surgical procedure and anesthesia.",
+        "The surgical procedure.",
+        "All of the above."
+      ],
+      "correct_option_id": 0,
+      "explanation": "The choice of anesthetic technique is a critical determinant of peri-operative risk. For a patient with severe cardiac or pulmonary disease, for example, avoiding general anesthesia in favor of a regional or local technique can significantly reduce the risk of cardiopulmonary complications. The technique directly influences the physiological stress placed on the patient.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "General Surgical Principles",
+      "chapter": "Shock, Trauma, and Wound Care"
+    },
+    {
+      "id": 11079,
+      "question": "Which of the following is/are true concerning the vascular response to injury?",
+      "options": [
+        "Histamine, prostaglandin E2 (PGE2) and prostacyclin (PGI2) are important mediators of local vaso-constriction.",
+        "Vaso-constriction is an early event in the response to injury.",
+        "Vaso-dilatation is a detrimental response to injury with normal body Processes working to avoid this process.",
+        "Vascular permeability is maintained to prevent further cellular injury."
+      ],
+      "correct_option_id": 3,
+      "explanation": "Following an injury, the body's inflammatory response aims to deliver cells and mediators to the affected area. A key part of this is an increase in vascular permeability, which allows plasma proteins and leukocytes to move from the bloodstream into the interstitial tissue. The statement that permeability is maintained (i.e., unchanged) is incorrect; it is actively increased by mediators like histamine and bradykinin.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "General Surgical Principles",
+      "chapter": "Shock, Trauma, and Wound Care"
+    },
+    {
+      "id": 11086,
+      "question": "Narcotics are commonly used in administration of general anesthesia. Which of the following statement (s) is/are true concerning this class of agents?",
+      "options": [
+        "Narcotics have both profound analgesic and amnestic properties; can cause hypotension by direct myocardial depressive effects.",
+        "Naloxone should be used routinely for the reversal of narcotic analgesia.",
+        "Acutely injured hypovolemic patients are at significant risk for decreased blood pressure with the use of narcotic analgesia.",
+        "Propofol is a new intra-venous short-acting narcotic used frequently in the outpatient setting."
+      ],
+      "correct_option_id": 3,
+      "explanation": "This statement is false. Propofol is a potent, short-acting intravenous hypnotic agent, but it is not a narcotic (opioid). It works through GABA-A receptor agonism and is one of the most common drugs used for induction and maintenance of anesthesia. Narcotics are a separate class of drugs (e.g., fentanyl, morphine) that act on opioid receptors.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "General Surgical Principles",
+      "chapter": "Shock, Trauma, and Wound Care"
+    },
+    {
+      "id": 11094,
+      "question": "Which of the following is not assessed in FAST?",
+      "options": [
+        "Right upper quadrant.",
+        "Left upper quadrant.",
+        "Hypogastrium.",
+        "Sub-xiphoid area.",
+        "Right iliac fossa."
+      ],
+      "correct_option_id": 2,
+      "explanation": "The hypogastrium, or suprapubic region, is a standard and critical component of the FAST exam. This view is used to assess for free fluid in the pelvis, which is the most dependent portion of the abdomen in a supine patient. Fluid will collect in the rectovesical pouch in males or the pouch of Douglas in females. The other views are the right upper quadrant (Morison's pouch), left upper quadrant (splenorenal recess), and the subxiphoid view for the pericardium.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "General Surgical Principles",
+      "chapter": "Shock, Trauma, and Wound Care"
+    },
+    {
+      "id": 11097,
+      "question": "The severity of hypovolemic shock has been found to correlate with:",
+      "options": [
+        "Hematocrit.",
+        "Pulmonary capillary wedge pressure (PCWP).",
+        "Lactic acid.",
+        "PaO2.",
+        "White blood cell count."
+      ],
+      "correct_option_id": 0,
+      "explanation": "In acute hemorrhage, hematocrit is a crucial indicator of blood loss and the oxygen-carrying capacity. While it may not change immediately due to proportional loss of plasma and red cells, as fluid shifts occur or resuscitation is initiated, a falling hematocrit directly reflects the severity of the hemorrhage. It is serially monitored to guide transfusion therapy.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "General Surgical Principles",
+      "chapter": "Shock, Trauma, and Wound Care"
+    },
+    {
+      "id": 11103,
+      "question": "A 24 y player sustained a trauma while playing Volleyball; is brought to ER with BP 80/40 and pulse 130. Which of the following fractures or dislocations of the extremities induced by blunt trauma is associated with significant vascular injuries?",
+      "options": [
+        "Knee dislocation.",
+        "Closed posterior elbow dislocation.",
+        "Mid-clavicular fracture.",
+        "Supracondylar femur fracture.",
+        "Tibial plateau fracture."
+      ],
+      "correct_option_id": 2,
+      "explanation": "A mid-clavicular fracture can pose a significant risk to the underlying subclavian artery and vein. Although less common than injuries associated with knee dislocations, a displaced or angulated clavicle fracture can directly compress, lacerate, or lead to thrombosis of these major vessels, resulting in a vascular emergency.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "General Surgical Principles",
+      "chapter": "Shock, Trauma, and Wound Care"
+    },
+    {
+      "id": 11106,
+      "question": "A 23-year-old man presents after trauma to his head and neck. On arrival, he has a systolic blood pressure of 65 mmHg, a heart rate of 50 b/m, and a GCS of 5. CT reveals a large epidural hematoma and bilateral vertebral facet dislocations at C4. What is the likely cause of his hypotension?",
+      "options": [
+        "Head trauma and Massive vasodilatation.",
+        "Hypovolemia.",
+        "Isolated blunt cardiac injury.",
+        "Alcohol intoxication.",
+        "Terminal medullary failure."
+      ],
+      "correct_option_id": 0,
+      "explanation": "This patient's clinical picture is a result of two catastrophic injuries. The hypotension (SBP 65) combined with bradycardia (HR 50) is the classic presentation of neurogenic shock, which is caused by the C4 vertebral dislocation. The underlying mechanism of neurogenic shock is a massive peripheral vasodilatation due to the loss of sympathetic nervous system tone. Concurrently, the patient has a severe head trauma, evidenced by the large epidural hematoma and the Glasgow Coma Scale (GCS) of 5. While isolated severe head injury typically causes hypertension (Cushing's reflex), it is a critical part of the patient's overall state. Therefore, the option 'Head trauma and Massive vasodilatation' is the most comprehensive answer, as it correctly identifies the primary physiological cause of the hypotension (massive vasodilation from the spinal injury) while also acknowledging the severe, concomitant head injury that defines the patient's neurological status.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "General Surgical Principles",
+      "chapter": "Shock, Trauma, and Wound Care"
+    },
+    {
+      "id": 11107,
+      "question": "A teenage boy falls from his bicycle and is run over by a truck. On arrival in the emergency room, he is awake and alert. The chest radiograph suggests an air fluid level in the left lower lung field and the Naso-gastric tube seems to coil upward into the left chest. The next best step in management is:",
+      "options": [
+        "Placement of a left chest tube.",
+        "Immediate thoracotomy.",
+        "Immediate Laparotomy.",
+        "Esophago-gastroscopy.",
+        "Removal and replacement of the nasogastric tube; diagnostic peritoneal lavage."
+      ],
+      "correct_option_id": 3,
+      "explanation": "The clinical and radiographic findings strongly suggest a traumatic diaphragmatic hernia with stomach herniation. Before any surgical intervention, an esophago-gastroscopy (EGD) is indicated. This procedure can confirm the diagnosis by visualizing the stomach above the diaphragm, assess for any associated gastric or esophageal injury, and help in planning the surgical approach.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "General Surgical Principles",
+      "chapter": "Shock, Trauma, and Wound Care"
+    },
+    {
+      "id": 11108,
+      "question": "A 41-year-old woman presents after a gunshot wound to the abdomen, with injuries to the liver and large bowel. Despite successful resuscitation and operative intervention, the patient dies 2 weeks later of multi-system organ failure. Which organ most likely first experienced dysfunction?",
+      "options": [
+        "Combined liver and kidney failure.",
+        "Gastro-intestinal Tract.",
+        "Lung.",
+        "Kidney.",
+        "Heart."
+      ],
+      "correct_option_id": 0,
+      "explanation": "Following severe trauma and sepsis, the systemic inflammatory response can lead to multiple organ dysfunction syndrome (MODS). The liver and kidneys are particularly vulnerable. The initial hypoperfusion during shock can cause acute kidney injury (AKI), while the liver is central to the inflammatory response and can suffer hypoxic injury and dysfunction. Often, dysfunction in these two organ systems occurs concurrently and heralds the onset of MODS.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "General Surgical Principles",
+      "chapter": "Shock, Trauma, and Wound Care"
+    },
+    {
+      "id": 11110,
+      "question": "A patient with a localized wound infection after surgery should be treated with:",
+      "options": [
+        "Anti-biotics and warm soaks to the wound.",
+        "Anti-biotics alone.",
+        "Incision and drainage alone.",
+        "Anti-biotics and opening the wound."
+      ],
+      "correct_option_id": 3,
+      "explanation": "The optimal treatment for a localized surgical site infection, especially with abscess formation, is a combination of source control and systemic therapy. The wound should be opened to allow for drainage of purulent material. Concurrently, systemic antibiotics are administered to treat the surrounding cellulitis and prevent systemic spread of the infection.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "General Surgical Principles",
+      "chapter": "Surgical Infections, Skin, and Burns"
+    },
+    {
+      "id": 11112,
+      "question": "The classic chest X-ray finding in anthrax is:",
+      "options": [
+        "Bilateral apical pneumo-thorax.",
+        "Basilar pneumonia.",
+        "Widened mediastinum and effusions.",
+        "Pulmonary oedema."
+      ],
+      "correct_option_id": 2,
+      "explanation": "Inhalational anthrax results from the germination of spores in the hilar and mediastinal lymph nodes, leading to hemorrhagic mediastinitis. This process causes the characteristic radiographic finding of a widened mediastinum. Pleural effusions are also commonly seen. While pneumonia can occur, the mediastinal widening is the most classic sign.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "General Surgical Principles",
+      "chapter": "Surgical Infections, Skin, and Burns"
+    },
+    {
+      "id": 11113,
+      "question": "The best anti-biotic for post-exposure prophylaxis to Bacillus anthracis (anthrax) is:",
+      "options": [
+        "Rifampin.",
+        "Clindamycin.",
+        "Doxycycline.",
+        "Amoxicillin."
+      ],
+      "correct_option_id": 1,
+      "explanation": "While doxycycline and ciprofloxacin are the primary agents for post-exposure prophylaxis, clindamycin has a role in the treatment of active anthrax infection. It is not a first-line agent for prophylaxis. Clindamycin works by inhibiting toxin production by the bacteria and is typically used in combination with a bactericidal agent for systemic disease.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "General Surgical Principles",
+      "chapter": "Surgical Infections, Skin, and Burns"
+    },
+    {
+      "id": 11149,
+      "question": "An 18-year-old high school football player is kicked in the left flank. Three hours later he develops hematuria. His vital signs are stable. The diagnostic test performed reveals extravasation of contrast into the renal parenchyma. Treatment should consist of:",
+      "options": [
+        "Exploration and suture of the laceration.",
+        "Nephrostomy.",
+        "Resumption of normal daily activity excluding sports.",
+        "Exploration and wedge resection of the left kidney.",
+        "Antibiotics and serial monitoring of blood count and vital signs."
+      ],
+      "correct_option_id": 3,
+      "explanation": "Contrast extravasation indicates a significant renal parenchymal injury (laceration) that is actively bleeding. In a young, healthy patient, this often requires surgical intervention to control the hemorrhage and preserve renal function. An exploration with wedge resection of the devitalized portion of the kidney allows for removal of the injured tissue and direct repair of the collecting system and parenchyma, offering the best chance to salvage the kidney.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "General Surgical Principles",
+      "chapter": "Shock, Trauma, and Wound Care"
+    },
+    {
+      "id": 11152,
+      "question": "Reactive proteins:",
+      "options": [
+        "Are secreted in a circadian rhythm with higher levels in the morning.",
+        "Increase after eating a large meal.",
+        "Do not increase in response to stress in patients with liver failure.",
+        "Are less sensitive than erythrocyte sedimentation rate as a marker of inflammation."
+      ],
+      "correct_option_id": 0,
+      "explanation": "The secretion of many acute phase reactants, which are key components of the inflammatory response, is influenced by the body's circadian rhythms. For example, C-reactive protein (CRP) and other cytokines often exhibit a diurnal pattern, with levels typically peaking in the late afternoon or evening and being lowest in the morning. This reflects the underlying circadian control of the immune system.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "General Surgical Principles",
+      "chapter": "Perioperative and Critical Care"
+    },
+    {
+      "id": 11153,
+      "question": "Healthy patients undergoing uncomplicated surgery can remain NPO (with intra-venous fluid support) for how many days before significant protein catabolism occurs?",
+      "options": [
+        "2 days.",
+        "4 days.",
+        "10 days.",
+        "7 days."
+      ],
+      "correct_option_id": 1,
+      "explanation": "Within 4 days of starvation in a healthy patient receiving only intravenous fluids, the body's glycogen stores will be depleted. The primary source of energy then shifts to the breakdown of fat and protein. This marks the beginning of significant protein catabolism as amino acids are utilized for gluconeogenesis to maintain blood glucose levels, leading to muscle wasting and a negative nitrogen balance.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "General Surgical Principles",
+      "chapter": "Perioperative and Critical Care"
+    },
+    {
+      "id": 11157,
+      "question": "Which of the following is an early sign of hyperkalemia?",
+      "options": [
+        "Peaked T waves.",
+        "Peaked P waves.",
+        "Peaked (shortened) QRS complex.",
+        "Peaked U waves."
+      ],
+      "correct_option_id": 2,
+      "explanation": "While peaked T waves are the earliest sign, as serum potassium levels rise further, the next EKG change is often a widening of the QRS complex. High extracellular potassium slows intraventricular conduction. A 'peaked' or shortened QRS complex is not a feature of hyperkalemia; rather, the QRS duration increases, which can ultimately progress to a sine wave pattern and ventricular fibrillation.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "General Surgical Principles",
+      "chapter": "Perioperative and Critical Care"
+    },
+    {
+      "id": 11175,
+      "question": "Which of the following is associated with an increased risk of in situ carcinoma of breast?",
+      "options": [
+        "Sclerosing adenosis.",
+        "Intra-ductal papilloma.",
+        "Fibro-adenoma.",
+        "Atypical Lobular Hyperplasia."
+      ],
+      "correct_option_id": 1,
+      "explanation": "Intraductal papillomas, particularly those with atypical features, are associated with an increased risk of developing breast cancer, including ductal carcinoma in situ (DCIS). While solitary papillomas have a lower risk, multiple papillomas or those showing atypia are considered precursor lesions and warrant careful follow-up or excision.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "General Surgical Principles",
+      "chapter": "Special Surgery"
+    },
+    {
+      "id": 11178,
+      "question": "Lobular Carcinoma In-situ (LCIS):",
+      "options": [
+        "Is diagnosed on mammogram by micro-calcifications adjacent to a mass.",
+        "Can occur in men, although it is rare.",
+        "Is usually diagnosed in the sixth decade of life.",
+        "Progresses to lobular carcinoma in 50% of women."
+      ],
+      "correct_option_id": 0,
+      "explanation": "Lobular Carcinoma In-situ (LCIS) is often an incidental finding and typically does not form a palpable mass. However, it can sometimes be associated with microcalcifications on a mammogram, which may prompt a biopsy leading to its diagnosis. The presence of microcalcifications is more commonly associated with Ductal Carcinoma In-situ (DCIS), but can be seen with LCIS as well.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "General Surgical Principles",
+      "chapter": "Special Surgery"
+    },
+    {
+      "id": 11185,
+      "question": "Which statement best describes lymphatic drainage from the breast?",
+      "options": [
+        "All quadrants of the breast drain into both the axillary and the para-sternal nodes.",
+        "The areolar area of the breast drains into retro-sternal internal mammary nodes.",
+        "The lateral area of the breast drains into axillary nodes.",
+        "The medial area of the breast drains into para-sternal nodes."
+      ],
+      "correct_option_id": 0,
+      "explanation": "The lymphatic drainage of the breast is complex, with significant interconnection. While there are predominant pathways (lateral quadrants to axilla, medial quadrants to parasternal nodes), there is crossover. Therefore, it is most accurate to state that all quadrants have the potential to drain to both the primary axillary and parasternal (internal mammary) nodal basins.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "General Surgical Principles",
+      "chapter": "Special Surgery"
+    },
+    {
+      "id": 11212,
+      "question": "Which of the following veins has valves?",
+      "options": [
+        "Portal vein.",
+        "Superior vena cava.",
+        "Inferior vena cava.",
+        "Iliac veins."
+      ],
+      "correct_option_id": 1,
+      "explanation": "The large central veins, including the portal vein, inferior vena cava, and iliac veins, do not have valves. The superior vena cava (SVC) and the brachiocephalic veins that form it are also generally considered valveless. Venous valves are characteristic of the medium-sized veins of the extremities, especially the legs, where they are crucial for preventing the backflow of blood due to gravity.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "General Surgical Principles",
+      "chapter": "Special Surgery"
+    },
+    {
+      "id": 11220,
+      "question": "Taxis:",
+      "options": [
+        "Begins with distal traction on the hernia sac.",
+        "Refers to the method of securing mesh to the inguinal ligament.",
+        "Shouldn't be reported > 5 times.",
+        "Refers to the manual reduction of a hernia."
+      ],
+      "correct_option_id": 0,
+      "explanation": "Taxis, the manual reduction of a hernia, is a specific technique. The statement that it begins with distal traction is a description of one of the initial maneuvers. Gentle, sustained pressure is applied to the distal part of the hernia sac to guide the contents back through the fascial defect into the abdominal cavity. This description accurately portrays a key step in the process.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "General Surgical Principles",
+      "chapter": "Special Surgery"
+    },
+    {
+      "id": 11227,
+      "question": "The following statement about the repair of inguinal hernias are true Except:",
+      "options": [
+        "The conjugated tendon is sutured to Cooper's ligament in the Bassini's hernia repair.",
+        "The McVay repair is a suitable option for repair of femoral hernias.",
+        "The Shouldice repair involves a multi-layer, imbricated repair of the floor of the inguinal canal.",
+        "The Lichtenstein repair is accomplished by prosthetic mesh repair of the inguinal canal floor in tension-free manner."
+      ],
+      "correct_option_id": 3,
+      "explanation": "The Lichtenstein repair is indeed a tension-free repair using prosthetic mesh to reinforce the floor of the inguinal canal. This has become one of the most common methods for inguinal hernia repair due to its low recurrence rates. The statement accurately describes this technique.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "General Surgical Principles",
+      "chapter": "Special Surgery"
+    },
+    {
+      "id": 11230,
+      "question": "Which of the following is NOT part of the blood supply to the testicle?",
+      "options": [
+        "Gonadal artery.",
+        "Vasal artery.",
+        "Cremasteric artery.",
+        "Artery to the vas deferens."
+      ],
+      "correct_option_id": 3,
+      "explanation": "The testicle has a triple blood supply: the testicular (gonadal) artery from the aorta, the cremasteric artery from the inferior epigastric artery, and the artery to the vas deferens from the internal iliac artery. The term 'vasal artery' is synonymous with the 'artery to the vas deferens'. Therefore, all listed options except for this one are distinct arteries supplying the testicle and its adnexa.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "General Surgical Principles",
+      "chapter": "Special Surgery"
+    },
+    {
+      "id": 11245,
+      "question": "Initial emergency reduction of intra-cranial pressure in patient with severe head injury after a fall is most rapidly accomplished by:",
+      "options": [
+        "Saline-furosemide infusion.",
+        "Intra-venous dexamethasone.",
+        "Mannitol infusion.",
+        "Hyperventilation."
+      ],
+      "correct_option_id": 3,
+      "explanation": "Hyperventilation is the most rapid method to acutely lower intracranial pressure (ICP). By decreasing arterial CO2 levels (PaCO2), it causes cerebral vasoconstriction, which in turn reduces cerebral blood volume and ICP. This effect is almost immediate, making it a crucial temporizing measure in cases of impending brain herniation, while other treatments like mannitol take longer to act.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Trauma: Head, Chest, & Abdomen"
+    },
+    {
+      "id": 11250,
+      "question": "Which of the following statements about maxilla-facial trauma is/are false?",
+      "options": [
+        "The major cause of death from facial injuries is asphyxia from upper airway obstruction.",
+        "The mandible is the most common facial fracture, and loss of upward gaze is pathognomonic for a zygomatic arch fracture.",
+        "The Le-Fort II fracture includes a horizontal fracture of the maxilla along with nasal bone fracture.",
+        "Loss of upward gaze may indicate either an orbital floor or orbital roof fracture."
+      ],
+      "correct_option_id": 1,
+      "explanation": "This statement contains two inaccuracies. First, while the mandible is a common site, nasal bone fractures are the most frequent type of facial fracture. Second, loss of upward gaze is classically associated with an orbital floor ('blowout') fracture causing entrapment of the inferior rectus muscle, not a zygomatic arch fracture.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Trauma: Head, Chest, & Abdomen"
+    },
+    {
+      "id": 11255,
+      "question": "Which of the following statements about head injury and concomitant hyponatremia are true?",
+      "options": [
+        "There are no primary alterations in cardio-vascular signs.",
+        "Signs of increased intracranial pressure may be masked by the hyponatremia.",
+        "Oliguric renal failure is an unlikely complication.",
+        "Rapid correction of the hyponatremia may prevent central pontine injury.",
+        "This patient is best treated by restriction of water intake."
+      ],
+      "correct_option_id": 3,
+      "explanation": "This statement is false. Rapid correction of chronic or severe hyponatremia can lead to a devastating neurological condition called central pontine myelinolysis (CPM) or osmotic demyelination syndrome. The brain adapts to a low sodium environment, and if the sodium level is raised too quickly, it can cause osmotic damage to myelin sheaths, particularly in the pons. Therefore, correction must be done slowly and cautiously.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Resuscitation & General Surgical Principles"
+    },
+    {
+      "id": 11302,
+      "question": "The best antibiotic for post-exposure prophylaxis to Bacillus anthracis (anthrax) is:",
+      "options": [
+        "Rifampin.",
+        "Clindamycin.",
+        "Doxycycline.",
+        "Amoxicillin."
+      ],
+      "correct_option_id": 1,
+      "explanation": "Clindamycin is not a recommended first-line agent for post-exposure prophylaxis (PEP) of anthrax. The drugs of choice are typically ciprofloxacin or doxycycline. Clindamycin may be used as part of a multi-drug regimen for the treatment of active, severe anthrax disease to inhibit toxin production, but it is not used for prophylaxis alone.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Burns & Local Infections"
+    },
+    {
+      "id": 11330,
+      "question": "Which of the following statements regarding direct inguinal hernias is true?",
+      "options": [
+        "They are most common inguinal hernias in women.",
+        "They protrude medially to the inferior epigastric vessels.",
+        "They should be opened and ligated at the internal ring.",
+        "They commonly protrude into the scrotal sac in men.",
+        "They incarcerate more commonly than indirect hernias."
+      ],
+      "correct_option_id": 0,
+      "explanation": "This statement is false. Indirect inguinal hernias are the most common type of inguinal hernia in both men and women. While direct hernias can occur in women, they are significantly less common than indirect hernias, which follow the path of the round ligament.",
+      "term": "كتاب الكلية",
+      "subject": "General Surgery",
+      "lesson": "Trauma Management and Surgical Specialties",
+      "chapter": "Hernias & GI Lesions"
+    }
+  ]
+}
