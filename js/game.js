@@ -162,7 +162,7 @@ const Game = {
         let sub = [...State.pool];
         
         // Filter pool based on previous selections
-        const currentTerm = State.sel.terms[0];
+        const currentTerm = State.sel.terms[0] || State.sel.term;
         if (currentTerm) sub = sub.filter(q => q.term === currentTerm);
         if(State.sel.subj) sub = sub.filter(q => q.subject === State.sel.subj);
         
