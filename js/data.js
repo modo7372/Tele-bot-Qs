@@ -82,8 +82,6 @@ const Data = {
     },
 
     // Load Questions
-    // In data.js, replace the loadQuestions function:
-
     loadQuestions: async () => {
         try {
             const list = await (await fetch('questions_list.json')).json();
@@ -113,6 +111,8 @@ const Data = {
             const dbStatus = document.getElementById('db-status');
             if(dbStatus) dbStatus.innerText = State.allQ.length + ' سؤال';
             if(UI && UI.updateHomeStats) UI.updateHomeStats();
+            // Re-render term selector after questions load
+            if(UI && UI.renderTermSelector) UI.renderTermSelector();
 
         } catch(e) { 
             const dbStatus = document.getElementById('db-status');
@@ -130,19 +130,26 @@ const Data = {
         console.log("🔍 telegram_id:", State.user.telegram_id);
         console.log("🔍 ALLOWED_IDS:", ALLOWED_IDS);
 
-
-        const savedTerms = localStorage.getItem('globalSelectedTerms');
-            if (savedTerms) {
+        // FIXED: Safely load globalSelectedTerms with null check
+        try {
+            const savedTerms = localStorage.getItem('globalSelectedTerms');
+            if (savedTerms && savedTerms !== 'undefined') {
                 State.globalSelectedTerms = JSON.parse(savedTerms);
+            } else {
+                State.globalSelectedTerms = [];
             }
+        } catch (e) {
+            console.log("⚠️ Error loading globalSelectedTerms:", e);
+            State.globalSelectedTerms = [];
+        }
 
-        // Load local data first
+        // Load local data first - FIXED: with null/undefined checks
         const local = {
-            mistakes: JSON.parse(localStorage.getItem('mistakes') || '[]'),
-            archive: JSON.parse(localStorage.getItem('archive') || '[]'),
-            fav: JSON.parse(localStorage.getItem('fav') || '[]'),
-            settings: JSON.parse(localStorage.getItem('settings') || '{}'),
-            sessions: JSON.parse(localStorage.getItem('sessions') || '[]')
+            mistakes: Data.safeJSONParse(localStorage.getItem('mistakes'), []),
+            archive: Data.safeJSONParse(localStorage.getItem('archive'), []),
+            fav: Data.safeJSONParse(localStorage.getItem('fav'), []),
+            settings: Data.safeJSONParse(localStorage.getItem('settings'), {}),
+            sessions: Data.safeJSONParse(localStorage.getItem('sessions'), [])
         };
         State.localData = local;
         
@@ -193,6 +200,17 @@ const Data = {
             Data.setupAdminPanel();
         }
     },
+
+    // NEW: Safe JSON parse helper
+    safeJSONParse: (str, defaultVal) => {
+        try {
+            if (!str || str === 'undefined' || str === 'null') return defaultVal;
+            return JSON.parse(str);
+        } catch (e) {
+            return defaultVal;
+        }
+    },
+
     mergeArrays: (local, cloud) => {
         if (!cloud) return local;
         if (!local) return cloud;
@@ -209,12 +227,12 @@ const Data = {
             last_updated: firebase.database.ServerValue.TIMESTAMP
         };
         
-        // LocalStorage
-        localStorage.setItem('globalSelectedTerms', JSON.stringify(State.globalSelectedTerms));
-        localStorage.setItem('mistakes', JSON.stringify(State.localData.mistakes));
-        localStorage.setItem('archive', JSON.stringify(State.localData.archive));
-        localStorage.setItem('fav', JSON.stringify(State.localData.fav));
-        localStorage.setItem('settings', JSON.stringify(State.localData.settings));
+        // LocalStorage - FIXED: Always save valid JSON
+        localStorage.setItem('globalSelectedTerms', JSON.stringify(State.globalSelectedTerms || []));
+        localStorage.setItem('mistakes', JSON.stringify(State.localData.mistakes || []));
+        localStorage.setItem('archive', JSON.stringify(State.localData.archive || []));
+        localStorage.setItem('fav', JSON.stringify(State.localData.fav || []));
+        localStorage.setItem('settings', JSON.stringify(State.localData.settings || {}));
         
         // Firebase
         if (currentUser) {
