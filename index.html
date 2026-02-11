@@ -504,10 +504,9 @@
     </script>
 
     <!-- Load JS files in CORRECT ORDER with proper paths -->
-    <script src="js/config.js?v=5.0"></script>
-    <script src="js/data.js?v=5.0"></script>
-    <script src="js/ui.js?v=5.0"></script>
-    <script src="js/game.js?v=5.0"></script>
+    <script src="js/data.js?v=5.2"></script>
+    <script src="js/ui.js?v=5.2"></script>
+    <script src="js/game.js?v=5.2"></script>
     
     <!-- Main Application Logic (replaces main.js) -->
     <script>
@@ -516,7 +515,7 @@
         // ============================================
         
         window.onload = async () => {
-            const APP_VER = '7.9-firebase';
+            const APP_VER = '8.9-firebase';
             const savedVer = localStorage.getItem('app_version');
             if(savedVer !== APP_VER) {
                 localStorage.setItem('app_version', APP_VER);
