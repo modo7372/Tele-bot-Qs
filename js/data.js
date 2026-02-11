@@ -129,7 +129,13 @@ const Data = {
         console.log("🔍 State.user:", State.user);
         console.log("🔍 telegram_id:", State.user.telegram_id);
         console.log("🔍 ALLOWED_IDS:", ALLOWED_IDS);
-        
+
+
+        const savedTerms = localStorage.getItem('globalSelectedTerms');
+            if (savedTerms) {
+                State.globalSelectedTerms = JSON.parse(savedTerms);
+            }
+
         // Load local data first
         const local = {
             mistakes: JSON.parse(localStorage.getItem('mistakes') || '[]'),
@@ -204,6 +210,7 @@ const Data = {
         };
         
         // LocalStorage
+        localStorage.setItem('globalSelectedTerms', JSON.stringify(State.globalSelectedTerms));
         localStorage.setItem('mistakes', JSON.stringify(State.localData.mistakes));
         localStorage.setItem('archive', JSON.stringify(State.localData.archive));
         localStorage.setItem('fav', JSON.stringify(State.localData.fav));
