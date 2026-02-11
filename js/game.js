@@ -1,15 +1,10 @@
-/* --- START OF FILE game.js --- */
-
 let tInt; let cStep = ''; let autoNavTimer = null;
-
-// Track steps to handle smart navigation back (used by prevSel)
-let navHistory = []; // Stores the names of steps already passed (e.g., ['term', 'subj'])
+let navHistory = [];
 
 const Game = {
-    // ... (Keep triggerHaptic, shareApp, randomizeUI, toggleInstant) ...
     triggerHaptic: (type) => {
         if(State.localData.settings?.haptic === false) return;
-        if (window.Telegram.WebApp.isVersionAtLeast && window.Telegram.WebApp.isVersionAtLeast('6.1')) {
+        if (window.Telegram.WebApp.isVersionAtLeast?.('6.1')) {
             try {
                 if(type === 'success') Telegram.WebApp.HapticFeedback.notificationOccurred('success');
                 else if(type === 'error') Telegram.WebApp.HapticFeedback.notificationOccurred('error');
@@ -17,23 +12,25 @@ const Game = {
             } catch(e){}
         }
     },
+    
     shareApp: () => {
         Game.triggerHaptic('selection');
         const botLink = "https://t.me/YourBotName/app"; 
         const msg = "تطبيق ممتاز لأسئلة الجراحة والميدكال، جربه الآن! 🔥👨‍⚕️";
         const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(botLink)}&text=${encodeURIComponent(msg)}`;
-        if (window.Telegram && window.Telegram.WebApp) Telegram.WebApp.openTelegramLink(shareUrl);
+        if (window.Telegram?.WebApp) Telegram.WebApp.openTelegramLink(shareUrl);
         else window.open(shareUrl, '_blank');
     },
+    
     randomizeUI: () => {
         Game.triggerHaptic('selection');
         const rndTheme = THEMES[Math.floor(Math.random() * THEMES.length)];
         UI.setTheme(rndTheme.id);
         UI.initAnim(true); 
     },
+    
     toggleInstant: (val) => { State.instantFeedback = val; },
     
-    // Ensure Zen Mode is disabled before confirming exit
     confirmExit: () => { 
         if(document.getElementById('app-wrap').classList.contains('zen-mode-active')) {
             Game.toggleZenMode(false);
@@ -41,25 +38,18 @@ const Game = {
         if(confirm('هل تريد الخروج والعودة للقائمة الرئيسية؟')) UI.goHome(); 
     },
 
-    // ### ZEN MODE FIX ###
     toggleZenMode: (force) => {
-        // Correctly target the main app container which has the .container class
         const container = document.getElementById('app-wrap'); 
         const button = document.getElementById('btn-zen-mode');
         
-        let shouldActivate;
-        if (typeof force === 'boolean') {
-            shouldActivate = force;
-        } else {
-            shouldActivate = !container.classList.contains('zen-mode-active');
-        }
+        let shouldActivate = typeof force === 'boolean' ? force : !container.classList.contains('zen-mode-active');
 
         container.classList.toggle('zen-mode-active', shouldActivate);
         
         if (shouldActivate) {
             button.innerHTML = '🧘‍♀️ الخروج من وضع زين';
             button.classList.add('zen-active-btn');
-            Game.triggerHaptic('success'); // Use success haptic for entering
+            Game.triggerHaptic('success');
         } else {
             button.innerHTML = '🧘 وضع زين';
             button.classList.remove('zen-active-btn');
@@ -76,8 +66,7 @@ const Game = {
     getFilteredPool: () => {
         let p = [...State.allQ];
     
-        // Apply global term filter FIRST if any terms are selected
-        if (State.globalSelectedTerms && State.globalSelectedTerms.length > 0) {
+        if (State.globalSelectedTerms?.length > 0) {
             p = p.filter(q => State.globalSelectedTerms.includes(q.term));
         }
     
@@ -91,27 +80,19 @@ const Game = {
         return p;
     },
 
-
-    // ... (Keep luckyShot, startGlobalRandom, startFavMode) ...
     luckyShot: () => {
-        let pool = Game.getFilteredPool(); // Respects global term filter
+        let pool = Game.getFilteredPool();
         if(!pool.length) {
-            if (State.globalSelectedTerms.length > 0) {
-                return alert('لا توجد أسئلة في التروم المختارة.');
-            }
-            return alert('لا توجد أسئلة متاحة حسب الفلتر المختار.');
+            return alert(State.globalSelectedTerms.length > 0 ? 'لا توجد أسئلة في التروم المختارة.' : 'لا توجد أسئلة متاحة.');
         }
         const q = pool[Math.floor(Math.random() * pool.length)];
         Game.startQuizSession([q], 'lucky');
     },
 
     startGlobalRandom: () => {
-        let sub = Game.getFilteredPool(); // Respects global term filter
+        let sub = Game.getFilteredPool();
         if(!sub.length) {
-            if (State.globalSelectedTerms.length > 0) {
-                return alert('لا توجد أسئلة في التروم المختارة حسب الفلتر المختار.');
-            }
-            return alert('القائمة فارغة حسب الفلتر المختار.');
+            return alert(State.globalSelectedTerms.length > 0 ? 'لا توجد أسئلة في التروم المختارة.' : 'القائمة فارغة.');
         }
         sub.sort(() => 0.5 - Math.random());
         const count = Math.floor(Math.random() * 50) + 1;
@@ -124,8 +105,7 @@ const Game = {
     
         let pool = State.allQ.filter(q => favs.includes(q.id));
     
-        // Apply global term filter to favorites too
-        if (State.globalSelectedTerms && State.globalSelectedTerms.length > 0) {
+        if (State.globalSelectedTerms?.length > 0) {
             pool = pool.filter(q => State.globalSelectedTerms.includes(q.term));
         }
     
@@ -139,21 +119,15 @@ const Game = {
     startFlow: (m) => {
         State.tempMode = m; 
         State.isRankMode = false;
-        State.pool = Game.getFilteredPool(); // This now includes global term filter
+        State.pool = Game.getFilteredPool();
     
         if(!State.pool.length) {
-            // Check if it's because of term filter
-            if (State.globalSelectedTerms.length > 0) {
-                return alert('لا توجد أسئلة متاحة في التروم المختارة حسب الفلتر المختار.');
-            }
-            return alert('لا توجد أسئلة متاحة.');
+            return alert(State.globalSelectedTerms.length > 0 ? 'لا توجد أسئلة في التروم المختارة.' : 'لا توجد أسئلة متاحة.');
         }
     
-        // Reset state and history
         State.sel = {terms:[], subj:null, lessons:[], chapters:[], limit:'All'};
         navHistory = []; 
     
-        // If terms are pre-selected globally, skip term selection and go to subject
         if (State.globalSelectedTerms.length > 0) {
             State.sel.terms = [...State.globalSelectedTerms];
             Game.renderSel('subj');
@@ -170,25 +144,19 @@ const Game = {
         UI.updateActiveTermIndicator();
         Data.saveData();
         Game.triggerHaptic('selection');
-    }, // FIXED: Added comma here
+    }, // <-- COMMA HERE
 
     startRankMode: () => {
         State.isRankMode = true; 
-        // Apply global term filter to rank mode too
         State.pool = [...State.allQ];
-        if (State.globalSelectedTerms && State.globalSelectedTerms.length > 0) {
+        if (State.globalSelectedTerms?.length > 0) {
             State.pool = State.pool.filter(q => State.globalSelectedTerms.includes(q.term));
         }
     
         State.sel = {term:null, subj:null, lessons:[], chapters:[], limit:'All'}; 
         navHistory = [];
     
-        // Skip term selection if globally selected
-        if (State.globalSelectedTerms.length === 1) {
-            State.sel.term = State.globalSelectedTerms[0];
-            Game.renderSel('subj');
-        } else if (State.globalSelectedTerms.length > 1) {
-            // For multiple terms in rank mode, use the first one or show term selector
+        if (State.globalSelectedTerms.length >= 1) {
             State.sel.term = State.globalSelectedTerms[0];
             Game.renderSel('subj');
         } else {
@@ -209,32 +177,26 @@ const Game = {
     },
 
     renderSel: (step) => {
-        // --- START FIX: Record History and Handle Errors ---
-        // 1. Record navigation step before changing cStep, only if we came from a different step
         if (cStep && cStep !== step && !navHistory.includes(cStep)) { 
              navHistory.push(cStep);
         }
         
         cStep = step; 
         UI.showView('v-select');
-        const list = document.getElementById('sel-body'); list.innerHTML='';
-        const titleMap = {'term':'الترم','subj':'المادة','lesson':'المحاضرة','chapter':'الفصل','limit':'العدد'};
+        const list = document.getElementById('sel-body'); 
+        if(list) list.innerHTML='';
         
+        const titleMap = {'term':'الترم','subj':'المادة','lesson':'المحاضرة','chapter':'الفصل','limit':'العدد'};
         const prefix = State.isRankMode ? "ترتيب: " : "اختر ";
         document.getElementById('sel-head').innerText = `${prefix} ${titleMap[step] || step}`;
         
         const btnRnd = document.getElementById('btn-mode-random');
         const btnAll = document.getElementById('btn-all');
 
-        // Safe hiding of buttons (Fixes the Null Error)
         if (btnRnd) btnRnd.classList.add('hidden');
         if (btnAll) btnAll.classList.add('hidden');
-        // --- END FIX: Record History and Handle Errors ---
-
 
         let sub = [...State.pool];
-        
-        // Filter pool based on previous selections
         const currentTerm = State.sel.terms[0] || State.sel.term;
         if (currentTerm) sub = sub.filter(q => q.term === currentTerm);
         if(State.sel.subj) sub = sub.filter(q => q.subject === State.sel.subj);
@@ -255,7 +217,6 @@ const Game = {
             isMulti = false; 
             if(items.length === 1 && !State.isRankMode) { 
                 State.sel.subj = items[0];
-                // Record the automatic step and proceed
                 navHistory.push(cStep);
                 return Game.renderSel('lesson');
             }
@@ -266,24 +227,23 @@ const Game = {
             isMulti=true;
             if(items.length === 1) {
                 State.sel.lessons = [items[0]];
-                // Record the automatic step and proceed
                 navHistory.push(cStep);
                 return Game.renderSel('chapter');
             }
-            // Ensure State.sel.lessons is reset if showing options manually
             State.sel.lessons = []; 
             if (btnAll) btnAll.classList.remove('hidden');
         }
         else if(step==='chapter') {
             isMulti=true;
-            
             const currentLessons = State.sel.lessons;
             State.sel.chapters = []; 
             
             currentLessons.forEach(l => {
                 const lDiv = document.createElement('div');
                 lDiv.innerHTML = `<div style="position:sticky; top:0; background:var(--glass-bg); padding:5px; z-index:2; font-weight:bold; color:var(--primary); border-bottom:1px solid #ccc;">📂 ${l}</div>`;
-                const g = document.createElement('div'); g.className='chip-grid'; g.style.padding='5px';
+                const g = document.createElement('div'); 
+                g.className='chip-grid'; 
+                g.style.padding='5px';
                 [...new Set(sub.filter(q=>q.lesson===l).map(q=>q.chapter))].forEach(ch => {
                     const c = Game.createChip(ch, true);
                     g.appendChild(c);
@@ -294,14 +254,12 @@ const Game = {
             if (btnAll) btnAll.classList.remove('hidden');
             return;
         }
-        
         else if(step==='limit') {
             ['10','20','30','50','All'].forEach(l => {
                 const b = document.createElement('div'); 
                 b.className='chip'; 
                 b.innerText=l;
-                b.dataset.val = l;  // <-- ADD THIS LINE
-        
+                b.dataset.val = l;
                 b.onclick = () => { 
                     document.querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));
                     b.classList.add('selected');
@@ -313,11 +271,10 @@ const Game = {
             return;
         }
 
-        // Render generic chips for Term, Subject, Lesson
-        const g = document.createElement('div'); g.className='chip-grid';
+        const g = document.createElement('div'); 
+        g.className='chip-grid';
         items.sort().forEach(i => {
             const chip = Game.createChip(i, isMulti);
-            // Re-select previously chosen single item if exists (Term/Subject)
             if (!isMulti) {
                 if (step === 'term' && State.sel.terms.includes(i)) chip.classList.add('selected');
                 else if (step === 'subj' && State.sel.subj === i) chip.classList.add('selected');
@@ -325,22 +282,21 @@ const Game = {
             }
             g.appendChild(chip);
         });
-        list.appendChild(g);
+        if(list) list.appendChild(g);
     },
 
     createChip: (val, multi) => {
-        const c = document.createElement('div'); c.className='chip'; c.innerText=val; c.dataset.val=val;
+        const c = document.createElement('div'); 
+        c.className='chip'; 
+        c.innerText=val; 
+        c.dataset.val=val;
         c.onclick = () => {
             Game.triggerHaptic('selection');
             if(multi) {
-                // Multi-select mode (Lesson, Chapter)
                 c.classList.toggle('selected');
             } else {
-                // Single-select mode (Term, Subject)
                 document.querySelectorAll('.chip').forEach(ch=>ch.classList.remove('selected'));
                 c.classList.add('selected');
-                
-                // Clicking selects, but user must hit 'Next' to proceed
             }
         };
         return c;
@@ -351,130 +307,47 @@ const Game = {
         
         if(cStep === 'term') {
              if(picked.length !== 1) return alert('الرجاء اختيار ترم واحد');
-             
              State.sel.subj = null;
              State.sel.lessons = [];
              State.sel.chapters = [];
-             
-             if (State.isRankMode) {
-                 State.sel.term = picked[0];
-             } else {
-                 State.sel.terms = picked;
-             }
+             State.sel.terms = picked;
              Game.renderSel('subj');
-             
         } else if(cStep === 'subj') { 
              if(picked.length !== 1) return alert('الرجاء اختيار مادة واحدة فقط');
-             
              State.sel.lessons = [];
              State.sel.chapters = [];
-             
              State.sel.subj = picked[0];
              Game.renderSel('lesson');
-
         } else if(cStep === 'lesson') { 
             if(!picked.length) return alert('اختر محاضرة واحدة على الأقل'); 
-            
             State.sel.chapters = [];
             State.sel.lessons=picked; 
             Game.renderSel('chapter'); 
-            
         } else if(cStep === 'chapter') { 
             if(!picked.length) return alert('اختر فصلاً واحداً على الأقل'); 
             State.sel.chapters=picked; 
             Game.renderSel('limit'); 
-            
         } else if(cStep === 'limit') {
-            // --- FIX: Check if State.sel.limit was set on click. If not, check if a chip was selected now.
             let limit = State.sel.limit;
-            if (limit === 'All') {
-                 // Do nothing, default is acceptable
-            } else if (picked.length === 1 && picked[0] !== 'All') {
-                 // This shouldn't happen if chip logic worked, but as a fallback
+            if (limit !== 'All' && picked.length === 1 && picked[0] !== 'All') {
                  limit = picked[0];
                  State.sel.limit = limit;
-            } else {
-                 // Failsafe if nothing was explicitly selected (and default isn't 'All' but it should be)
-                 // This condition is now highly unlikely if the chip onclick logic is correct.
-                 return alert('الرجاء تحديد عدد الأسئلة أو اختيار "الكل"');
             }
-            
             Game.initQuiz();
-            // --- END FIX: Limit Selection ---
         }
     },
     
-    // Smart Back Button Logic (Simplified and Fixed)
     prevSel: () => {
-        if (navHistory.length === 0) {
-            return UI.goHome();
-        }
-
-        const currentStep = cStep; // e.g., 'limit'
-        const previousStepInHistory = navHistory.pop(); // e.g., 'chapter' or 'lesson'
-
-        // Double Back Logic: Check if the previous step we landed on was an AUTO-SKIP.
-        const isSkippedStep = ['subj', 'lesson'].includes(previousStepInHistory);
-
-        let mustDoubleBack = false;
-        
-        if (isSkippedStep) {
-            // If we are backing to a step that was auto-skipped, we must double back
-            
-            if (previousStepInHistory === 'subj') {
-                 // Check if subject was auto-skipped (requires only one subject for the current term)
-                 const currentTerm = State.sel.terms[0];
-                 if (currentTerm) {
-                     const tempPool = State.pool.filter(q => q.term === currentTerm);
-                     const uniqueSubjects = [...new Set(tempPool.map(q => q.subject))];
-                     if (uniqueSubjects.length === 1) {
-                         mustDoubleBack = true;
-                         // Clear state to force rendering the previous step (Term)
-                         State.sel.subj = null; 
-                         State.sel.terms = []; 
-                     }
-                 }
-            } else if (previousStepInHistory === 'lesson') {
-                 // Check if lesson was auto-skipped (requires only one lesson for the current subject)
-                 const currentTerm = State.sel.terms[0];
-                 let tempPool = [...State.pool];
-                 if (currentTerm) tempPool = tempPool.filter(q => q.term === currentTerm);
-                 if(State.sel.subj) tempPool = tempPool.filter(q => q.subject === State.sel.subj);
-
-                 const uniqueLessons = [...new Set(tempPool.map(q => q.lesson))];
-
-                 if (uniqueLessons.length === 1 && State.sel.subj) {
-                     mustDoubleBack = true;
-                     // Clear state to force rendering the previous step (Subject)
-                     State.sel.lessons = []; 
-                     State.sel.subj = null; 
-                 }
-            }
-        }
-        
-        if (mustDoubleBack) {
-            // Remove one more step from history and render
-            const stepToRender = navHistory.pop() || 'term';
-            Game.renderSel(stepToRender);
-        } else {
-            // Single step back: render the explicitly chosen step
-            // We must clear the data for the step we were just on, to allow re-selection
-            if (currentStep === 'limit') State.sel.limit = 'All';
-            else if (currentStep === 'chapter') State.sel.chapters = [];
-            else if (currentStep === 'lesson') State.sel.lessons = [];
-            else if (currentStep === 'subj') State.sel.subj = null;
-            else if (currentStep === 'term') State.sel.terms = [];
-
-            Game.renderSel(previousStepInHistory);
-        }
+        if (navHistory.length === 0) return UI.goHome();
+        const currentStep = cStep;
+        const previousStep = navHistory.pop();
+        Game.renderSel(previousStep);
     },
 
     toggleAll: () => document.querySelectorAll('.chip').forEach(c => c.classList.toggle('selected')),
 
     initQuiz: () => {
         const selectedTerm = State.sel.terms[0]; 
-
-        // 1. Filter the entire pool based on selections
         let filteredPool = State.pool.filter(q => 
             (selectedTerm ? q.term === selectedTerm : true) && 
             State.sel.subj === q.subject && 
@@ -482,27 +355,17 @@ const Game = {
             State.sel.chapters.some(c => q.chapter === c)
         );
 
-        // 2. Shuffle the resulting pool
         filteredPool.sort(() => 0.5 - Math.random());
+        let quizQuestions = State.sel.limit !== 'All' 
+            ? filteredPool.slice(0, parseInt(State.sel.limit, 10))
+            : filteredPool;
 
-        // 3. Apply the limit if it's not 'All'
-        let quizQuestions;
-        if (State.sel.limit !== 'All') {
-            const limit = parseInt(State.sel.limit, 10);
-            // Slice the array. If there are fewer questions than the limit, it will just take all of them.
-            quizQuestions = filteredPool.slice(0, limit);
-        } else {
-            quizQuestions = filteredPool;
-        }
-
-        // 4. Start the quiz session. The check for an empty array is now reliably handled inside startQuizSession.
         Game.startQuizSession(quizQuestions, State.tempMode || 'normal');
     },
 
     startQuizSession: (questions, mode) => {
-        // CRITICAL BUG FIX: Add a failsafe check to prevent crash on empty question array
         if (!questions || questions.length === 0) {
-            alert('لا توجد أسئلة تطابق معايير البحث. ستتم إعادتك للقائمة الرئيسية.');
+            alert('لا توجد أسئلة تطابق معايير البحث.');
             return UI.goHome();
         }
 
@@ -510,29 +373,35 @@ const Game = {
         State.qIdx = 0;
         State.score = 0;
         State.answers = new Array(questions.length).fill(null).map(() => ({ answered: false, selectedIdx: null, isCorrect: false }));
-        State.instantFeedback = document.getElementById('chk-instant').checked;
-        
-        // Initial state for irrelevant options display based on setting (which is defaulted correctly by UI.init)
+        State.instantFeedback = document.getElementById('chk-instant')?.checked ?? true;
         State.showIrrelevantOptions = !(State.localData.settings?.hideIrrelevant === true);
+        State.mode = mode;
 
         UI.showView('v-quiz');
-        UI.initAnim(true);
         if(mode === 'timeAttack') Game.startTimer();
-        else document.getElementById('timer-bar').style.display='none';
+        else {
+            const timerBar = document.getElementById('timer-bar');
+            if(timerBar) timerBar.style.display='none';
+        }
 
         const isSearchOrView = (mode === 'view_mode' || mode === 'search_mode');
-        document.getElementById('btn-finish').style.display = isSearchOrView ? 'none' : 'inline-block';
-        document.getElementById('archive-controls').classList.toggle('hidden', !isSearchOrView);
-        document.getElementById('btn-toggle-options').classList.add('hidden');
+        const btnFinish = document.getElementById('btn-finish');
+        if(btnFinish) btnFinish.style.display = isSearchOrView ? 'none' : 'inline-block';
+        
+        const archiveControls = document.getElementById('archive-controls');
+        if(archiveControls) archiveControls.classList.toggle('hidden', !isSearchOrView);
+        
+        const btnToggle = document.getElementById('btn-toggle-options');
+        if(btnToggle) btnToggle.classList.add('hidden');
         
         const navContainer = document.getElementById('quiz-navigator');
         const navToggle = document.getElementById('btn-nav-toggle');
         if(isSearchOrView) {
-            navToggle.classList.remove('hidden');
+            if(navToggle) navToggle.classList.remove('hidden');
             Game.renderNavigator();
         } else {
-            navToggle.classList.add('hidden');
-            navContainer.classList.remove('open');
+            if(navToggle) navToggle.classList.add('hidden');
+            if(navContainer) navContainer.classList.remove('open');
         }
 
         Game.renderQ();
@@ -540,6 +409,7 @@ const Game = {
 
     renderNavigator: () => {
         const grid = document.getElementById('nav-grid-content');
+        if(!grid) return;
         grid.innerHTML = '';
         State.quiz.forEach((q, i) => {
             const btn = document.createElement('button');
@@ -549,12 +419,17 @@ const Game = {
             grid.appendChild(btn);
         });
     },
+    
     toggleNavigator: (force) => {
         const el = document.getElementById('quiz-navigator');
-        if(typeof force === 'boolean') { if(force) el.classList.add('open'); else el.classList.remove('open'); } 
-        else { el.classList.toggle('open'); }
+        if(!el) return;
+        if(typeof force === 'boolean') { 
+            force ? el.classList.add('open') : el.classList.remove('open'); 
+        } else { 
+            el.classList.toggle('open'); 
+        }
         document.querySelectorAll('.nav-btn').forEach((b, i) => {
-             if(i === State.qIdx) b.classList.add('current'); else b.classList.remove('current');
+             b.classList.toggle('current', i === State.qIdx);
         });
     },
 
@@ -569,13 +444,12 @@ const Game = {
         }
     },
 
-    // PDF Mode Logic
     startPDFMode: (questions) => {
         UI.showView('v-pdf');
         const list = document.getElementById('pdf-list');
+        if(!list) return;
         list.innerHTML = '';
         
-        // NEW FEATURE: Check the user's setting for auto-hiding before the loop
         const shouldHideIrrelevant = State.localData.settings?.hideIrrelevant === true;
 
         questions.forEach((q, i) => {
@@ -583,11 +457,9 @@ const Game = {
             d.className = 'pdf-item';
             let optsHtml = '';
             
-            // MODIFIED: Loop checks the setting before adding an option
             q.options.forEach((o, idx) => {
                 const isCorrect = (idx === q.correct_option_id);
-                // Only render if auto-hide is OFF, OR if auto-hide is ON AND it's the correct option
-                if (!shouldHideIrrelevant || (shouldHideIrrelevant && isCorrect)) {
+                if (!shouldHideIrrelevant || isCorrect) {
                     optsHtml += `<div class="pdf-opt ${isCorrect ? 'is-correct' : ''}">${o}</div>`;
                 }
             });
@@ -601,10 +473,9 @@ const Game = {
         });
     },
 
-    // ... (Keep other functions) ...
     execSearch: (mode = 'quiz') => {
-        const idVal = document.getElementById('inp-search-id').value;
-        const txtVal = document.getElementById('inp-search-txt').value.toLowerCase();
+        const idVal = document.getElementById('inp-search-id')?.value;
+        const txtVal = document.getElementById('inp-search-txt')?.value.toLowerCase();
         let found = [];
     
         if(idVal) {
@@ -638,9 +509,9 @@ const Game = {
             Game.startQuizSession(found, 'search_mode');
         }
     },
+    
     toggleAnswerView: () => {
         const qState = State.answers[State.qIdx];
-        const q = State.quiz[State.qIdx];
         if(qState.answered) {
             qState.answered = false; 
             State.showIrrelevantOptions = true;
@@ -649,11 +520,13 @@ const Game = {
             Game.answer(q.correct_option_id, true); 
         }
     },
+    
     toggleIrrelevantOptionsDisplay: () => {
         State.showIrrelevantOptions = !State.showIrrelevantOptions;
         Game.renderOptions();
         Game.triggerHaptic('selection');
     },
+    
     renderQ: () => {
         clearTimeout(autoNavTimer);
         const q = State.quiz[State.qIdx];
@@ -673,9 +546,9 @@ const Game = {
         const btnCheck = document.getElementById('btn-check');
         const btnToggleOptions = document.getElementById('btn-toggle-options');
 
-        expBox.classList.add('hidden');
-        btnCheck.classList.add('hidden');
-        btnToggleOptions.classList.add('hidden');
+        expBox?.classList.add('hidden');
+        btnCheck?.classList.add('hidden');
+        btnToggleOptions?.classList.add('hidden');
 
         Game.renderOptions();
 
@@ -685,18 +558,21 @@ const Game = {
         }
 
         if(!State.instantFeedback && qState.selectedIdx !== null && !qState.answered) {
-            btnCheck.classList.remove('hidden');
+            btnCheck?.classList.remove('hidden');
         }
     },
+    
     renderOptions: () => {
         const q = State.quiz[State.qIdx];
         const qState = State.answers[State.qIdx]; 
         const optsContainer = document.getElementById('q-opts'); 
+        if(!optsContainer) return;
         optsContainer.innerHTML='';
         const btnToggleOptions = document.getElementById('btn-toggle-options');
 
         q.options.forEach((o, i) => {
-            const d = document.createElement('div'); d.className='opt';
+            const d = document.createElement('div'); 
+            d.className='opt';
             d.innerHTML = `<span>${o}</span>`;
             
             if(qState.answered) {
@@ -716,24 +592,25 @@ const Game = {
             optsContainer.appendChild(d);
         });
 
-        if (qState.answered && q.options.length > 2) { 
+        if (qState.answered && q.options.length > 2 && btnToggleOptions) { 
             btnToggleOptions.classList.remove('hidden');
             btnToggleOptions.innerText = State.showIrrelevantOptions ? '👇 إخفاء الخيارات الأخرى' : '👆 إظهار الخيارات الأخرى';
-        } else {
-             btnToggleOptions.classList.add('hidden');
         }
     },
+    
     handleOptionClick: (idx, el) => {
         const qState = State.answers[State.qIdx];
         if(qState.answered) return; 
         qState.selectedIdx = idx;
-        if(State.instantFeedback || State.mode === 'lucky') Game.confirmAnswer(idx);
-        else {
+        if(State.instantFeedback || State.mode === 'lucky') {
+            Game.confirmAnswer(idx);
+        } else {
             document.querySelectorAll('.opt').forEach(o => o.classList.remove('selected-temp'));
             el.classList.add('selected-temp');
-            document.getElementById('btn-check').classList.remove('hidden');
+            document.getElementById('btn-check')?.classList.remove('hidden');
         }
     },
+    
     checkManual: () => {
         const qState = State.answers[State.qIdx];
         if(qState.selectedIdx !== null) Game.confirmAnswer(qState.selectedIdx);
@@ -755,7 +632,7 @@ const Game = {
         
         const divs = document.querySelectorAll('.opt');
         divs.forEach(d => d.classList.remove('selected-temp')); 
-        divs[q.correct_option_id].classList.add('correct');
+        divs[q.correct_option_id]?.classList.add('correct');
 
         if(isCorrect) {
             if(!isSim) {
@@ -765,18 +642,17 @@ const Game = {
                 State.localData.mistakes = State.localData.mistakes.filter(x=>x!==q.id);
             }
         } else {
-            divs[idx].classList.add('wrong');
+            divs[idx]?.classList.add('wrong');
             if(!isSim) {
                 AudioSys.playError();
                 Game.triggerHaptic('error');
                 if(!State.localData.mistakes.includes(q.id)) State.localData.mistakes.push(q.id);
-                // LEADERBOARD FIX for Survival Mode
                 if (State.mode === 'survival') {
                     setTimeout(() => {
                         alert('🔥 Game Over');
-                        Game.finishQuiz(); // Save score before exiting
+                        Game.finishQuiz();
                     }, 500);
-                    return; // Prevent further execution like auto-nav
+                    return;
                 }
             }
         }
@@ -784,13 +660,13 @@ const Game = {
         if(!State.localData.archive.includes(q.id)) State.localData.archive.push(q.id);
         Data.saveData();
 
-        if(q.explanation) {
-            const expBox = document.getElementById('q-exp');
+        const expBox = document.getElementById('q-exp');
+        if(q.explanation && expBox) {
             expBox.innerHTML = `<b>توضيح:</b> ${q.explanation}`;
             expBox.classList.remove('hidden');
         }
 
-        document.getElementById('btn-check').classList.add('hidden'); 
+        document.getElementById('btn-check')?.classList.add('hidden'); 
 
         if(shouldHide || !State.showIrrelevantOptions) {
             setTimeout(() => {
@@ -799,18 +675,16 @@ const Game = {
             }, 100);
         }
         
-        // LEADERBOARD FIX for Lucky Shot Mode
         if (State.mode === 'lucky') {
             setTimeout(() => Game.finishQuiz(), 500);
             return;
         }
 
-        if(State.instantFeedback && !isSim && isCorrect && State.mode !== 'view_mode' && State.mode !== 'search_mode') {
-            const delay = 1000;
+        if(State.instantFeedback && !isSim && isCorrect && !['view_mode','search_mode'].includes(State.mode)) {
             autoNavTimer = setTimeout(() => {
                 if(State.qIdx < State.quiz.length - 1) Game.nextQ();
                 else Game.finishQuiz();
-            }, delay);
+            }, 1000);
         }
     },
 
@@ -825,29 +699,36 @@ const Game = {
         const newIdx = State.qIdx + dir;
         if(newIdx >= 0 && newIdx < State.quiz.length) {
             State.qIdx = newIdx;
-            // Reset visibility flags for the new question
             State.showIrrelevantOptions = !(State.localData.settings?.hideIrrelevant === true);
-            
             Game.renderQ();
             Game.triggerHaptic('selection');
         } else if (newIdx >= State.quiz.length && State.mode !== 'view_mode') {
             Game.finishQuiz();
         }
     },
+    
     nextQ: () => Game.navQ(1),
+    
     startTimer: () => {
-        let t = 60; const b = document.getElementById('timer-bar'); b.style.display='block';
+        let t = 60; 
+        const b = document.getElementById('timer-bar'); 
+        if(b) b.style.display='block';
         clearInterval(tInt);
         tInt = setInterval(()=>{
-            t--; b.style.width = (t/60*100)+'%';
-            if(t<=0) { clearInterval(tInt); alert('⏰ Time Up'); Game.finishQuiz(); }
+            t--; 
+            if(b) b.style.width = (t/60*100)+'%';
+            if(t<=0) { 
+                clearInterval(tInt); 
+                alert('⏰ Time Up'); 
+                Game.finishQuiz(); 
+            }
         },1000);
     },
+    
     stopTimer: () => clearInterval(tInt),
     
-    // Ensure Zen Mode is disabled when finishing the quiz
     finishQuiz: () => {
-        if(document.getElementById('app-wrap').classList.contains('zen-mode-active')) {
+        if(document.getElementById('app-wrap')?.classList.contains('zen-mode-active')) {
             Game.toggleZenMode(false);
         }
 
@@ -857,9 +738,8 @@ const Game = {
         let finalScore = State.answers.filter(a => a.isCorrect).length;
         State.score = finalScore;
     
-        // Save analytics to Firebase
-        if (State.mode !== 'view_mode' && State.mode !== 'search_mode' && State.quiz.length > 0) {
-            Data.saveSessionAnalytics();
+        if (!['view_mode','search_mode'].includes(State.mode) && State.quiz.length > 0) {
+            Data.saveSession();
         }
     
         AudioSys.playSuccess();
@@ -868,45 +748,54 @@ const Game = {
         document.getElementById('sc-txt').innerText = State.score + ' / ' + State.quiz.length;
         UI.openModal('m-score');
     },    
+    
     toggleFav: () => {
         const id = State.quiz[State.qIdx].id;
-        if(State.localData.fav.includes(id)) State.localData.fav = State.localData.fav.filter(x=>x!==id);
-        else State.localData.fav.push(id);
+        if(State.localData.fav.includes(id)) {
+            State.localData.fav = State.localData.fav.filter(x=>x!==id);
+        } else {
+            State.localData.fav.push(id);
+        }
         Data.saveData();
         Game.updateFavUI();
         Game.triggerHaptic('selection');
     },
+    
     updateFavUI: () => {
         const el = document.getElementById('btn-fav-big');
+        if(!el) return;
         const isFav = State.localData.fav.includes(State.quiz[State.qIdx].id);
         el.innerText = isFav ? "★ في المفضلة (S)" : "☆ أضف للمفضلة (S)";
         el.style.backgroundColor = isFav ? "var(--primary)" : "transparent";
         el.style.color = isFav ? "#fff" : "var(--txt-sec)";
     },
+    
     showRank: () => {
-        if(!State.sel || !State.sel.term || !State.sel.subj) return alert('يجب اختيار مادة وترم واحد لعرض ترتيبها');
+        if(!State.sel?.term || !State.sel.subj) return alert('يجب اختيار مادة وترم');
         const ctx = `${State.sel.term}_${State.sel.subj}`.replace(/[.#$/\[\]]/g, "_");
         document.getElementById('rank-topic').innerText = ctx.replace('_', ' > ');
         document.getElementById('rank-val').innerText = '...';
         UI.openModal('m-rank');
-        db.ref(`ranks/${ctx}`).once('value', snap => {
-            const data = snap.val();
-            if(!data) { document.getElementById('rank-val').innerText = 'No Data'; return; }
-            let arr = Object.keys(data).map(k => {
-                let v = data[k]; return { id: k, score: (v.score||v), name: (v.name||"User") };
-            });
+        
+        const teleId = State.user.telegram_id || State.user.id;
+        db.ref(`leaderboards/${ctx}`).once('value', snap => {
+            const data = snap.val() || {};
+            let arr = Object.entries(data).map(([id, v]) => ({ 
+                id, 
+                score: v.score || 0, 
+                name: v.name || "User" 
+            }));
             arr.sort((a,b) => b.score - a.score);
-            const myRank = arr.findIndex(x => x.id == State.user.id) + 1;
-            document.getElementById('rank-val').innerText = myRank>0 ? `#${myRank}` : 'Unranked';
+            const myRank = arr.findIndex(x => x.id == teleId) + 1;
+            document.getElementById('rank-val').innerText = myRank > 0 ? `#${myRank}` : 'Unranked';
             document.getElementById('rank-user-name').innerText = State.user.first_name;
             document.getElementById('rank-total').innerText = `${arr.length} Players`;
         });
     },
     
-    // NEW FEATURE: Reset Progress
     resetProgress: () => {
         Game.triggerHaptic('error');
-        if (confirm('هل أنت متأكد من مسح جميع بيانات تقدمك (الأخطاء، الأرشيف، المفضلة)؟ لا يمكن التراجع عن هذا الإجراء.')) {
+        if (confirm('هل أنت متأكد من مسح جميع بيانات تقدمك؟')) {
             State.localData.mistakes = [];
             State.localData.archive = [];
             State.localData.fav = [];
