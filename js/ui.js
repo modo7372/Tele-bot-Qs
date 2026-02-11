@@ -1,48 +1,36 @@
-/* --- START OF FILE ui.js --- */
-
 const UI = {
     init: () => {
         console.log("🎨 UI Initializing...");
         
-        // Initialize theme
         const savedTheme = State.localData.settings?.theme || 'light';
         UI.setTheme(savedTheme);
         
-        // Initialize animation state
         if (State.localData.settings?.anim === false) {
             UI.toggleAnim(false);
         } else {
             UI.initAnim(true);
         }
         
-        // Initialize sound/haptic settings
         const soundEnabled = State.localData.settings?.sound !== false;
         const hapticEnabled = State.localData.settings?.haptic !== false;
         document.getElementById('chk-sound').checked = soundEnabled;
         document.getElementById('chk-haptic').checked = hapticEnabled;
         
-        // Initialize font size
         const fontSize = State.localData.settings?.fontSize || '14px';
         document.getElementById('set-size').value = fontSize;
         UI.updateStyleVar('--font-size', fontSize);
         
-        // Initialize gender/avatar
         const gender = State.localData.settings?.gender || 'male';
         document.getElementById('set-gender').value = gender;
         UI.renderAvatarList(gender);
         
-        // Update profile display
         UI.updateProfileDisplay();
         UI.updateHomeStats();
-        
-        // Setup theme list
         UI.renderThemeList();
         
-        // Setup auto-hide checkbox
         const autoHide = State.localData.settings?.hideIrrelevant === true;
         document.getElementById('chk-auto-hide-main').checked = autoHide;
         
-        // Initialize Term Selector
         UI.renderTermSelector();
         UI.updateActiveTermIndicator();
         
@@ -50,17 +38,14 @@ const UI = {
     },
 
     showView: (viewId) => {
-        // Hide all views
         ['v-home', 'v-select', 'v-quiz', 'v-pdf'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.classList.add('hidden');
         });
         
-        // Show target view
         const target = document.getElementById(viewId);
         if (target) {
             target.classList.remove('hidden');
-            // Scroll to top
             window.scrollTo(0, 0);
         }
     },
@@ -68,16 +53,14 @@ const UI = {
     goHome: () => {
         UI.showView('v-home');
         UI.updateHomeStats();
-        UI.updateActiveTermIndicator(); // Refresh term indicator
-        Game.stopTimer();
-        clearTimeout(autoNavTimer);
+        UI.updateActiveTermIndicator();
+        if(typeof Game !== 'undefined') Game.stopTimer();
     },
 
     openModal: (modalId) => {
         const modal = document.getElementById(modalId);
         if (modal) {
             modal.style.display = 'flex';
-            // Prevent body scroll
             document.body.style.overflow = 'hidden';
         }
     },
@@ -86,7 +69,6 @@ const UI = {
         const modal = document.getElementById(modalId);
         if (modal) {
             modal.style.display = 'none';
-            // Restore body scroll
             document.body.style.overflow = '';
         }
     },
@@ -95,13 +77,11 @@ const UI = {
         document.body.setAttribute('data-theme', themeId);
         State.localData.settings.theme = themeId;
         
-        // Update Telegram header color if available
         if (window.Telegram?.WebApp?.isVersionAtLeast('6.1')) {
             const primary = getComputedStyle(document.body).getPropertyValue('--primary').trim();
             if (primary) window.Telegram.WebApp.setHeaderColor(primary);
         }
         
-        // Re-render theme list to update selection
         UI.renderThemeList();
     },
 
@@ -114,7 +94,7 @@ const UI = {
             const chip = document.createElement('div');
             chip.className = 'chip';
             chip.style.background = theme.color;
-            chip.style.color = theme.id === 'light' || theme.id === 'minimal' || theme.id === 'mint' ? '#333' : '#fff';
+            chip.style.color = ['light', 'minimal', 'mint'].includes(theme.id) ? '#333' : '#fff';
             chip.innerText = theme.name;
             
             if (State.localData.settings?.theme === theme.id) {
@@ -122,7 +102,7 @@ const UI = {
             }
             
             chip.onclick = () => {
-                Game.triggerHaptic('selection');
+                if(typeof Game !== 'undefined') Game.triggerHaptic('selection');
                 UI.setTheme(theme.id);
                 Data.saveData();
             };
@@ -155,9 +135,7 @@ const UI = {
         if (!canvas || !canvas.getContext) return;
         
         const ctx = canvas.getContext('2d');
-        let width, height;
-        let bubbles = [];
-        let animationId;
+        let width, height, bubbles = [], animationId;
         
         const resize = () => {
             width = canvas.width = window.innerWidth;
@@ -165,10 +143,7 @@ const UI = {
         };
         
         class Bubble {
-            constructor() {
-                this.reset();
-            }
-            
+            constructor() { this.reset(); }
             reset() {
                 this.x = Math.random() * width;
                 this.y = height + Math.random() * 100;
@@ -176,12 +151,10 @@ const UI = {
                 this.speed = Math.random() * 1 + 0.5;
                 this.opacity = Math.random() * 0.5 + 0.1;
             }
-            
             update() {
                 this.y -= this.speed;
                 if (this.y < -50) this.reset();
             }
-            
             draw() {
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
@@ -190,33 +163,22 @@ const UI = {
             }
         }
         
-        const init = () => {
-            resize();
-            bubbles = Array(20).fill().map(() => new Bubble());
-        };
+        resize();
+        bubbles = Array(20).fill().map(() => new Bubble());
         
         const animate = () => {
             ctx.clearRect(0, 0, width, height);
-            bubbles.forEach(b => {
-                b.update();
-                b.draw();
-            });
+            bubbles.forEach(b => { b.update(); b.draw(); });
             animationId = requestAnimationFrame(animate);
         };
         
-        init();
         animate();
-        
         window.addEventListener('resize', resize);
-        
-        // Store reference to stop later
-        UI._bubbleAnim = { id: animationId, bubbles };
+        UI._bubbleAnim = { id: animationId };
     },
 
     stopBubbleAnimation: () => {
-        if (UI._bubbleAnim?.id) {
-            cancelAnimationFrame(UI._bubbleAnim.id);
-        }
+        if (UI._bubbleAnim?.id) cancelAnimationFrame(UI._bubbleAnim.id);
     },
 
     updateProfileDisplay: () => {
@@ -224,10 +186,8 @@ const UI = {
         const avatarEl = document.getElementById('u-avatar');
         
         if (nameEl) nameEl.innerText = State.user.first_name || 'Guest';
-        
         if (avatarEl) {
-            const avatar = State.localData.settings?.avatar || '👤';
-            avatarEl.innerText = avatar;
+            avatarEl.innerText = State.localData.settings?.avatar || '👤';
         }
     },
 
@@ -235,10 +195,9 @@ const UI = {
         const container = document.getElementById('avatar-list');
         if (!container) return;
         
-        const maleAvatars = ['👨‍⚕️', '👨‍💼', '👨‍🎓', '🧑‍🔬', '👨', '🤵', '👨‍🔧', '🦸‍♂️'];
-        const femaleAvatars = ['👩‍⚕️', '👩‍💼', '👩‍🎓', '👩‍🔬', '👩', '👸', '👩‍🔧', '🦸‍♀️'];
-        
-        const avatars = gender === 'female' ? femaleAvatars : maleAvatars;
+        const avatars = gender === 'female' 
+            ? ['👩‍⚕️', '👩‍💼', '👩‍🎓', '👩‍🔬', '👩', '👸', '👩‍🔧', '🦸‍♀️']
+            : ['👨‍⚕️', '👨‍💼', '👨‍🎓', '🧑‍🔬', '👨', '🤵', '👨‍🔧', '🦸‍♂️'];
         
         container.innerHTML = '';
         avatars.forEach(avatar => {
@@ -257,7 +216,7 @@ const UI = {
                 UI.updateProfileDisplay();
                 UI.renderAvatarList(gender);
                 Data.saveData();
-                Game.triggerHaptic('selection');
+                if(typeof Game !== 'undefined') Game.triggerHaptic('selection');
             };
             
             container.appendChild(chip);
@@ -272,9 +231,8 @@ const UI = {
     },
 
     updateHomeStats: () => {
-        // Calculate stats based on filtered pool (respects global term selection)
         let pool = [...State.allQ];
-        if (State.globalSelectedTerms && State.globalSelectedTerms.length > 0) {
+        if (State.globalSelectedTerms?.length > 0) {
             pool = pool.filter(q => State.globalSelectedTerms.includes(q.term));
         }
         
@@ -292,24 +250,19 @@ const UI = {
         const correct = archive - mistakes;
         const pct = total > 0 ? Math.round((archive / total) * 100) : 0;
         
-        const pctEl = document.getElementById('home-pct');
-        const correctEl = document.getElementById('home-correct');
-        const totalEl = document.getElementById('home-total');
+        if (document.getElementById('home-pct')) document.getElementById('home-pct').innerText = pct + '%';
+        if (document.getElementById('home-correct')) document.getElementById('home-correct').innerText = correct;
+        if (document.getElementById('home-total')) document.getElementById('home-total').innerText = total;
+        
         const ring = document.getElementById('home-progress-ring');
-        
-        if (pctEl) pctEl.innerText = pct + '%';
-        if (correctEl) correctEl.innerText = correct;
-        if (totalEl) totalEl.innerText = total;
-        
         if (ring) {
             ring.style.background = `conic-gradient(var(--primary) ${pct}%, transparent ${pct}%)`;
         }
     },
 
     showTotalStats: () => {
-        // Calculate stats based on filtered pool
         let pool = [...State.allQ];
-        if (State.globalSelectedTerms && State.globalSelectedTerms.length > 0) {
+        if (State.globalSelectedTerms?.length > 0) {
             pool = pool.filter(q => State.globalSelectedTerms.includes(q.term));
         }
         
@@ -361,20 +314,13 @@ const UI = {
     toggleAutoHide: (val) => {
         State.localData.settings.hideIrrelevant = val;
         Data.saveData();
-        // Update current quiz state if in quiz
         State.showIrrelevantOptions = !val;
     },
 
-    // ============================================
-    // TERM SELECTOR FUNCTIONS (NEW)
-    // ============================================
-
-    // Render term selector chips on home screen
     renderTermSelector: () => {
         const container = document.getElementById('term-selector-chips');
         if (!container) return;
         
-        // Get unique terms from all questions
         const terms = [...new Set(State.allQ.map(q => q.term))].filter(t => t).sort();
         
         if (terms.length === 0) {
@@ -389,16 +335,14 @@ const UI = {
             chip.innerText = term;
             chip.dataset.term = term;
             
-            // Check if this term is globally selected
             if (State.globalSelectedTerms.includes(term)) {
                 chip.classList.add('selected');
             }
             
             chip.onclick = () => {
-                Game.triggerHaptic('selection');
+                if(typeof Game !== 'undefined') Game.triggerHaptic('selection');
                 chip.classList.toggle('selected');
                 
-                // Update global selection
                 const termValue = chip.dataset.term;
                 if (chip.classList.contains('selected')) {
                     if (!State.globalSelectedTerms.includes(termValue)) {
@@ -409,8 +353,8 @@ const UI = {
                 }
                 
                 UI.updateActiveTermIndicator();
-                UI.updateHomeStats(); // Update stats to reflect term filter
-                Data.saveData(); // Persist selection
+                UI.updateHomeStats();
+                Data.saveData();
             };
             
             container.appendChild(chip);
@@ -419,7 +363,6 @@ const UI = {
         UI.updateActiveTermIndicator();
     },
 
-    // Update the indicator showing which terms are selected
     updateActiveTermIndicator: () => {
         const indicator = document.getElementById('active-term-indicator');
         const list = document.getElementById('active-terms-list');
