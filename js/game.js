@@ -170,9 +170,7 @@ const Game = {
         UI.updateActiveTermIndicator();
         Data.saveData();
         Game.triggerHaptic('selection');
-    },
-
-
+    }, // FIXED: Added comma here
 
     startRankMode: () => {
         State.isRankMode = true; 
@@ -197,9 +195,6 @@ const Game = {
             Game.renderSel('term');
         }
     },
-
-
-    
 
     startRandomInMode: () => {
         let sub = State.pool;
