@@ -170,7 +170,7 @@ const Game = {
         UI.updateActiveTermIndicator();
         Data.saveData();
         Game.triggerHaptic('selection');
-    }
+    },
 
 
 
