@@ -54,7 +54,8 @@ const State = {
     firebaseUid: null,
     isAnonymous: true,
     sessionStartTime: null,
-    answers: []  // Track detailed answers
+    answers: [] // Track detailed answers
+    globalSelectedTerms: [] // Empty array means all terms
 };
 
 // Security Helper
