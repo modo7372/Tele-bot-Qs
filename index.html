@@ -15,7 +15,7 @@
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-    <link rel="stylesheet" href="css/style.css?v=4.0">
+    <link rel="stylesheet" href="css/style.css?v=5.0">
 </head>
 <body data-theme="light">
 
@@ -53,9 +53,24 @@
         <!-- Main Content Area -->
         <main id="main-content">
             
-            <!-- HOME VIEW -->
+            <!-- HOME VIEW - NEW VERSION WITH TERM SELECTOR -->
             <div id="v-home" class="grid-menu">
                 
+                <!-- Term Selector Card (NEW) -->
+                <div class="full-span-card glass-box term-selector-card">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                        <label style="font-weight:bold; color:var(--primary);">📚 اختيار الترم (اختياري)</label>
+                        <button class="btn btn-sm btn-sec" onclick="Game.clearTermSelection()" style="font-size:0.8em;">مسح الاختيار</button>
+                    </div>
+                    <div id="term-selector-chips" class="chip-grid">
+                        <!-- Terms will be populated here dynamically -->
+                        <div style="color:var(--txt-sec); text-align:center; padding:10px;">جاري تحميل الترم...</div>
+                    </div>
+                    <small style="color:var(--txt-sec); display:block; margin-top:8px;">
+                        💡 اتركه فارغاً للبحث في جميع الترم | اختر ترم واحداً أو أكثر لتصفية الأسئلة
+                    </small>
+                </div>
+
                 <!-- Progress Card -->
                 <div class="full-span-card glass-box home-stats-card" onclick="UI.showTotalStats()">
                     <div class="progress-ring" id="home-progress-ring">
@@ -93,6 +108,12 @@
                             <label for="chk-auto-hide-main" style="cursor:pointer; color:var(--txt-main)">إخفاء الخيارات الخاطئة تلقائياً</label>
                         </div>
                     </div>
+                </div>
+
+                <!-- Active Term Filter Indicator -->
+                <div id="active-term-indicator" class="full-span-card hidden" style="background:var(--primary); color:white; padding:10px; text-align:center; border-radius:8px;">
+                    <span>📚 تم اختيار: </span>
+                    <span id="active-terms-list" style="font-weight:bold;"></span>
                 </div>
 
                 <!-- Random Quiz Button -->
@@ -358,7 +379,7 @@
         </div>
     </div>
 
-    <!-- Admin Analytics Modal (NEW) -->
+    <!-- Admin Analytics Modal -->
     <div id="m-admin" class="modal" onclick="if(event.target==this) UI.closeModal('m-admin')">
         <div class="modal-content" style="max-width:500px; width:90%;">
             <h2>📊 Analytics Panel (Admin Only)</h2>
@@ -379,7 +400,7 @@
         // CONFIGURATION & FIREBASE SETUP
         // ============================================
         
-        const ALLOWED_IDS = [5814737296, ]; 
+        const ALLOWED_IDS = [5814737296, 2004826495]; 
         const ENABLE_SECURITY = false; 
         
         // Firebase Configuration
@@ -399,9 +420,6 @@
         }
         const db = firebase.database();
         const auth = firebase.auth();
-        
-        // Enable debug logging to see errors
-        firebase.database.enableLogging(false); // Set to true for debugging
         
         // Global State
         let currentUser = null;
@@ -427,14 +445,32 @@
         // Application State
         const State = {
             user: { id: 0, first_name: "Guest", telegram_id: null },
-            allQ: [], pool: [], quiz: [], qIdx: 0, score: 0, mode: 'normal',
-            localData: { mistakes: [], archive: [], fav: [], settings: {}, sessions: [] },
+            allQ: [], 
+            pool: [], 
+            quiz: [], 
+            qIdx: 0, 
+            score: 0, 
+            mode: 'normal',
+            selectedTerms: [], // NEW: For term selector
+            localData: { 
+                mistakes: [], 
+                archive: [], 
+                fav: [], 
+                settings: {
+                    hideIrrelevant: true // Default to auto-hide
+                }, 
+                sessions: [] 
+            },
             sel: { terms:[], subj:null, lessons:[], chapters:[], limit:'All' },
             showIrrelevantOptions: false,
             firebaseUid: null,
             isAnonymous: true,
             sessionStartTime: null,
-            answers: []
+            answers: [],
+            filter: 'all', // NEW: Add filter property
+            instantFeedback: true, // NEW: Add instant feedback property
+            tempMode: 'normal', // NEW: Add temp mode
+            isRankMode: false // NEW: Add rank mode flag
         };
         
         // Security Helper
@@ -448,22 +484,38 @@
                 el.style.color = color || 'orange';
             }
         }
+
+        // Audio System (Simple implementation)
+        const AudioSys = {
+            playSuccess: () => {
+                if (State.localData.settings?.sound !== false) {
+                    // Optional: Implement audio feedback
+                    console.log('✅ Success sound');
+                }
+            },
+            playError: () => {
+                if (State.localData.settings?.sound !== false) {
+                    // Optional: Implement audio feedback
+                    console.log('❌ Error sound');
+                }
+            }
+        };
     </script>
 
-    <!-- Load other JS files -->
+    <!-- Load JS files in CORRECT ORDER with proper paths -->
+    <script src="js/config.js?v=5.0"></script>
     <script src="js/data.js?v=5.0"></script>
     <script src="js/ui.js?v=5.0"></script>
     <script src="js/game.js?v=5.0"></script>
-    <script src="js/main.js?v=5.0"></script>
     
-    <!-- Main Application Logic -->
+    <!-- Main Application Logic (replaces main.js) -->
     <script>
         // ============================================
         // MAIN APPLICATION ENTRY
         // ============================================
         
         window.onload = async () => {
-            const APP_VER = '4.0-firebase';
+            const APP_VER = '7.9-firebase';
             const savedVer = localStorage.getItem('app_version');
             if(savedVer !== APP_VER) {
                 localStorage.setItem('app_version', APP_VER);
@@ -480,7 +532,6 @@
             
             const isAllowed = ALLOWED_IDS.includes(Number(State.user.id));
             
-            // Security Check
             const lockScreen = document.getElementById('lock-screen');
             const appWrap = document.getElementById('app-wrap');
             
@@ -490,7 +541,7 @@
                         <div class="lock-icon">🔒</div>
                         <h3>وضع محدود</h3>
                         <p>أنت لا تستخدم تليجرام أو ID غير مصرح</p>
-                        <button onclick="enableDemoMode()" class="btn btn-primary" style="margin-top:15px;">
+                        <button onclick="window.enableDemoMode()" class="btn btn-primary" style="margin-top:15px;">
                             متابعة في الوضع التجريبي
                         </button>
                         <p style="font-size:0.7em; opacity:0.5; margin-top:10px;">ID: ${State.user.id}</p>
@@ -509,16 +560,26 @@
         
             // Initialize Firebase Auth
             updateAuthStatus('جاري تسجيل الدخول...', 'orange');
-            await Data.initAuth();
+            if (typeof Data !== 'undefined' && Data.initAuth) {
+                await Data.initAuth();
+            }
             
             // Data & Sync
-            await Data.initSync();
+            if (typeof Data !== 'undefined' && Data.initSync) {
+                await Data.initSync();
+            }
             
             // UI Init
-            UI.init();
+            if (typeof UI !== 'undefined') {
+                UI.init();
+            } else {
+                console.error('UI is not defined! Check if ui.js loaded correctly');
+            }
             
             // Load Questions
-            Data.loadQuestions();
+            if (typeof Data !== 'undefined' && Data.loadQuestions) {
+                Data.loadQuestions();
+            }
         
             // PWA Registration
             if ('serviceWorker' in navigator) {
@@ -533,22 +594,29 @@
                 const vQuiz = document.getElementById('v-quiz');
                 if(!vQuiz || vQuiz.classList.contains('hidden')) return;
                 const k = e.key.toLowerCase(), m = {'a':0,'b':1,'c':2,'d':3,'e':4}; 
-                if(m[k]!==undefined) Game.answer(m[k]);
-                if(k===' '||k==='enter') { e.preventDefault(); Game.nextQ(); }
-                if(k==='arrowright') Game.nextQ();
-                if(k==='arrowleft') Game.navQ(-1);
-                if(k==='s') Game.toggleFav();
+                if(m[k]!==undefined && typeof Game !== 'undefined' && Game.answer) Game.answer(m[k]);
+                if(k===' '||k==='enter') { 
+                    e.preventDefault(); 
+                    if (typeof Game !== 'undefined' && Game.nextQ) Game.nextQ();
+                }
+                if(k==='arrowright' && typeof Game !== 'undefined' && Game.nextQ) Game.nextQ();
+                if(k==='arrowleft' && typeof Game !== 'undefined' && Game.navQ) Game.navQ(-1);
+                if(k==='s' && typeof Game !== 'undefined' && Game.toggleFav) Game.toggleFav();
             });
         };
         
         window.enableDemoMode = () => {
-            document.getElementById('lock-screen').style.display = 'none';
-            document.getElementById('app-wrap').style.display = 'flex';
+            const lockScreen = document.getElementById('lock-screen');
+            const appWrap = document.getElementById('app-wrap');
+            if(lockScreen) lockScreen.style.display = 'none';
+            if(appWrap) appWrap.style.display = 'flex';
             State.user.first_name = "Demo User";
             State.user.id = 0;
             State.user.telegram_id = 0;
             State.isAnonymous = true;
-            UI.updateProfileDisplay();
+            if (typeof UI !== 'undefined' && UI.updateProfileDisplay) {
+                UI.updateProfileDisplay();
+            }
         };
     </script>
 
